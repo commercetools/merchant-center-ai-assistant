@@ -101,7 +101,7 @@ const ChatArea = ({
   const retryCountRef = useRef(0);
   const isRetryingRef = useRef(false);
 
-  const { messages, sendMessage, regenerate, status, error } = useChat({
+  const { messages, sendMessage, regenerate, status, error, stop } = useChat({
     id: sessionId,
     messages: initialMessages,
 
@@ -405,11 +405,14 @@ const ChatArea = ({
           paddingTop="400"
           paddingBottom={isEmpty ? '0' : '500'}
         >
+          {/* Test hook: the chat status (`ready | submitted | streaming | error`). */}
+          <Box data-testid="chat-status" data-status={status} display="none" />
           <Composer
             value={input}
             onChange={setInput}
             onSubmit={handleSubmit}
             isLoading={isLoading}
+            onStop={stop}
             error={error}
             files={files}
             onFilesChange={setFiles}

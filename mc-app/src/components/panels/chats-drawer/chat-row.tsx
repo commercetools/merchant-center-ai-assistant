@@ -44,6 +44,7 @@ export const ChatRow: React.FC<Props> = ({
   return (
     <Box
       className="group"
+      data-testid="session-list-item"
       display="flex"
       alignItems="flex-start"
       gap="200"

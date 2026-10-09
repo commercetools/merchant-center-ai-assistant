@@ -22,6 +22,7 @@ export const SendButton: React.FC<Props> = ({ isDisabled }) => (
   <IconButton
     type="submit"
     aria-label="Send message"
+    data-testid="chat-send"
     variant="solid"
     colorPalette="primary"
     size="xs"
