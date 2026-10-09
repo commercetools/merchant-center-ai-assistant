@@ -24,34 +24,32 @@ const config = {
       initialProjectKey: process.env.INITIAL_PROJECT_KEY || 'unset-dev-only',
     },
   },
-  additionalEnv: {
-    chatServiceEndpointUrl: '${env:CHAT_SERVICE_ENDPOINT_URL}',
-  },
   headers: {
     csp: {
-      // The browser never contacts the service directly: every call goes through the
-      // Merchant Center API's /proxy/forward-to, whose origin app-kit already allows.
+      // The app makes no service calls: pages are read through the Merchant Center API.
       'connect-src': ['*.commercetools.app', '*.gstatic.com'],
-      // 'unsafe-eval' is needed by the generated-page renderer (change R).
+      // 'unsafe-eval' (and 'unsafe-inline') are needed only because the renderer executes
+      // the generated page code with `new Function`.
       'script-src': [
         '*.commercetools.app',
         '*.gstatic.com',
         "'unsafe-inline'",
         "'unsafe-eval'",
       ],
-      'img-src': ['*.gstatic.com', '*.gravatar.com', 'gravatar.com'],
+      'img-src': ['*.gstatic.com'],
       'font-src': ['*.gstatic.com'],
       'style-src': ['*.gstatic.com'],
     },
   },
   // Default View/Manage permission pair only (no custom permission, no additionalOAuthScopes).
-  // Composed pages query and mutate commerce data through the Merchant Center GraphQL proxy,
-  // so every scope below has a consumer. The MCP scopes are required by the repository's
-  // layout check (change B) for all three configs.
+  // Stored pages run arbitrary GraphQL through the Merchant Center proxy with the signed-in
+  // user's token: the view_* scopes back their queries, the manage_* scopes back the UI-action
+  // mutations a generated page may declare. view_key_value_documents reads the pages
+  // themselves; this app never writes them, so there is no manage_key_value_documents.
+  // No MCP scopes: the app has no Managed MCP surface.
   oAuthScopes: {
     view: [
       'view_key_value_documents',
-      'view_mcp_servers',
       'view_stores',
       'view_tax_categories',
       'view_products',
@@ -72,8 +70,6 @@ const config = {
       'view_quotes',
     ],
     manage: [
-      'manage_key_value_documents',
-      'manage_mcp_servers',
       'manage_stores',
       'manage_tax_categories',
       'manage_products',
