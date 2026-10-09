@@ -79,6 +79,8 @@ export const createNimbusToolSource = (
     description:
       'Documentation of the Nimbus design system (components, props, tokens, icons) for building pages',
     // Right after change M's page-generation source (order 60).
+    routingHints:
+      'Use together with the page builder to look up Nimbus components, props, tokens and icons before building a page.',
     order: 61,
     isEnabled: async (ctx) => options.enabled(ctx),
     getTools: async (): Promise<ToolSet> => {

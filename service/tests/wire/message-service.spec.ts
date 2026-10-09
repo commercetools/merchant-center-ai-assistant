@@ -27,6 +27,22 @@ describe('MessageService', () => {
     expect(await services.messages.list(s.id)).toHaveLength(2);
   });
 
+  it('never overwrites a stored id, so a continued assistant message keeps its first version (TA-20)', async () => {
+    const { services } = makeGApp();
+    const s = await services.sessions.create(USER, {});
+    await services.messages.appendMissing(s.id, [msg('a1', 'assistant')]);
+    const continued = {
+      ...msg('a1', 'assistant'),
+      parts: [
+        { type: 'text', text: 'a1' },
+        { type: 'text', text: 'continued after the tool result' },
+      ],
+    };
+    expect(await services.messages.appendMissing(s.id, [continued])).toEqual([]);
+    const [stored] = await services.messages.list(s.id);
+    expect(stored.parts).toHaveLength(1);
+  });
+
   it('stores only the missing ones and ignores a duplicate inside one call', async () => {
     const { services } = makeGApp();
     const s = await services.sessions.create(USER, {});

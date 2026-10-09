@@ -132,8 +132,20 @@ export const putIdentityMcp: RequestHandler = asyncHandler(async (req, res) => {
     connectedAt: Date.now(),
     discovery: toStoredDiscovery(discovery),
   };
-  // `set` drops the stored OAuth client: the next authorize registers a fresh one.
+  // `set` drops the stored OAuth client: the next authorize registers a fresh one. The token
+  // records of the previous binding belong to the dropped client, so they are removed (and
+  // revoked best effort, while the old client registration is still readable) like on
+  // DELETE; users merely have to reconnect.
+  const previous = await stores.binding.get();
+  const removedTokens = previous
+    ? await stores.tokens.deleteAll((record) =>
+        revokeStoredTokens(config, previous, record, fetchFn)
+      )
+    : 0;
   await stores.binding.set(binding);
+  if (removedTokens > 0) {
+    logger.info(`${LOG_PREFIX} REBOUND tokensRemoved=${removedTokens}`);
+  }
   await invalidateAllToolSets();
   auditAdminAction(authed, 'managed-mcp-identity.put', 'ok');
 

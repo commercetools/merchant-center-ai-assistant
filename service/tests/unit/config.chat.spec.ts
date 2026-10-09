@@ -14,6 +14,7 @@ describe('chat section (request budget)', () => {
     expect(freshConfig().chat).toEqual({
       requestBudgetMs: 270000,
       finalizeReserveMs: 30000,
+      digestBeforeClose: false,
     });
   });
 
@@ -25,7 +26,17 @@ describe('chat section (request budget)', () => {
     expect(c.chat).toEqual({
       requestBudgetMs: 40000,
       finalizeReserveMs: 10000,
+      digestBeforeClose: false,
     });
+  });
+
+  it('CHAT_DIGEST_BEFORE_CLOSE switches the digest fallback on and rejects other values', () => {
+    expect(
+      freshConfig({ CHAT_DIGEST_BEFORE_CLOSE: 'true' }).chat.digestBeforeClose
+    ).toBe(true);
+    expect(() => freshConfig({ CHAT_DIGEST_BEFORE_CLOSE: 'yes' })).toThrow(
+      /CHAT_DIGEST_BEFORE_CLOSE/
+    );
   });
 
   it('rejects a budget above the platform limit, naming key and maximum', () => {

@@ -4,6 +4,11 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
+import {
+  describeMcpFailure as describeSharedMcpFailure,
+  statusOf,
+} from '../tool-sources/mcp-failure';
+
 /** Thrown when a runtime path needs a token the user has not granted (or lost). */
 export class IdentityReauthRequiredError extends Error {
   constructor(
@@ -24,20 +29,14 @@ export class IdentityNoPermittedToolsError extends Error {
 
 const NO_PERMITTED = /no (configured )?tools? .*permitted|not permitted/i;
 
-/** HTTP status carried by an SDK error, when there is one. */
-export const statusOf = (error: unknown): number | undefined => {
-  if (typeof error !== 'object' || error === null) return undefined;
-  const o = error as { statusCode?: unknown; status?: unknown };
-  const v = o.statusCode ?? o.status;
-  return typeof v === 'number' ? v : undefined;
-};
+export { statusOf };
 
-/** One-line, bounded description of an MCP failure (never includes tokens). */
-export const describeMcpFailure = (error: unknown): string => {
-  if (!(error instanceof Error)) return String(error).slice(0, 300);
-  const status = statusOf(error);
-  return `${status ? `${status} ` : ''}${error.message}`.slice(0, 300);
-};
+/**
+ * One-line, bounded description of a failure of the project's own Managed MCP Server (status
+ * and message; never includes tokens). Shared implementation: `tool-sources/mcp-failure.ts`.
+ */
+export const describeMcpFailure = (error: unknown): string =>
+  describeSharedMcpFailure(error, { includeMessage: true });
 
 /**
  * The exact wording of the "no tool permitted" rejection is not documented: the 403 status

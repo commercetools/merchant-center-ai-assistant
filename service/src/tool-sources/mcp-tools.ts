@@ -7,6 +7,7 @@
 import { createMCPClient } from '@ai-sdk/mcp';
 import type { ToolSet } from 'ai';
 import { CACHE_NS, getCache } from '../cache';
+import { describeMcpFailure } from './mcp-failure';
 import type { Log } from '../utils/log.types';
 
 /**
@@ -52,11 +53,7 @@ export const setMcpClientFactoryForTests = (f?: McpClientFactory): void => {
 };
 
 /** Class and HTTP status of a handshake failure; never the message, URL or body. */
-const describeFailure = (error: unknown): string => {
-  const e = (error ?? {}) as { statusCode?: number };
-  const cls = (error as Error | undefined)?.constructor?.name ?? 'Error';
-  return e.statusCode !== undefined ? `${cls} status=${e.statusCode}` : cls;
-};
+const describeFailure = (error: unknown): string => describeMcpFailure(error);
 
 export interface McpToolsParams {
   /** Cache key; must not contain a secret (use a hash of the URL). */

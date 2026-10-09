@@ -8,7 +8,7 @@ import type { ToolContext } from '../../tool-sources/types';
 import { getBaseRules, getReturnFormatSection } from './base.prompt';
 
 /**
- * System prompt for the export agent
+ * Prompt fragment of the export tool group
  * Handles exporting data to downloadable files (CSV)
  */
 export const getExportPrompt = (context: ToolContext): string => {
@@ -55,12 +55,11 @@ ${getBaseRules(context.locale)}
 
 <workflow>
   Typical export workflow:
-  1. Data is fetched by another agent (commercetools, bigquery, etc.)
+  1. Data is fetched first with another tool (commercetools, bigquery, etc.)
   2. User requests to export the data
-  3. Switch to export agent (you)
-  4. Format the data with appropriate headers
-  5. Call export_data tool
-  6. Confirm success to user
+  3. Format the data with appropriate headers
+  4. Call export_data tool
+  5. Confirm success to user
 </workflow>
 
 

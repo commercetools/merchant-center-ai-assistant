@@ -190,4 +190,110 @@ describe('loadHistory', () => {
     const persisted = await services.messages.list('s1');
     expect(JSON.stringify(persisted)).toContain('/files/s1/a.png');
   });
+
+  describe('generated images in earlier tool outputs (TA-19)', () => {
+    const imageTurn = (n: number) => [
+      textMessage(`u${n}`, 'user', `draw ${n}`),
+      {
+        id: `a${n}`,
+        role: 'assistant' as const,
+        parts: [
+          {
+            type: 'tool-imageGeneration',
+            toolCallId: `c${n}`,
+            state: 'output-available',
+            input: { task: `draw ${n}` },
+            output: {
+              id: `o${n}`,
+              role: 'assistant',
+              parts: [
+                {
+                  type: 'file',
+                  mediaType: 'image/png',
+                  url: `/files/s1/${n}.png`,
+                },
+                { type: 'text', text: `done ${n}` },
+              ],
+            },
+          },
+        ],
+      },
+    ];
+
+    const registerConvertingUploader = () => {
+      setImageUploader({
+        upload: async () => 'x',
+        toModelMessages: async (messages) =>
+          JSON.parse(
+            JSON.stringify(messages).replace(
+              /\/files\/s1\/(\d)\.png/g,
+              'data:image/png;base64,IMG$1'
+            )
+          ) as UIMessage[],
+      });
+    };
+
+    it('sends the converted image of an earlier generation to the model as an image', async () => {
+      await services.messages.appendMissing('s1', imageTurn(1));
+      registerConvertingUploader();
+      const { modelMessages } = await loadHistory({
+        messages: services.messages,
+        sessionId: 's1',
+        incoming: textMessage('u9', 'user', 'make it blue'),
+      });
+      const tool = modelMessages.find((m) => m.role === 'tool');
+      const output = JSON.stringify(tool);
+      expect(output).toContain('"type":"content"');
+      expect(output).toContain('IMG1');
+      expect(output).toContain('done 1');
+      expect(output).not.toContain('/files/s1/');
+    });
+
+    it('keeps only the newest generated images; older ones are text only', async () => {
+      await services.messages.appendMissing('s1', [
+        ...imageTurn(1),
+        ...imageTurn(2),
+        ...imageTurn(3),
+      ]);
+      let seen = '';
+      setImageUploader({
+        upload: async () => 'x',
+        toModelMessages: async (messages) => {
+          seen = JSON.stringify(messages);
+          return JSON.parse(
+            seen.replace(
+              /\/files\/s1\/(\d)\.png/g,
+              'data:image/png;base64,IMG$1'
+            )
+          ) as UIMessage[];
+        },
+      });
+      const { modelMessages } = await loadHistory({
+        messages: services.messages,
+        sessionId: 's1',
+        incoming: textMessage('u9', 'user', 'edit'),
+      });
+      // The uploader is never asked to download the dropped image.
+      expect(seen).not.toContain('/files/s1/1.png');
+      const all = JSON.stringify(modelMessages);
+      expect(all).not.toContain('IMG1');
+      expect(all).toContain('IMG2');
+      expect(all).toContain('IMG3');
+      expect(all).toContain('done 1');
+    });
+
+    it('never sends a non-data URL of a generated image to the model', async () => {
+      await services.messages.appendMissing('s1', imageTurn(1));
+      // No uploader registered: the stored relative URL stays relative.
+      const { modelMessages } = await loadHistory({
+        messages: services.messages,
+        sessionId: 's1',
+        incoming: textMessage('u9', 'user', 'again'),
+      });
+      const tool = JSON.stringify(modelMessages.find((m) => m.role === 'tool'));
+      expect(tool).toContain('done 1');
+      expect(tool).not.toContain('/files/s1/');
+      expect(tool).not.toContain('"type":"file"');
+    });
+  });
 });

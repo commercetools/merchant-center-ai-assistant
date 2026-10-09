@@ -19,6 +19,8 @@ export const visualizeSource: ToolSource = {
   description:
     'Creates standalone charts and graphs from data that was fetched first (bar, line, pie, table, ...).',
   kind: 'core',
+  routingHints:
+    'Keywords: chart, graph, visualization, plot, visualize data, show chart, bar chart, pie chart, line chart. Prerequisite: fetch the data first with the commercetools or bigquery tools.',
   order: 110,
   isEnabled: async () => true,
   getTools: async () => ({ [VISUALIZE_DATA_TOOL]: tool(visualizeDataTool) }),

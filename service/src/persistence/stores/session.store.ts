@@ -43,6 +43,8 @@ export interface SessionStore {
     userId?: string;
     createdBefore?: string;
     createdAfter?: string;
+    /** Newest first by `createdAt` (default) or by the platform's `lastModifiedAt` (last write). */
+    sortBy?: 'createdAt' | 'lastModifiedAt';
   }): Promise<{ items: SessionRecord[]; total: number }>;
   /** The object only; use `deleteSessionCascade` to remove the messages as well. */
   delete(id: string): Promise<boolean>;
@@ -148,6 +150,8 @@ export class GatewaySessionStore implements SessionStore {
     userId?: string;
     createdBefore?: string;
     createdAfter?: string;
+    /** Newest first by `createdAt` (default) or by the platform's `lastModifiedAt` (last write). */
+    sortBy?: 'createdAt' | 'lastModifiedAt';
   }): Promise<{ items: SessionRecord[]; total: number }> {
     const offset = o.offset ?? 0;
     if (offset + o.limit > MAX_OFFSET) {
@@ -165,7 +169,7 @@ export class GatewaySessionStore implements SessionStore {
     }
     const page = await this.deps.gw.query(this.container, {
       filters,
-      sort: { field: 'createdAt', dir: 'desc' },
+      sort: { field: o.sortBy ?? 'createdAt', dir: 'desc' },
       limit: o.limit,
       offset,
       withTotal: true,

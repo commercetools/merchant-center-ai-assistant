@@ -282,6 +282,35 @@ describe('stripe source', () => {
     expect(calls).toHaveLength(1);
   });
 
+  it('the menu keeps 24 names and marks the 4 without a toolkit tool as unavailable (TA-22)', async () => {
+    stubFactory();
+    const menu = await stripeToolSource.listForMenu(ctxFor(STRIPE_ENV));
+    expect(menu?.toolNames).toHaveLength(24);
+    expect([...(menu?.unavailableToolNames ?? [])].sort()).toEqual([
+      'invoiceItems.read',
+      'paymentLinks.read',
+      'refunds.read',
+      'subscriptions.create',
+    ]);
+    // Every unavailable name is in the menu; every other name is backed by a tool key.
+    for (const name of menu?.unavailableToolNames ?? []) {
+      expect(menu?.toolNames).toContain(name);
+    }
+    const tools = await stripeToolSource.getTools(ctxFor(STRIPE_ENV));
+    for (const name of menu?.unavailableToolNames ?? []) {
+      expect(Object.keys(tools)).not.toContain(name);
+    }
+  });
+
+  it('the registry passes unavailable names through to the menu groups', async () => {
+    stubFactory();
+    const registry = createToolSourceRegistry();
+    registry.register(stripeToolSource);
+    const [group] = await registry.listMenuGroups(ctxFor(STRIPE_ENV));
+    expect(group.mcp).toBe('stripe');
+    expect(group.unavailableToolNames).toHaveLength(4);
+  });
+
   it('menu lists the 24 names; tool keys are menu names with an argument schema', async () => {
     stubFactory();
     const ctx = ctxFor(STRIPE_ENV);

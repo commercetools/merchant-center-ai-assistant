@@ -41,7 +41,11 @@ export const getSessionTools: RequestHandler = asyncHandler(async (req, res) => 
   });
   const menu: GroupedSessionTools[] = groups.map((group) => ({
     mcp: group.mcp,
-    tools: toSessionTools(group.toolNames, disabledNamesFor(session.disabledTools, group.mcp)),
+    tools: toSessionTools(
+      group.toolNames,
+      disabledNamesFor(session.disabledTools, group.mcp),
+      new Set(group.unavailableToolNames ?? [])
+    ),
   }));
   return ok(res, menu);
 });

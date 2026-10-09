@@ -11,7 +11,7 @@ const toolList = (contributing: ToolSource[]): string =>
     ? 'No data tools are connected right now.'
     : contributing
         .map((source) =>
-          [`### ${source.displayName}`, source.description]
+          [`### ${source.displayName}`, source.description, source.routingHints]
             .filter(Boolean)
             .join('\n')
         )

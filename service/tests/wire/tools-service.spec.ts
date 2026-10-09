@@ -94,6 +94,22 @@ describe('session tools routes', () => {
     expect(seen[0]).toEqual({ userId: 'user-a', sessionId: id });
   });
 
+  it('marks names without a backing tool as available:false and leaves the others untouched (TA-22)', async () => {
+    provider([{ mcp: 'stripe', toolNames: ['a', 'b'], unavailableToolNames: ['b'] }]);
+    const t = makeGApp();
+    const id = await session(t);
+    const res = await request(t.app).get(`/service/session/${id}/tools`).set(A);
+    expect(res.body.data).toEqual([
+      {
+        mcp: 'stripe',
+        tools: [
+          { toolName: 'a', enabled: true },
+          { toolName: 'b', enabled: true, available: false },
+        ],
+      },
+    ]);
+  });
+
   it('a new tool from a source is enabled by default', async () => {
     provider([{ mcp: 'knowledge', toolNames: ['a', 'b', 'c'] }]);
     const t = makeGApp();

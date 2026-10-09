@@ -13,6 +13,8 @@ import type { RequestUser } from '../types/request.types';
 export type MenuGroup = {
   mcp: string;
   toolNames: Array<string | { toolName: string; description?: string }>;
+  /** Names of `toolNames` that no tool backs; shown as `available: false`. */
+  unavailableToolNames?: string[];
 };
 
 /**

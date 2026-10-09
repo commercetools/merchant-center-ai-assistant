@@ -31,6 +31,8 @@ export const composedPageSource: ToolSource = {
   description:
     'Creates and edits custom Merchant Center pages (dashboards, lists, forms) built with the Nimbus design system',
   kind: 'core',
+  routingHints:
+    'Keywords: dashboard, UI, page, create page, view, composed page, interface, widget, chart in page.',
   order: 60,
   isEnabled: async () => true,
   getTools: async (ctx) => ({

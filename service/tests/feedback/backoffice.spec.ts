@@ -63,6 +63,22 @@ describe('thread listing', () => {
     expect(res.body.pagination).toEqual({ limit: 10, offset: 0, total: 2 });
   });
 
+  it('?sort=lastModifiedAt lists the most recently written thread first; other values keep createdAt order', async () => {
+    const h = makeFeedbackHarness();
+    await seed(h, 'sa', 'user-a', 0);
+    await seed(h, 'sb', 'user-b', 0);
+    await seed(h, 'sc', 'user-c', 0);
+    await h.p.sessions.touch('sa');
+    const ids = async (query: string) =>
+      (
+        (await request(h.app).post(`/service/backoffice/threads${query}`).set(admin).send({}))
+          .body.data as Array<{ sessionId: string }>
+      ).map((t) => t.sessionId);
+    expect(await ids('')).toEqual(['sc', 'sb', 'sa']);
+    expect(await ids('?sort=lastModifiedAt')).toEqual(['sa', 'sc', 'sb']);
+    expect(await ids('?sort=bogus')).toEqual(['sc', 'sb', 'sa']);
+  });
+
   it('shapes a thread and carries the unverified label for display', async () => {
     const h = makeFeedbackHarness();
     await seed(h, 'sa', 'user-a', 1, { userLabel: 'Alice' });

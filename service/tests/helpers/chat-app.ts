@@ -41,6 +41,7 @@ export const makeChatApp = (o: {
   registry: ToolSourceRegistry;
   turns: Array<Chunk[] | (() => Chunk[] | ReadableStream<Chunk>)>;
   runTurnDigest?: ChatControllerDeps['runTurnDigest'];
+  runTurnDigestBeforeClose?: ChatControllerDeps['runTurnDigestBeforeClose'];
 }): ChatApp => {
   const { p } = makePersistence();
   const services = createServices(p);
@@ -61,7 +62,10 @@ export const makeChatApp = (o: {
     startBudget,
     fakeAuth,
     loadSession,
-    createSendAiChatMessage(o.registry, { runTurnDigest })
+    createSendAiChatMessage(o.registry, {
+      runTurnDigest,
+      runTurnDigestBeforeClose: o.runTurnDigestBeforeClose,
+    })
   );
   app.use(errorMiddleware);
   return { app, services, model, digests };

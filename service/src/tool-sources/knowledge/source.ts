@@ -55,6 +55,8 @@ export const knowledgeToolSource: ToolSource = {
   description:
     'Official commercetools documentation search plus GraphQL/REST schemata and request validators; use it for API usage, data-model questions and to validate generated queries.',
   kind: 'core',
+  routingHints:
+    'Keywords: documentation, API, schema, graphql, openapi, oas, validate, query, mutation, how to, error help, what is, explain API.',
   order: 20,
   isEnabled: async () => true,
   getTools: async (ctx): Promise<ToolSet> => {

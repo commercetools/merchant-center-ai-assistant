@@ -55,6 +55,10 @@ export function backofficeController(getService: () => BackofficeService) {
         limit: parseIntParam(req.query.limit),
         offset: parseIntParam(req.query.offset),
         includeMessages: req.query.messages !== 'false',
+        // Optional `?sort=lastModifiedAt`; any other value keeps the default (createdAt).
+        ...(req.query.sort === 'lastModifiedAt'
+          ? { sortBy: 'lastModifiedAt' as const }
+          : {}),
       });
       ok(res, page.items, 200, { pagination: page.pagination });
     } catch (error) {

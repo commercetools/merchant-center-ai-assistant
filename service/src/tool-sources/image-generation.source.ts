@@ -4,7 +4,9 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-import { ToolLoopAgent, type ModelMessage, type UIMessage } from 'ai';
+import { ToolLoopAgent, tool, type ModelMessage, type UIMessage } from 'ai';
+import type { ToolResultOutput } from '@ai-sdk/provider-utils';
+import { z } from 'zod';
 import { AGENT_META } from '../agents/agent-keys';
 import { getImageGenerationPrompt } from '../agents/prompts';
 import {
@@ -82,6 +84,55 @@ export const uploadGeneratedImage = async (
 };
 
 /**
+ * What the model sees of a finished image generation: the last text and every generated image
+ * that is still a base64 `data:` URL (the history loader converts stored `/files/...` images
+ * to data URLs first), so an earlier generated image can be edited. Any other URL is never
+ * sent to the model.
+ */
+export const imageToModelOutput = ({
+  output,
+}: {
+  output: UIMessage | undefined;
+}): ToolResultOutput => {
+  const parts = (output?.parts ?? []) as FilePartLike[];
+  const texts = (output?.parts ?? []).filter(
+    (part): part is Extract<UIMessage['parts'][number], { type: 'text' }> =>
+      part.type === 'text'
+  );
+  const text = texts[texts.length - 1]?.text ?? 'Task completed.';
+  const files: Array<{
+    type: 'file';
+    mediaType: string;
+    data: { type: 'data'; data: string };
+  }> = [];
+  for (const part of parts) {
+    if (part.type !== 'file' || !part.url || !part.mediaType) continue;
+    const match = /^data:[^;,]*;base64,(.*)$/s.exec(part.url);
+    if (!match || !part.mediaType.startsWith('image/')) continue;
+    files.push({
+      type: 'file',
+      mediaType: part.mediaType,
+      data: { type: 'data', data: match[1] },
+    });
+  }
+  if (files.length === 0) return { type: 'text', value: text };
+  return { type: 'content', value: [{ type: 'text', text }, ...files] };
+};
+
+/**
+ * Tool shape used ONLY to convert stored history: lets `convertToModelMessages` apply
+ * `imageToModelOutput` to earlier `tool-imageGeneration` parts. Never executed.
+ */
+export const imageGenerationHistoryTools = {
+  [IMAGE_GENERATION_TOOL]: tool({
+    description: AGENT_META.imageGeneration.description,
+    inputSchema: z.object({ task: z.string() }),
+    toModelOutput: ({ output }) =>
+      imageToModelOutput({ output: output as UIMessage | undefined }),
+  }),
+};
+
+/**
  * The image generation subagent: the model itself produces the image (multi-modal output), so
  * the child has no tools. `getModel('image')` is a language model; no provider options are
  * passed on purpose (image-model options such as aspectRatio are not language-model options
@@ -103,6 +154,7 @@ export const imageGenerationAgent: AgentDefinition = {
     return tokens > IMAGE_HISTORY_TOKEN_LIMIT ? [] : messages;
   },
   processMessage: uploadGeneratedImage,
+  toModelOutput: imageToModelOutput,
 };
 
 /**
@@ -115,6 +167,8 @@ export const imageGenerationSource: ToolSource = {
   description:
     'Generates and edits images from a description. Give it a clear, complete task.',
   kind: 'core',
+  routingHints:
+    'Keywords: generate image, create image, make image, picture, photo, edit image, modify image, image generation, draw, illustration.',
   order: 130,
   isEnabled: async () => getImageUploader() !== undefined,
   getTools: async (ctx) => ({

@@ -5,7 +5,7 @@
  */
 
 /**
- * Export all agent prompts
+ * Export all prompts
  */
 export { getCommercetoolsPrompt } from './commercetools.prompt';
 export { getContentstackPrompt } from './contentstack.prompt';

@@ -8,7 +8,7 @@ import type { ToolContext } from '../../tool-sources/types';
 import { getBaseRules, getReturnFormatSection } from './base.prompt';
 
 /**
- * System prompt for the stripe agent
+ * Prompt fragment of the stripe tool group
  * Handles payments, invoices, subscriptions, and billing
  */
 export const getStripePrompt = (context: ToolContext): string => {

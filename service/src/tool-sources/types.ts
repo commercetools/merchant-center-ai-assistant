@@ -41,6 +41,11 @@ export interface ToolContext {
 /** What a source shows in the per-session tools menu. */
 export interface MenuEntry {
   toolNames: string[];
+  /**
+   * Names in `toolNames` that no tool backs in the pinned toolkit version (the switch would
+   * change nothing). They stay in the menu and are marked `available: false` in the response.
+   */
+  unavailableToolNames?: string[];
 }
 
 /**
@@ -59,6 +64,11 @@ export interface ToolSource {
   readonly displayName: string;
   /** One line shown to the orchestrator in the generated preamble. Optional. */
   readonly description?: string;
+  /**
+   * Optional routing hints for the generated preamble: keywords that point to this source and
+   * prerequisites such as "fetch the data first". Replaces the legacy keyword table.
+   */
+  readonly routingHints?: string;
   /**
    * `core`: always-on built-in tools. `integration`: an optional external data source; only
    * integrations count as "connected sources" for the suggestions prompt. Omitted = not an

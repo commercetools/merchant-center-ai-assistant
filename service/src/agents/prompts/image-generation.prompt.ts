@@ -40,7 +40,7 @@ You generate and edit images based on user descriptions and requests.
 - Handle complex scene compositions
 - Apply specific artistic styles when requested
 
-${getBaseRules(context.locale)}
+${getBaseRules(context.locale, true)}
 
 <image_generation_rules>
   CRITICAL INSTRUCTIONS:

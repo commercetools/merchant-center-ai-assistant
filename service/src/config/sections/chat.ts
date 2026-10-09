@@ -4,7 +4,7 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-import { int } from '../parse';
+import { bool, int } from '../parse';
 import { SectionParser } from '../types';
 
 /** Connect times a request out after 5 minutes; keep 15 s of margin at the very least. */
@@ -16,7 +16,16 @@ export interface ChatConfig {
   requestBudgetMs: number;
   /** Part of the budget kept for the wrap-up step (soft deadline = budget - reserve). */
   finalizeReserveMs: number;
+  /**
+   * Fallback for a runtime that freezes CPU once the response has closed (design R-G1): the
+   * turn digest then runs BEFORE the stream closes, for at most `DIGEST_BEFORE_CLOSE_CAP_MS`.
+   * Off by default: the digest runs detached after the answer (the answer is never delayed).
+   */
+  digestBeforeClose: boolean;
 }
+
+/** Upper bound the stream close waits for the digest when `digestBeforeClose` is on. */
+export const DIGEST_BEFORE_CLOSE_CAP_MS = 3_000;
 
 /**
  * The chat stream's time budget (change H, capability request-time-budget).
@@ -55,5 +64,15 @@ export const parseChat: SectionParser<ChatConfig> = (env) => {
     );
   }
 
-  return { value: { requestBudgetMs, finalizeReserveMs }, errors };
+  const digestBeforeClose = bool(
+    env,
+    'CHAT_DIGEST_BEFORE_CLOSE',
+    false,
+    errors
+  );
+
+  return {
+    value: { requestBudgetMs, finalizeReserveMs, digestBeforeClose },
+    errors,
+  };
 };
