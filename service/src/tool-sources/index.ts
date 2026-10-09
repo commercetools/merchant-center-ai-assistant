@@ -10,6 +10,7 @@ import { bigquerySource } from '../analytics/tools/bigquery.source';
 import { entityLinkSource } from './entity-link.source';
 import { exportSource } from './export.source';
 import { imageGenerationSource } from './image-generation.source';
+import { commercetoolsToolSource } from '../identity-mcp/tool-source';
 import { createToolSourceRegistry } from './registry';
 import { thirdPartyToolSources } from './third-party';
 import type { ToolSource } from './types';
@@ -54,6 +55,7 @@ registerToolSource(nimbusSource);
 // L: SQL analytics over offloaded tool results (tools are created per request).
 registerToolSource(bigquerySource);
 registerToolSource(...thirdPartyToolSources); // J: Knowledge, Contentstack, Algolia, Stripe
+registerToolSource(commercetoolsToolSource); // I
 
 /*
  * Composition. A new tool source is one file plus one line here.

@@ -25,6 +25,26 @@ export interface TokenStore {
   /** `'stale-ignored'` when a strictly newer grant is already stored. */
   putTokens(r: IdentityTokenRecord): Promise<'written' | 'stale-ignored'>;
   deleteTokens(userId: string): Promise<void>;
+  /** Like `getTokens`, plus the object version for a later compare-and-delete (change I). */
+  getTokensWithVersion(
+    userId: string
+  ): Promise<{ record: IdentityTokenRecord; version: number } | null>;
+  /**
+   * Compare-and-delete: only deletes the object when it still has `version`. `conflict` means
+   * somebody wrote a newer record meanwhile; `absent` means there was nothing to delete.
+   */
+  deleteTokensIfVersion(
+    userId: string,
+    version: number
+  ): Promise<'deleted' | 'conflict' | 'absent'>;
+  /**
+   * Deletes every token record (unbind); returns how many were deleted. `beforeDelete` runs
+   * for each record just before it is deleted (best effort: its failures are ignored), so the
+   * caller can revoke the refresh token at the authorization server.
+   */
+  deleteAllTokens(
+    beforeDelete?: (record: IdentityTokenRecord) => Promise<void>
+  ): Promise<number>;
   /**
    * `encryptedVerifier` must already be encrypted with `aad = stateKey(state)`: this store
    * never sees plaintext secrets.
@@ -32,7 +52,10 @@ export interface TokenStore {
   createAuthState(r: IdentityAuthStateRecord): Promise<void>;
   /** Exactly one of several simultaneous claims gets `claimed`. */
   claimAuthState(state: string): Promise<ClaimResult>;
-  sweepExpiredAuthStates(o?: { olderThanMs?: number; max?: number }): Promise<number>;
+  sweepExpiredAuthStates(o?: {
+    olderThanMs?: number;
+    max?: number;
+  }): Promise<number>;
 }
 
 const SWEEP_EVERY_MS = 60_000;
@@ -46,11 +69,79 @@ export class GatewayTokenStore implements TokenStore {
   ) {}
 
   async getTokens(userId: string): Promise<IdentityTokenRecord | null> {
-    const obj = await this.deps.gw.get(this.deps.c.tokens(), assertSafeId(userId));
+    const obj = await this.deps.gw.get(
+      this.deps.c.tokens(),
+      assertSafeId(userId)
+    );
     return obj ? tokenFromValue(obj.value) : null;
   }
 
-  async putTokens(r: IdentityTokenRecord): Promise<'written' | 'stale-ignored'> {
+  async getTokensWithVersion(
+    userId: string
+  ): Promise<{ record: IdentityTokenRecord; version: number } | null> {
+    const obj = await this.deps.gw.get(
+      this.deps.c.tokens(),
+      assertSafeId(userId)
+    );
+    return obj
+      ? { record: tokenFromValue(obj.value), version: obj.version }
+      : null;
+  }
+
+  async deleteTokensIfVersion(
+    userId: string,
+    version: number
+  ): Promise<'deleted' | 'conflict' | 'absent'> {
+    try {
+      const gone = await this.deps.gw.delete(
+        this.deps.c.tokens(),
+        assertSafeId(userId),
+        { ifVersion: version }
+      );
+      return gone ? 'deleted' : 'absent';
+    } catch (e) {
+      if (e instanceof ConflictError) return 'conflict';
+      throw e;
+    }
+  }
+
+  async deleteAllTokens(
+    beforeDelete?: (record: IdentityTokenRecord) => Promise<void>
+  ): Promise<number> {
+    const container = this.deps.c.tokens();
+    let total = 0;
+    // Each pass deletes what it read, so the next pass sees the following records. The
+    // bound stops a pathological loop (a delete that silently does nothing).
+    for (let pass = 0; pass < 1000; pass++) {
+      const page = await this.deps.gw.query(container, {
+        sort: { field: 'createdAt', dir: 'asc' },
+        limit: 100,
+      });
+      if (page.results.length === 0) return total;
+      const deleted = await mapBounded(
+        page.results,
+        this.deps.concurrency,
+        async (r) => {
+          if (beforeDelete) {
+            try {
+              await beforeDelete(tokenFromValue(r.value));
+            } catch {
+              // Best effort by contract: the record is deleted regardless.
+            }
+          }
+          return this.deps.gw.delete(container, r.key);
+        }
+      );
+      const n = deleted.filter((d) => d !== null).length;
+      total += n;
+      if (n === 0) return total;
+    }
+    return total;
+  }
+
+  async putTokens(
+    r: IdentityTokenRecord
+  ): Promise<'written' | 'stale-ignored'> {
     const result = await updateWithRetry<Record<string, unknown>>(
       this.deps.gw,
       this.deps.c.tokens(),
@@ -74,11 +165,16 @@ export class GatewayTokenStore implements TokenStore {
       throw new InvalidIdError('Invalid state');
     }
     this.maybeSweep();
-    await this.deps.gw.put(this.deps.c.states(), stateKey(r.state), stateToValue(r));
+    await this.deps.gw.put(
+      this.deps.c.states(),
+      stateKey(r.state),
+      stateToValue(r)
+    );
   }
 
   async claimAuthState(state: string): Promise<ClaimResult> {
-    if (typeof state !== 'string' || state === '') return { outcome: 'unknown' };
+    if (typeof state !== 'string' || state === '')
+      return { outcome: 'unknown' };
     const key = stateKey(state);
     const container = this.deps.c.states();
     const obj = await this.deps.gw.get(container, key);
@@ -87,7 +183,9 @@ export class GatewayTokenStore implements TokenStore {
     // Delete-with-version is the single atomic claim: whoever deletes it owns it.
     let won;
     try {
-      won = await this.deps.gw.delete(container, key, { ifVersion: obj.version });
+      won = await this.deps.gw.delete(container, key, {
+        ifVersion: obj.version,
+      });
     } catch (e) {
       if (e instanceof ConflictError) return { outcome: 'unknown' };
       throw e;
@@ -124,7 +222,9 @@ export class GatewayTokenStore implements TokenStore {
     if (now - this.lastSweepAt < SWEEP_EVERY_MS) return;
     this.lastSweepAt = now;
     this.sweepExpiredAuthStates().catch((e: unknown) => {
-      logger.warn(`persistence: auth state sweep failed (${(e as Error).name})`);
+      logger.warn(
+        `persistence: auth state sweep failed (${(e as Error).name})`
+      );
     });
   }
 }

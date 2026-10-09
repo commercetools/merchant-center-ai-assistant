@@ -6,6 +6,7 @@
 
 import { Router } from 'express';
 import { createFilesRouter } from '../storage/files-route';
+import { identityMcpRouter } from '../identity-mcp/routes';
 import { verifyMcSession } from '../middleware/mc-session.middleware';
 import { aiChatRouter } from './ai-chat.route';
 import { backofficeRouter } from './backoffice.route';
@@ -33,3 +34,5 @@ serviceRouter.use('/backoffice', backofficeRouter);
 serviceRouter.use('/files', verifyMcSession, createFilesRouter());
 serviceRouter.use('/mcp', verifyMcSession, mcpProvidersRouter); // J
 // I..M mount their routers here.
+serviceRouter.use('/managed-mcp-identity', identityMcpRouter); // I
+// J..M mount their routers here.
