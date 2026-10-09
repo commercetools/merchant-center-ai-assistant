@@ -5,9 +5,10 @@
  */
 
 import { Router } from 'express';
+import { statusRouter } from './status.route';
 
+/** Mounted at /service in app.ts; MUST equal `endpoint` in connect.yaml. */
 export const serviceRouter = Router();
 
-serviceRouter.get('/status', (_req, res) => {
-  res.status(200).json({ status: 'ok' });
-});
+serviceRouter.use('/', statusRouter);
+// D..N mount their routers here.

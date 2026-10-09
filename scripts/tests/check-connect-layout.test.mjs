@@ -38,6 +38,7 @@ function canonical() {
         },
         configuration: {
           standardConfiguration: [
+            k('CTP_REGION', { required: true }),
             k('CLOUD_IDENTIFIER', { default: 'gcp-us' }),
             k('MC_AUDIENCE', { required: false }),
             k('GCP_PROJECT_ID', { required: false }),

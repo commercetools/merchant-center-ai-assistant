@@ -4,10 +4,30 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-import app from './app';
+import { AppConfig, readConfiguration } from './config';
+import { createApp } from './app';
+import { logger } from './utils/logger.utils';
 
-const PORT = Number(process.env.PORT) || 8080;
+let config: AppConfig;
+try {
+  config = readConfiguration();
+} catch (error) {
+  logger.error((error as Error).message);
+  process.exit(1);
+}
 
-app.listen(PORT, () => {
-  process.stdout.write(`service listening on ${PORT}\n`);
+if (config.auth.adminUserIds.length === 0) {
+  logger.warn('ADMIN_USER_IDS is empty: no administrator');
+}
+for (const warning of config.providers.warnings) {
+  logger.warn(warning);
+}
+
+const server = createApp(config).listen(config.server.port, () => {
+  logger.info(`service listening on ${config.server.port}`);
+});
+
+// Connect stops instances with SIGTERM.
+process.on('SIGTERM', () => {
+  server.close(() => process.exit(0));
 });

@@ -31,13 +31,13 @@ export const INJECTED_KEYS = [
   'CTP_CLIENT_SECRET',
   'CTP_PROJECT_KEY',
   'CTP_SCOPE',
-  'CTP_REGION',
 ];
 
 const PLACEHOLDER_URL = 'https://not-configured.invalid/service';
 
 // key -> expectation. `default` = exact default value; `optional` = required must be false.
 const SERVICE_STANDARD = {
+  CTP_REGION: { required: true },
   CLOUD_IDENTIFIER: { default: 'gcp-us' },
   MC_AUDIENCE: { optional: true },
   GCP_PROJECT_ID: { optional: true },

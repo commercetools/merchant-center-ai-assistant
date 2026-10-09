@@ -2,8 +2,8 @@
 #
 # 1. inheritAs: the top-level `inheritAs.apiClient` block at the end of this file makes Connect generate ONE
 #    API client for the whole connector and inject exactly CTP_API_URL, CTP_AUTH_URL, CTP_CLIENT_ID,
-#    CTP_CLIENT_SECRET, CTP_PROJECT_KEY and CTP_SCOPE. Never declare these keys (or CTP_REGION, which is NOT
-#    injected) under `configuration`.
+#    CTP_CLIENT_SECRET, CTP_PROJECT_KEY and CTP_SCOPE. Never declare these six keys under `configuration`.
+#    CTP_REGION is NOT injected: the service entry declares it as a standard configuration key.
 # 2. CONNECT_SERVICE_URL (the public URL of a service) exists only inside the postDeploy / preUndeploy scripts,
 #    not in the running service. The service URL is therefore unknown until the first deployment, so
 #    MC_AUDIENCE and CHAT_SERVICE_ENDPOINT_URL are set by a configuration redeploy (change U, two-phase deploy).
@@ -18,6 +18,9 @@ deployAs:
       preUndeploy: npm ci && npm run build && npm run connector:pre-undeploy
     configuration:
       standardConfiguration:
+        - key: CTP_REGION
+          description: commercetools API region of the project in API-host spelling (us-central1.gcp, europe-west1.gcp, australia-southeast1.gcp, eu-central-1.aws or us-east-2.aws). Connect does not inject it
+          required: true
         - key: CLOUD_IDENTIFIER
           description: Merchant Center API cloud identifier of the target project (for example gcp-us); used to pick the JWKS issuer when the gateway header is absent
           default: 'gcp-us'
