@@ -77,6 +77,8 @@ export class BackofficeService {
     limit?: number;
     offset?: number;
     includeMessages?: boolean;
+    /** `lastModifiedAt`: most recently active first (TA-12); default `createdAt`. */
+    sortBy?: 'createdAt' | 'lastModifiedAt';
   }): Promise<{ items: BackofficeThread[]; pagination: Pagination }> {
     const limit = clamp(input.limit, 1, MAX_THREAD_PAGE, DEFAULT_THREAD_PAGE);
     const offset = clamp(input.offset, 0, MAX_OFFSET, 0);
@@ -89,6 +91,7 @@ export class BackofficeService {
     const page = await this.deps.sessions.listAll({
       limit,
       offset,
+      ...(input.sortBy ? { sortBy: input.sortBy } : {}),
       ...(f.userId ? { userId: f.userId } : {}),
       ...(createdBefore ? { createdBefore } : {}),
       ...(createdAfter ? { createdAfter } : {}),

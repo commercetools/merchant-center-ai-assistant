@@ -121,6 +121,22 @@ describe('SessionStore', () => {
     );
   });
 
+  it('listAll sorts by lastModifiedAt on request: the most recently written session first (TA-12)', async () => {
+    const { p } = makePersistence();
+    await p.sessions.create(session('s1', 'u1'));
+    await p.sessions.create(session('s2', 'u1'));
+    await p.sessions.create(session('s3', 'u1'));
+    await p.sessions.touch('s1');
+    const byCreated = await p.sessions.listAll({ limit: 10 });
+    expect(byCreated.items.map((s) => s.id)).toEqual(['s3', 's2', 's1']);
+    const byModified = await p.sessions.listAll({
+      limit: 10,
+      sortBy: 'lastModifiedAt',
+    });
+    expect(byModified.items.map((s) => s.id)).toEqual(['s1', 's3', 's2']);
+    expect(byModified.total).toBe(3);
+  });
+
   it('deletes the object only with delete, everything with the cascade', async () => {
     const { p } = makePersistence();
     await p.sessions.create(session('s1', 'u'));
