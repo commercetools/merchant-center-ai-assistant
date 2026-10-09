@@ -11,13 +11,23 @@ import {
   createLifecycleApiRoot,
   statusOf,
 } from './checks/custom-object-probe';
+import { containers } from '../persistence/names';
 import { LifecycleEnv, readLifecycleEnv } from './env';
 
 /**
  * Containers that hold user data. They are only reported, never touched (design D-U10).
- * TODO(E): take the names from change E's container constants once it is merged.
+ * The names come from change E's container constants (per-session message and feedback
+ * snapshot containers are created per id and are not listed here).
  */
-export const DATA_CONTAINERS = ['ai-assistant-sessions', 'ai-assistant-settings'] as const;
+const names = containers();
+export const DATA_CONTAINERS: readonly string[] = [
+  names.settings(),
+  names.sessions(),
+  names.tokens(),
+  names.states(),
+  names.feedback(),
+  names.suggestions(),
+];
 
 export interface PreUndeployDeps {
   readEnv: () => LifecycleEnv;
@@ -36,7 +46,9 @@ export async function run(deps: PreUndeployDeps): Promise<number> {
   try {
     env = deps.readEnv();
   } catch {
-    log('pre-undeploy: warning: the lifecycle environment is incomplete; nothing was cleaned up');
+    log(
+      'pre-undeploy: warning: the lifecycle environment is incomplete; nothing was cleaned up'
+    );
     return 0;
   }
 

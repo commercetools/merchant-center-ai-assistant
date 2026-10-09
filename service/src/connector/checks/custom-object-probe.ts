@@ -10,6 +10,9 @@ import {
 } from '@commercetools/platform-sdk';
 import { buildClient } from '../../client/build.client';
 import { Secret } from '../../config';
+import { CustomObjectGateway } from '../../persistence/gateway/custom-object.gateway';
+import { UnavailableError } from '../../persistence/gateway/errors';
+import type { RetryOptions } from '../../persistence/gateway/retry';
 import type { LifecycleEnv } from '../env';
 
 export const PROBE_CONTAINER = 'ai-assistant-lifecycle';
@@ -28,9 +31,10 @@ export function statusOf(error: unknown): number | undefined {
  * API root for the lifecycle scripts, built from the lifecycle environment with the service's
  * own client builder (change C) instead of readConfiguration(): the scripts must not demand
  * keys they do not use (design D-U9).
- * TODO(E): switch the probe to change E's persistence gateway once it is merged.
  */
-export function createLifecycleApiRoot(env: LifecycleEnv): ByProjectKeyRequestBuilder {
+export function createLifecycleApiRoot(
+  env: LifecycleEnv
+): ByProjectKeyRequestBuilder {
   const client = buildClient({
     projectKey: env.projectKey,
     region: '',
@@ -41,36 +45,48 @@ export function createLifecycleApiRoot(env: LifecycleEnv): ByProjectKeyRequestBu
     apiUrl: env.api.apiUrl,
     authUrl: env.api.authUrl,
   });
-  return createApiBuilderFromCtpClient(client).withProjectKey({ projectKey: env.projectKey });
+  return createApiBuilderFromCtpClient(client).withProjectKey({
+    projectKey: env.projectKey,
+  });
 }
 
+const failed = (error: unknown, what: string): ProbeResult => ({
+  ok: false,
+  reason:
+    error instanceof UnavailableError
+      ? `${what} failed (commercetools unavailable)`
+      : `${what} failed (HTTP ${statusOf(error) ?? 'unknown'})`,
+});
+
 /**
- * Create-or-update, read, delete a throw-away Custom Object: proves the generated API client
- * can write. Idempotent: the object is removed again (a 404 on delete is fine).
+ * Create-or-update, read, delete a throw-away Custom Object through change E's gateway
+ * (which owns timeout and transport retries): proves the generated API client can write.
+ * Idempotent: the object is removed again (a missing object on delete is fine).
  */
-export async function runProbe(apiRoot: ByProjectKeyRequestBuilder): Promise<ProbeResult> {
-  const address = { container: PROBE_CONTAINER, key: PROBE_KEY };
+export async function runProbe(
+  apiRoot: ByProjectKeyRequestBuilder,
+  retry?: RetryOptions
+): Promise<ProbeResult> {
+  const gateway = new CustomObjectGateway(apiRoot, retry);
   try {
-    await apiRoot
-      .customObjects()
-      .post({ body: { ...address, value: { checkedAt: new Date().toISOString() } } })
-      .execute();
-    await apiRoot.customObjects().withContainerAndKey(address).get().execute();
+    await gateway.put(PROBE_CONTAINER, PROBE_KEY, {
+      checkedAt: new Date().toISOString(),
+    });
+    await gateway.get(PROBE_CONTAINER, PROBE_KEY);
   } catch (error) {
     if (statusOf(error) === 403) {
       return {
         ok: false,
-        reason: 'missing manage_key_value_documents scope on the generated API client',
+        reason:
+          'missing manage_key_value_documents scope on the generated API client',
       };
     }
-    return { ok: false, reason: `custom object probe failed (HTTP ${statusOf(error) ?? 'unknown'})` };
+    return failed(error, 'custom object probe');
   }
   try {
-    await apiRoot.customObjects().withContainerAndKey(address).delete().execute();
+    await gateway.delete(PROBE_CONTAINER, PROBE_KEY);
   } catch (error) {
-    if (statusOf(error) !== 404) {
-      return { ok: false, reason: `custom object probe could not be removed (HTTP ${statusOf(error) ?? 'unknown'})` };
-    }
+    return failed(error, 'custom object probe removal');
   }
   return { ok: true };
 }
