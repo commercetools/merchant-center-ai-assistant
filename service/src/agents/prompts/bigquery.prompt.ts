@@ -14,7 +14,7 @@ import {
 const QUERY_AGGREGATED_DATA_TOOL = 'query_aggregated_data';
 
 /**
- * System prompt for the bigquery agent
+ * Prompt fragment of the bigquery tool group
  * Handles SQL analytics, data aggregation, and querying temporary tables
  */
 export const getBigqueryPrompt = (context: ToolContext): string => {
@@ -40,8 +40,8 @@ ${getBaseRules(context.locale)}
 <workflow>
   1. FIRST: Use get_table_info to understand the table schema
   2. THEN: Write and execute SQL queries with ${QUERY_AGGREGATED_DATA_TOOL}
-  3. If you need to visualize results, switch to the visualize agent
-  4. If you need to export results, switch to the export agent
+  3. To visualize the results, use the visualize_data tool with the query result
+  4. To export the results, use the export_data tool with the query result
 </workflow>
 
 <sql_best_practices>

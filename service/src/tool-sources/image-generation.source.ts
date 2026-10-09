@@ -115,6 +115,8 @@ export const imageGenerationSource: ToolSource = {
   description:
     'Generates and edits images from a description. Give it a clear, complete task.',
   kind: 'core',
+  routingHints:
+    'Keywords: generate image, create image, make image, picture, photo, edit image, modify image, image generation, draw, illustration.',
   order: 130,
   isEnabled: async () => getImageUploader() !== undefined,
   getTools: async (ctx) => ({

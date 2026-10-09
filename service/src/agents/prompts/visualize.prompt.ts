@@ -8,7 +8,7 @@ import type { ToolContext } from '../../tool-sources/types';
 import { getBaseRules, getReturnFormatSection } from './base.prompt';
 
 /**
- * System prompt for the visualize agent
+ * Prompt fragment of the visualize tool group
  * Handles creating charts, graphs, and data visualizations
  */
 export const getVisualizePrompt = (context: ToolContext): string => {

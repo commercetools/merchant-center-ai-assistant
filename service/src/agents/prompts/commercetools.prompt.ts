@@ -9,7 +9,7 @@ import { getBaseRules, getReturnFormatSection } from './base.prompt';
 import { getImageGenerationRules } from './image-generation.prompt';
 
 /**
- * System prompt for the commercetools agent
+ * Prompt fragment of the commercetools tool group
  * Handles all commercetools commerce operations and API documentation lookups.
  */
 export const getCommercetoolsPrompt = (

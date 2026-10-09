@@ -21,6 +21,8 @@ export const bigquerySource: ToolSource = {
   description:
     'SQL analytics over tool results stored in this conversation (tables named in the conversation).',
   kind: 'core',
+  routingHints:
+    'Keywords: SQL, query, aggregate, sum, count, average, group by, join, analyze data, BigQuery.',
   order: 70,
   isEnabled: async (ctx) =>
     ctx.config.gcp.serviceAccount !== undefined &&

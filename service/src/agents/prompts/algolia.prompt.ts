@@ -8,7 +8,7 @@ import type { ToolContext } from '../../tool-sources/types';
 import { getBaseRules, getReturnFormatSection } from './base.prompt';
 
 /**
- * System prompt for the algolia agent
+ * Prompt fragment of the algolia tool group
  * Handles search index operations and configuration
  */
 export const getAlgoliaPrompt = (context: ToolContext): string => {

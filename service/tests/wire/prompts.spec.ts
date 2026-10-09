@@ -74,6 +74,27 @@ describe('source prompts', () => {
     }
   );
 
+  it.each(Object.keys(builders).filter((n) => n !== 'imageGeneration'))(
+    '%s has no stale sub-agent wording (the orchestrator is flat)',
+    (name) => {
+      const ctx = makeToolContext();
+      contexts.push(ctx);
+      const text = builders[name](ctx).toLowerCase();
+      expect(text).not.toContain('sub-agent');
+      expect(text).not.toContain('main agent');
+      expect(text).not.toContain('switch to');
+      expect(text).not.toContain('export agent');
+      expect(text).not.toContain('visualize agent');
+    }
+  );
+
+  it('only the delegated image agent reports errors back to its caller', () => {
+    const ctx = makeToolContext();
+    contexts.push(ctx);
+    expect(getImageGenerationPrompt(ctx)).toContain('calling agent');
+    expect(getBigqueryPrompt(ctx)).not.toContain('calling agent');
+  });
+
   it('the commercetools prompt embeds the optional developer tips (change J)', () => {
     const ctx = makeToolContext();
     contexts.push(ctx);

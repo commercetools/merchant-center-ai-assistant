@@ -36,6 +36,8 @@ export const algoliaToolSource: ToolSource = {
   description:
     'Algolia search indices: run queries, inspect and configure indices, facets and search analytics.',
   kind: 'integration',
+  routingHints:
+    'Keywords: search, index, algolia, facet, filter, ranking, search configuration.',
   order: 40,
   isEnabled: async (ctx) => isConfigured(ctx),
   getTools: async (ctx): Promise<ToolSet> => {

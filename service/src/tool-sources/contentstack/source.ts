@@ -48,6 +48,8 @@ export const contentstackToolSource: ToolSource = {
   description:
     'Contentstack CMS: read, create, update, delete and publish content types, entries and global fields.',
   kind: 'integration',
+  routingHints:
+    'Keywords: content, CMS, entry, content type, publish, asset, article, blog, page content.',
   order: 30,
   isEnabled: async (ctx) => isConfigured(ctx),
   getTools: async (ctx): Promise<ToolSet> => {

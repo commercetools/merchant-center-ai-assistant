@@ -83,6 +83,8 @@ export const commercetoolsToolSource: ToolSource = {
     'Reads and manages commerce data (products, orders, customers, carts, inventory, discounts) ' +
     "of the user's Project. The tools offered depend on the user's Merchant Center permissions.",
   kind: 'core',
+  routingHints:
+    'Keywords: product, order, customer, cart, inventory, discount, price, category, sku, variant, shipping, tax. Fetch commerce data here first before charting or exporting it.',
   order: 10,
 
   isEnabled: async (ctx) => Boolean(await depsOf(ctx).stores.binding.get()),

@@ -18,9 +18,11 @@ export const getFormattedDate = (locale: string): string => {
 };
 
 /**
- * Base rules that apply to all agents
+ * Base rules that apply to every prompt. The orchestrator is flat: tool groups are called
+ * directly, so errors are recovered from in the same turn. Only the image generation agent
+ * is a real delegated sub-agent (`delegated: true`) that reports back to the orchestrator.
  */
-export const getBaseRules = (locale: string): string => `
+export const getBaseRules = (locale: string, delegated = false): string => `
 <rules>
   - Provide clear and concise answers
   - Be professional and helpful
@@ -31,8 +33,14 @@ export const getBaseRules = (locale: string): string => `
 </rules>
 
 <error_recovery>
-  You are a sub-agent so if a tool call fails or returns an error:
-  1. DO NOT give up immediately. return the error to the main agent.
+${
+  delegated
+    ? `  You are a delegated agent. If a tool call fails or returns an error:
+  1. DO NOT give up immediately. Return the error to the calling agent.`
+    : `  If a tool call fails or returns an error:
+  1. DO NOT give up immediately. Read the error, correct the arguments and retry, or use another suitable tool.
+  2. If it still fails, tell the user plainly what went wrong.`
+}
 </error_recovery>
 `;
 
@@ -50,7 +58,7 @@ export const getConfirmationSection = (updateTools: string[]): string => {
 };
 
 /**
- * Standard return format section
+ * Standard return format section: the final answer goes to the user.
  */
 export const getReturnFormatSection = (): string => `
 <return_format>
@@ -58,8 +66,7 @@ export const getReturnFormatSection = (): string => `
   ALWAYS use markdown formatting to make your response more readable.
 </return_format>
 
-IMPORTANT: When you have finished, write a clear summary of what you did as your final response.
-This summary will be returned to the main agent, so include all relevant information.
+IMPORTANT: When you have finished, write a clear final answer for the user that says what you did and includes all relevant information.
 Do not make up any information, only use the information provided by the tools.`;
 
 /**

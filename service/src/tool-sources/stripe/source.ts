@@ -120,6 +120,8 @@ export const stripeToolSource: ToolSource = {
   description:
     'Stripe payments: customers, invoices, subscriptions, refunds, disputes, payment links, prices, coupons, balance and Stripe documentation search.',
   kind: 'integration',
+  routingHints:
+    'Keywords: payment, invoice, subscription, billing, refund, charge, stripe, credit card.',
   order: 50,
   isEnabled: async (ctx) => isConfigured(ctx),
   getTools: async (ctx): Promise<ToolSet> => {

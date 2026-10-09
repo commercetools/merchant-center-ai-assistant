@@ -60,6 +60,11 @@ export interface ToolSource {
   /** One line shown to the orchestrator in the generated preamble. Optional. */
   readonly description?: string;
   /**
+   * Optional routing hints for the generated preamble: keywords that point to this source and
+   * prerequisites such as "fetch the data first". Replaces the legacy keyword table.
+   */
+  readonly routingHints?: string;
+  /**
    * `core`: always-on built-in tools. `integration`: an optional external data source; only
    * integrations count as "connected sources" for the suggestions prompt. Omitted = not an
    * integration.

@@ -8,7 +8,7 @@ import type { ToolContext } from '../../tool-sources/types';
 import { getBaseRules, getReturnFormatSection } from './base.prompt';
 
 /**
- * System prompt for the contentstack agent
+ * Prompt fragment of the contentstack tool group
  * Handles CMS content types, entries, and content management
  */
 export const getContentstackPrompt = (context: ToolContext): string => {

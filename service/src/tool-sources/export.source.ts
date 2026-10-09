@@ -16,6 +16,8 @@ export const exportSource: ToolSource = {
   description:
     'Exports data that was fetched first to a downloadable CSV file.',
   kind: 'core',
+  routingHints:
+    'Keywords: export, download, CSV, file, save data, get file. Prerequisite: fetch the data first with the commercetools or bigquery tools.',
   order: 120,
   isEnabled: async () => true,
   getTools: async () => ({ [EXPORT_DATA_TOOL]: tool(exportDataTool) }),
