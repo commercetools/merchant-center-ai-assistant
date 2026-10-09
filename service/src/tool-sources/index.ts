@@ -4,6 +4,7 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
+import { bigquerySource } from '../analytics/tools/bigquery.source';
 import { entityLinkSource } from './entity-link.source';
 import { exportSource } from './export.source';
 import { imageGenerationSource } from './image-generation.source';
@@ -43,6 +44,9 @@ registerToolSource(
   exportSource,
   imageGenerationSource
 );
+
+// L: SQL analytics over offloaded tool results (tools are created per request).
+registerToolSource(bigquerySource);
 
 /*
  * Composition. A new tool source is one file plus one line here.

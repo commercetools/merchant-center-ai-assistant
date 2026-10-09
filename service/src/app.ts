@@ -6,6 +6,7 @@
 
 import bodyParser from 'body-parser';
 import express, { Express } from 'express';
+import { installGcpImageUploader } from './analytics/register';
 import type { AppConfig } from './config';
 import CustomError from './errors/custom.error';
 import { initRequestContext } from './middleware/context.middleware';
@@ -20,6 +21,8 @@ import { logger } from './utils/logger.utils';
 export function createApp(config: AppConfig): Express {
   // The tool-source registry feeds the tools menu and the suggestions prompt (change G seams).
   installRegistryProviders(registry);
+  // Image generation is on whenever Google Cloud is configured (change L).
+  installGcpImageUploader(config);
 
   const app = express();
   app.disable('x-powered-by');
