@@ -16,6 +16,8 @@ public/
 .env
 .env.*
 !.env.example
+scripts/connect/.env.connect
+!.env.connect.example
 *.pem
 *.key
 *.p12
