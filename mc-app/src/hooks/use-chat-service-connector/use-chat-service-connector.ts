@@ -106,11 +106,9 @@ export const useChatServiceConnector = () => {
 
   const updateSessionTools = useCallback(
     (sessionId: string, tools: GroupedSessionTools[]) =>
-      request<UpdateSessionToolsResponse>(
-        'PUT',
-        `session/${sessionId}/tools`,
-        { tools }
-      ),
+      request<UpdateSessionToolsResponse>('PUT', `session/${sessionId}/tools`, {
+        tools,
+      }),
     [request]
   );
 

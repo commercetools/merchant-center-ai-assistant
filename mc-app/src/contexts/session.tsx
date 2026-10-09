@@ -14,12 +14,13 @@ import React, {
   useRef,
   ReactNode,
 } from 'react';
-import { useApplicationContext } from '@commercetools-frontend/application-shell-connectors';
 import { useChatServiceConnector } from '../hooks/use-chat-service-connector/use-chat-service-connector';
-import {
+import type {
+  ChatSession,
   GroupedSessionTools,
   SessionSummary,
 } from '../hooks/use-chat-service-connector/types';
+import { useCurrentUser } from '../hooks/use-current-user';
 import { useAuth } from './auth';
 import {
   clearStoredSessionId,
@@ -41,7 +42,7 @@ interface SessionContextValue {
    */
   refreshSessions: () => Promise<void>;
   createNewSession: () => Promise<void>;
-  getSessionDetails: () => Promise<any | null>;
+  getSessionDetails: () => Promise<ChatSession | null>;
   fetchSessionTools: () => Promise<void>;
   /**
    * Recover from a stored session id that no longer exists. Called by the messages read,
@@ -99,6 +100,8 @@ export type PendingPrompt = {
   nonce: number;
 };
 
+const DEFAULT_SESSION_TITLE = 'New chat';
+
 const SessionContext = createContext<SessionContextValue | undefined>(
   undefined
 );
@@ -114,13 +117,14 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
   autoCreateSession = true,
   sessionTitle,
 }) => {
-  const { userEmail } = useApplicationContext((context) => {
-    return {
-      userEmail: context.user?.email || 'anonymous',
-    };
-  });
+  // Display-only and unverified: sent in the JSON body of session creation so the
+  // backoffice can show who a conversation belongs to. It is never an identity: the
+  // service identifies the caller from the gateway token. `'anonymous'` is the display
+  // fallback of `useCurrentUser`, not a label worth storing.
+  const { email } = useCurrentUser();
+  const userLabel = email && email !== 'anonymous' ? email : undefined;
 
-  const { isAuthenticated, workspace } = useAuth();
+  const { isAuthenticated } = useAuth();
   const {
     createSession,
     getSession,
@@ -145,8 +149,7 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
   // Session ids already recovered from - see `resolveStaleSession`.
   const recoveredIds = useRef<Set<string>>(new Set());
 
-  // Shared with the bootstrap, which sends the remembered id so the router can resolve
-  // the session server-side - see utils/session-storage.ts.
+  // See utils/session-storage.ts.
   const saveSessionToStorage = writeStoredSessionId;
   const loadSessionFromStorage = readStoredSessionId;
   const clearSessionFromStorage = clearStoredSessionId;
@@ -167,68 +170,78 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
 
   const clearPendingPrompt = useCallback(() => setPendingPrompt(null), []);
 
-  // Fetch all sessions summary - internal method, not exposed
-  const getAllSessions = useCallback(async () => {
-    if (!isAuthenticated || !userEmail) return;
+  // Fetch all sessions summary. Resolves with the fresh list (so callers that need the
+  // list right now do not read a stale closure) or `null` when the read failed.
+  const loadAllSessions = useCallback(async (): Promise<
+    SessionSummary[] | null
+  > => {
+    if (!isAuthenticated) return null;
 
     try {
-      const response = await getAllSessionsSummary(userEmail);
+      const response = await getAllSessionsSummary();
       if (response.success) {
         setAllSessions(response.data);
+        return response.data;
       }
-    } catch (err) {
+    } catch {
+      // The drawer keeps the list it already has; the next refresh retries.
     }
-  }, [getAllSessionsSummary, userEmail, isAuthenticated]);
+    return null;
+  }, [getAllSessionsSummary, isAuthenticated]);
+
+  const getAllSessions = useCallback(async () => {
+    await loadAllSessions();
+  }, [loadAllSessions]);
 
   // Function to create a new session
   const createNewSession = useCallback(
     async (title?: string) => {
-      const response = await createSession(
-        {
-          title:
-            title ||
-            sessionTitle ||
-            `Chat Session ${new Date().toLocaleString()}`,
-          metadata: {
-            userAgent: navigator.userAgent,
-            timestamp: new Date().toISOString(),
-          },
-        },
-        userEmail
-      );
+      try {
+        const response = await createSession({
+          title: title || sessionTitle || DEFAULT_SESSION_TITLE,
+          ...(userLabel ? { userLabel } : {}),
+        });
 
-      if (response.success) {
-        saveSessionToStorage(response.data.id);
-        setSessionId(response.data.id);
-        // Refresh the sessions list after creating a new session
-        await getAllSessions();
-      } else {
-        setError('Failed to create chat session');
+        if (response.success) {
+          saveSessionToStorage(response.data.id);
+          setSessionId(response.data.id);
+          // Refresh the sessions list after creating a new session
+          await getAllSessions();
+        } else {
+          setError('Failed to create chat session');
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : 'Failed to create chat session'
+        );
       }
     },
     [
       createSession,
       sessionTitle,
-      userEmail,
+      userLabel,
       saveSessionToStorage,
       getAllSessions,
     ]
   );
 
   // Function to fetch the last session
+  // The service answers 404 when the caller has no session yet; any failure is handled
+  // the same way: start a new one.
   const fetchLastSession = useCallback(async () => {
     try {
-      const response = await getLastSession(userEmail);
+      const response = await getLastSession();
       if (!response.success) {
         throw new Error('Failed to fetch last session');
       }
       setSessionId(response.data.id);
       saveSessionToStorage(response.data.id);
       return response.data.id;
-    } catch (error) {
-      createNewSession();
+    } catch {
+      await createNewSession();
+      return undefined;
     }
-  }, [getLastSession, createNewSession, userEmail]);
+  }, [getLastSession, createNewSession, saveSessionToStorage]);
 
   /**
    * Adopt the stored session id WITHOUT a round trip, and let the messages read prove it.
@@ -243,25 +256,8 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
    */
   const initializeSessionFromStorage = useCallback(async () => {
     // Don't initialize session if not authenticated
-    if (!isAuthenticated) {
-      return;
-    }
+    if (!isAuthenticated) return;
 
-    // The bootstrap already resolved this: it was sent the remembered id and answered
-    // with that session if it still exists, or the most recent one if it does not. So
-    // there is nothing to look up and nothing to guess.
-    if (workspace) {
-      if (workspace.session) {
-        setSessionId(workspace.session.id);
-        saveSessionToStorage(workspace.session.id);
-      } else {
-        // The project has no sessions at all - first visit, or they were all deleted.
-        await createNewSession();
-      }
-      return;
-    }
-
-    // Older router, or its reads failed: resolve it here the way we used to.
     const storedSessionId = loadSessionFromStorage();
 
     if (storedSessionId) {
@@ -269,27 +265,16 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
       return;
     }
 
-    // Nothing stored: this is the only branch that still has to ask the router which
+    // Nothing stored: this is the only branch that still has to ask the service which
     // session to open, so it is the only one that shows a loading state.
     try {
       setIsLoading(true);
       setError(null);
       await fetchLastSession();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to initialize session'
-      );
     } finally {
       setIsLoading(false);
     }
-  }, [
-    isAuthenticated,
-    workspace,
-    saveSessionToStorage,
-    createNewSession,
-    loadSessionFromStorage,
-    fetchLastSession,
-  ]);
+  }, [isAuthenticated, loadSessionFromStorage, fetchLastSession]);
 
   /**
    * The stored id turned out not to exist - fall back to the most recent session.
@@ -328,12 +313,12 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
     if (!sessionId) return null;
 
     try {
-      const response = await getSession(sessionId, userEmail);
+      const response = await getSession(sessionId);
       return response.success ? response.data : null;
-    } catch (err) {
+    } catch {
       return null;
     }
-  }, [sessionId, getSession, userEmail]);
+  }, [sessionId, getSession]);
 
   // Fetch session tools
   const fetchSessionTools = useCallback(async () => {
@@ -341,15 +326,16 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
 
     try {
       setIsLoadingTools(true);
-      const response = await getSessionTools(sessionId, userEmail);
+      const response = await getSessionTools(sessionId);
       if (response.success) {
         setSessionTools(response.data);
       }
-    } catch (err) {
+    } catch {
+      // The tool menu stays as it was; opening it again retries.
     } finally {
       setIsLoadingTools(false);
     }
-  }, [sessionId, getSessionTools, userEmail]);
+  }, [sessionId, getSessionTools]);
 
   // Update session tools - now accepts grouped tools format
   const updateTools = useCallback(
@@ -358,16 +344,17 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
 
       try {
         setIsLoadingTools(true);
-        const response = await updateSessionTools(sessionId, userEmail, tools);
+        const response = await updateSessionTools(sessionId, tools);
         if (response.success) {
           setSessionTools(response.data);
         }
-      } catch (err) {
+      } catch {
+        // Not saved: the panel keeps its draft, the stored menu is unchanged.
       } finally {
         setIsLoadingTools(false);
       }
     },
-    [sessionId, updateSessionTools, userEmail]
+    [sessionId, updateSessionTools]
   );
 
   // Set current session and save to localStorage
@@ -383,36 +370,34 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
   const deleteSessionById = useCallback(
     async (sessionIdToDelete: string): Promise<boolean> => {
       try {
-        const response = await deleteSession(sessionIdToDelete, userEmail);
-        if (response.success) {
-          // Refresh the sessions list
-          await getAllSessions();
+        const response = await deleteSession(sessionIdToDelete);
+        if (!response.success) return false;
 
-          // If we deleted the current session, switch to the most recent one
-          if (sessionIdToDelete === sessionId) {
-            // Get updated sessions (excluding the deleted one)
-            const updatedSessions = allSessions.filter(
-              (s) => s.id !== sessionIdToDelete
-            );
-            if (updatedSessions.length > 0) {
-              // Switch to the most recent session (first in the list)
-              setCurrentSession(updatedSessions[0].id);
-            } else {
-              // No sessions left, create a new one
-              await createNewSession();
-            }
+        // Refresh the sessions list. The next session is picked from THIS list, not from
+        // the `allSessions` closure, which still contains the deleted one.
+        const refreshed = await loadAllSessions();
+
+        // If we deleted the current session, switch to the most recent one
+        if (sessionIdToDelete === sessionId) {
+          const remaining = (refreshed ?? allSessions).filter(
+            (s) => s.id !== sessionIdToDelete
+          );
+          if (remaining.length > 0) {
+            // The service sorts newest first.
+            setCurrentSession(remaining[0].id);
+          } else {
+            // No sessions left, create a new one
+            await createNewSession();
           }
-          return true;
         }
-        return false;
-      } catch (err) {
+        return true;
+      } catch {
         return false;
       }
     },
     [
       deleteSession,
-      userEmail,
-      getAllSessions,
+      loadAllSessions,
       sessionId,
       allSessions,
       setCurrentSession,
@@ -424,7 +409,7 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
     if (sessionId) {
       fetchSessionTools();
     }
-  }, [sessionId, userEmail, fetchSessionTools]);
+  }, [sessionId, fetchSessionTools]);
 
   // Initialize session on mount or when authentication changes
   // Only initialize if authenticated
@@ -439,20 +424,12 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
     initializeSessionFromStorage,
   ]);
 
-  /**
-   * The session list comes with the bootstrap; only fetch it when it did not.
-   *
-   * `refreshSessions()` still re-reads it after a turn (the digest renames the session a
-   * second or two later), so this is only about the opening state.
-   */
+  // The session list is read once when the app opens. `refreshSessions()` re-reads it
+  // after a turn (the digest renames the session a second or two later).
   useEffect(() => {
-    if (!isAuthenticated || !userEmail) return;
-    if (workspace) {
-      setAllSessions(workspace.sessions);
-      return;
-    }
+    if (!isAuthenticated) return;
     getAllSessions();
-  }, [isAuthenticated, userEmail, workspace, getAllSessions]);
+  }, [isAuthenticated, getAllSessions]);
 
   // Clear session when user logs out
   useEffect(() => {
