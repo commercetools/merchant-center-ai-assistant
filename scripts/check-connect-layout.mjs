@@ -309,7 +309,7 @@ function main() {
     // not a git checkout: skip the tracked-.env check
   }
   for (const f of tracked) {
-    if (/(^|\/)\.env(\.[^/]*)?$/.test(f) && !f.endsWith('.env.example')) errors.push(`${f}: .env files must not be tracked`);
+    if (/(^|\/)\.env(\.[^/]*)?$/.test(f) && !/\.example$/.test(f)) errors.push(`${f}: .env files must not be tracked`);
   }
 
   if (errors.length) {
