@@ -45,7 +45,7 @@
     "@commercetools-frontend/mc-scripts": "27.9.6",
     "@commercetools-frontend/permissions": "27.9.6",
     "@commercetools-frontend/sdk": "27.9.6",
-    "@commercetools/nimbus": "^3.5.1",
+    "@commercetools/nimbus": "3.6.0",
     "@commercetools/nimbus-icons": "^3.5.1",
     "@commercetools/nimbus-tokens": "^3.5.1",
     "@emotion/react": "^11.14.0",

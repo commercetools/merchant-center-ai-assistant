@@ -2515,7 +2515,7 @@
   resolved "https://registry.yarnpkg.com/@commercetools/nimbus-tokens/-/nimbus-tokens-3.6.0.tgz#b4a0d1b4179bbef9b05371c415e5f6403885323c"
   integrity sha512-hdQgQ6So69YejOpbEDJJNpKALJphVi9mEwuu9ERPc/0aTfa5Xkymb4A6Mo9rNWH6Q/0uU6FmDjZh8thKuYCMQA==
 
-"@commercetools/nimbus@^3.5.1":
+"@commercetools/nimbus@3.6.0":
   version "3.6.0"
   resolved "https://registry.yarnpkg.com/@commercetools/nimbus/-/nimbus-3.6.0.tgz#4e4342ac92498a8dbabd5f7818478455f9ff0afd"
   integrity sha512-A+9YaUFpVwmXvtAYJQUt77K6cGF2YxF7MZTWRHkZO/exzR7ArKAcYfNAVfMCIqrTxJ4TEMID8aSQmXxXvDywHg==
