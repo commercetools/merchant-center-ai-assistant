@@ -4,6 +4,7 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
+import { composedPageSource } from '../composed-pages/tool-source';
 import { nimbusSource } from '../nimbus';
 
 import { bigquerySource } from '../analytics/tools/bigquery.source';
@@ -56,6 +57,8 @@ registerToolSource(nimbusSource);
 registerToolSource(bigquerySource);
 registerToolSource(...thirdPartyToolSources); // J: Knowledge, Contentstack, Algolia, Stripe
 registerToolSource(commercetoolsToolSource); // I
+// M: composed pages (`create_composed_page`).
+registerToolSource(composedPageSource);
 
 /*
  * Composition. A new tool source is one file plus one line here.
