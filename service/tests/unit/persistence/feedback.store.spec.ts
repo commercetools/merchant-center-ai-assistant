@@ -5,7 +5,7 @@
  */
 
 import type { FeedbackRecord, SnapshotMessage } from '../../../src/persistence';
-import { buildSnapshotChunks } from '../../../src/persistence/feedback/chunks';
+import { readTranscript, snapshotChunks } from '../../helpers/feedback-chunks';
 import { makePersistence, spyGateway } from '../../helpers/persistence';
 
 const record = (id: string, userId: string, over: Partial<FeedbackRecord> = {}): FeedbackRecord => ({
@@ -33,14 +33,15 @@ const transcript: SnapshotMessage[] = [
 ];
 
 describe('FeedbackStore', () => {
-  it('reassembles a transcript byte-identically, including emoji and null', async () => {
+  it('returns the chunks in key order so the snapshot reassembles byte-identically, including emoji and null', async () => {
     const { p } = makePersistence();
-    const { chunks } = buildSnapshotChunks(transcript, 1000);
+    const { chunks, sha256 } = snapshotChunks('f1', transcript, 500);
     expect(chunks.length).toBeGreaterThan(3);
     await p.feedback.put(record('f1', 'u1'), chunks);
-    const got = await p.feedback.get('f1');
-    expect(got?.messages).toEqual(transcript);
-    expect(got?.comment).toBe('bad');
+    const parts = await p.feedback.getParts('f1');
+    expect(parts?.record.comment).toBe('bad');
+    expect(parts?.chunks).toHaveLength(chunks.length);
+    expect(readTranscript(parts ?? { chunks: [] }, sha256)).toEqual({ messages: transcript, intact: true });
   });
 
   it('writes no parent when a chunk write fails, so nothing is listed', async () => {
@@ -55,11 +56,11 @@ describe('FeedbackStore', () => {
         },
       })
     );
-    const { chunks } = buildSnapshotChunks(transcript, 500);
+    const { chunks } = snapshotChunks('f1', transcript, 500);
     await expect(p.feedback.put(record('f1', 'u1'), chunks)).rejects.toThrow('chunk 3 failed');
     expect(await mem.get('ai-assistant-feedback', 'f1')).toBeNull();
     expect((await p.feedback.list({}, 10, 0)).items).toEqual([]);
-    expect(await p.feedback.get('f1')).toBeNull();
+    expect(await p.feedback.getParts('f1')).toBeNull();
   });
 
   it('lists newest first with the projection only', async () => {
@@ -102,7 +103,7 @@ describe('FeedbackStore', () => {
     const { p, mem } = makePersistence((gw) =>
       spyGateway(gw, { onDelete: (c, k) => void order.push(c.includes('snap') ? 'chunk' : `parent:${k}`) })
     );
-    await p.feedback.put(record('f1', 'u1'), buildSnapshotChunks(transcript, 400).chunks);
+    await p.feedback.put(record('f1', 'u1'), snapshotChunks('f1', transcript, 400).chunks);
     expect(await p.feedback.delete('f1')).toBe(true);
     expect(order[0]).toBe('parent:f1');
     expect(order.slice(1).every((o) => o === 'chunk')).toBe(true);
@@ -123,9 +124,9 @@ describe('FeedbackStore', () => {
         },
       })
     );
-    await p.feedback.put(record('f1', 'u1'), buildSnapshotChunks(transcript, 400).chunks);
+    await p.feedback.put(record('f1', 'u1'), snapshotChunks('f1', transcript, 400).chunks);
     await expect(p.feedback.delete('f1')).rejects.toThrow('interrupted');
-    expect(await p.feedback.get('f1')).toBeNull();
+    expect(await p.feedback.getParts('f1')).toBeNull();
     expect(mem.containerNames()).toContain('ai-assistant-feedback-snap-f1');
     expect(await p.feedback.delete('f1')).toBe(false);
     expect(mem.containerNames()).toEqual([]);

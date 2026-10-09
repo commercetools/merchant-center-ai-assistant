@@ -12,9 +12,6 @@ export const SOFT_OBJECT_BYTES = 1 * MIB;
 /** Above this a write is refused before any request (platform hard limit is 16 MB). */
 export const HARD_OBJECT_BYTES = 6 * MIB;
 
-export const FEEDBACK_CHUNK_BYTES = 524288;
-export const MAX_SNAPSHOT_BYTES = 24 * MIB;
-
 /** Largest page the platform returns. */
 export const PAGE = 500;
 /** Largest offset the platform accepts. */

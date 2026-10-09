@@ -4,7 +4,6 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-import { reassembleSnapshot } from '../feedback/chunks';
 import { mapBounded } from '../gateway/concurrency';
 import { QueryLimitError } from '../gateway/errors';
 import type { ObjectFilter } from '../gateway/types';
@@ -15,7 +14,6 @@ import {
   FeedbackListItem,
   FeedbackRecord,
   FeedbackSnapshotChunk,
-  FeedbackWithSnapshot,
   feedbackFromValue,
   feedbackListItem,
   feedbackToValue,
@@ -32,10 +30,10 @@ export interface FeedbackStore {
     limit: number,
     offset: number
   ): Promise<{ items: FeedbackListItem[]; total: number }>;
-  get(id: string): Promise<FeedbackWithSnapshot | null>;
   /**
-   * The parent and the raw chunk payloads in key order, without reassembling (change N
-   * reassembles the whole-transcript snapshot itself and checks its digest).
+   * The parent and the raw chunk payloads in key order, without reassembling. Change N owns the
+   * snapshot format (`utils/feedback-snapshot.ts`): it reassembles the whole transcript itself
+   * and checks its digest, so the store only keeps and returns opaque chunks.
    */
   getParts(id: string): Promise<FeedbackParts | null>;
   /** Parent first, then the chunks; re-runnable. `false` when the parent did not exist. */
@@ -97,12 +95,6 @@ export class GatewayFeedbackStore implements FeedbackStore {
       .filter((r): r is FeedbackRecord => r !== null)
       .map(feedbackListItem);
     return { items, total: page.total ?? items.length };
-  }
-
-  async get(id: string): Promise<FeedbackWithSnapshot | null> {
-    const parts = await this.getParts(id);
-    if (!parts) return null;
-    return { ...parts.record, messages: reassembleSnapshot(parts.chunks) };
   }
 
   async getParts(id: string): Promise<FeedbackParts | null> {
