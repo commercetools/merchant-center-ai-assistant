@@ -4,15 +4,19 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-import type { ReactNode } from 'react';
+import { useApplicationContext } from '@commercetools-frontend/application-shell-connectors';
+import { NimbusProvider, Text } from '@commercetools/nimbus';
 
-type ApplicationRoutesProps = {
-  children?: ReactNode;
+// Change S replaces this placeholder with the assistant panel.
+const ApplicationRoutes = () => {
+  const dataLocale = useApplicationContext((context) => context.dataLocale);
+
+  return (
+    <NimbusProvider locale={dataLocale ?? 'en'} loadFonts={false}>
+      <Text>AI Assistant view foundation ready</Text>
+    </NimbusProvider>
+  );
 };
-
-const ApplicationRoutes = (_props: ApplicationRoutesProps) => (
-  <div>AI Assistant (stub)</div>
-);
 ApplicationRoutes.displayName = 'ApplicationRoutes';
 
 export default ApplicationRoutes;

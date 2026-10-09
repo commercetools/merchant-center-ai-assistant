@@ -4,15 +4,25 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-import type { ReactNode } from 'react';
+import { useApplicationContext } from '@commercetools-frontend/application-shell-connectors';
+import { NimbusProvider, Text } from '@commercetools/nimbus';
+import { useHistory } from 'react-router-dom';
 
-type ApplicationRoutesProps = {
-  children?: ReactNode;
+// Change R replaces this placeholder with the composed pages list and viewer.
+const ApplicationRoutes = () => {
+  const history = useHistory();
+  const dataLocale = useApplicationContext((context) => context.dataLocale);
+
+  return (
+    <NimbusProvider
+      locale={dataLocale ?? 'en'}
+      loadFonts={false}
+      router={{ navigate: (href: string) => history.push(href) }}
+    >
+      <Text>AI Assistant Pages foundation ready</Text>
+    </NimbusProvider>
+  );
 };
-
-const ApplicationRoutes = (_props: ApplicationRoutesProps) => (
-  <div>AI Assistant Pages (stub)</div>
-);
 ApplicationRoutes.displayName = 'ApplicationRoutes';
 
 export default ApplicationRoutes;

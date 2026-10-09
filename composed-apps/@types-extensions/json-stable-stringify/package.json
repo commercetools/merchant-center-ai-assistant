@@ -1,5 +1,6 @@
 {
-  "name": "@types/json-stable-stringify",
+  "name": "ai-assistant-types-json-stable-stringify",
   "version": "1.2.0",
+  "private": true,
   "types": "index.d.ts"
 }

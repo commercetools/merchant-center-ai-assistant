@@ -24,3 +24,7 @@ export const entryPointUriPath =
 // Merchant Center GraphQL proxy. Administrator status is decided by the service
 // (ADMIN_USER_IDS), never by a Merchant Center permission.
 export const PERMISSIONS = entryPointUriPathToPermissionKeys(entryPointUriPath);
+
+// Custom Object container shared by the composed pages written by the chat app (change P)
+// and read by the pages app (change R) and the service.
+export const SHARED_COMPOSED_PAGES_CONTAINER_KEY = 'shared-composed-pages';
