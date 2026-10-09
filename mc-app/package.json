@@ -11,15 +11,22 @@
     "compile-html": "mc-scripts compile-html",
     "compile-html:local": "MC_APP_ENV=development mc-scripts compile-html --transformer @commercetools-frontend/mc-dev-authentication/transformer-local.js",
     "start:prod:local": "npm run compile-html:local && mc-scripts serve",
-    "test": "echo 'No tests'",
+    "test": "jest --config jest.test.config.js",
     "lint": "eslint .",
     "format": "prettier --write '**/*.{js,ts,tsx}'",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:watch": "jest --config jest.test.config.js --watch",
+    "versions:appkit": "manypkg upgrade @commercetools-frontend",
+    "nimbus:typegen": "chakra typegen node_modules/@commercetools/nimbus/dist/theme.es.js",
+    "generate:nimbus-surface": "node scripts/generate-nimbus-surface.mjs",
+    "check:nimbus-surface": "node scripts/generate-nimbus-surface.mjs --check",
+    "postinstall": "npm run nimbus:typegen && npm run generate:nimbus-surface"
   },
   "dependencies": {
     "@apollo/client": "3.13.9",
     "@babel/core": "^7.28.6",
     "@babel/runtime-corejs3": "^7.28.6",
+    "@chakra-ui/react": "^3.36.1",
     "@commercetools-frontend/actions-global": "27.9.6",
     "@commercetools-frontend/application-components": "27.9.6",
     "@commercetools-frontend/application-config": "27.9.6",
@@ -35,8 +42,13 @@
     "@commercetools-frontend/mc-dev-authentication": "27.9.6",
     "@commercetools-frontend/mc-scripts": "27.9.6",
     "@commercetools-frontend/permissions": "27.9.6",
+    "@commercetools-frontend/sdk": "27.9.6",
+    "@commercetools/nimbus": "^3.5.1",
+    "@commercetools/nimbus-icons": "^3.5.1",
+    "@commercetools/nimbus-tokens": "^3.5.1",
     "@emotion/react": "^11.14.0",
     "@jest/types": "29.6.3",
+    "@manypkg/cli": "0.25.0",
     "@tabler/icons": "^3.35.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -58,6 +70,11 @@
     "react-redux": "9.2.0",
     "react-router-dom": "5.3.4",
     "redux": "5.0.1",
+    "slate": "^0.123.0",
+    "slate-dom": "^0.123.0",
+    "slate-history": "^0.115.0",
+    "slate-hyperscript": "^0.115.0",
+    "slate-react": "^0.123.0",
     "typescript": "5.9.2"
   },
   "resolutions": {
@@ -71,5 +88,6 @@
   },
   "devDependencies": {
     "jsdom": "^21.1.2"
-  }
+  },
+  "license": "MIT"
 }
