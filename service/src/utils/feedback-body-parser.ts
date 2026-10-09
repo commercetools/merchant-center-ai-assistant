@@ -6,6 +6,7 @@
 
 import bodyParser from 'body-parser';
 import type { Express, RequestHandler } from 'express';
+import { SERVICE_BASE_PATH } from '../constants/service-path';
 import { FEEDBACK_BODY_LIMIT } from './feedback-snapshot';
 
 /**
@@ -20,7 +21,7 @@ import { FEEDBACK_BODY_LIMIT } from './feedback-snapshot';
 export const registerFeedbackBodyParser = (
   app: Express,
   auth: RequestHandler,
-  basePath = '/service',
+  basePath: string = SERVICE_BASE_PATH,
   parser: RequestHandler = bodyParser.json({ limit: FEEDBACK_BODY_LIMIT })
 ): void => {
   app.use(`${basePath}/feedback/submit`, auth, parser);

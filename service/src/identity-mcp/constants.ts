@@ -11,8 +11,6 @@ export const AUTH_STATE_TTL_MS = 10 * 60_000;
 export const SERVER_KEY_PATTERN = /^[A-Za-z0-9_-]{2,256}$/;
 /** Pre-flight and revocation requests never wait longer than this. */
 export const SHORT_FETCH_TIMEOUT_MS = 5_000;
-/** The path the service router is mounted at (see `app.ts` and `endpoint` in connect.yaml). */
-export const SERVICE_BASE_PATH = '/service';
 /** `window.postMessage` type the frontend listens for. */
 export const OAUTH_MESSAGE_TYPE = 'ct-identity-mcp-oauth';
 /** Registry key, menu group id and `disabledTools` key of the source. */

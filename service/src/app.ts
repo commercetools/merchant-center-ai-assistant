@@ -8,6 +8,7 @@ import bodyParser from 'body-parser';
 import express, { Express } from 'express';
 import { installGcpImageUploader } from './analytics/register';
 import type { AppConfig } from './config';
+import { SERVICE_BASE_PATH } from './constants/service-path';
 import CustomError from './errors/custom.error';
 import { initRequestContext } from './middleware/context.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
@@ -64,8 +65,8 @@ export function createApp(config: AppConfig): Express {
     next();
   });
 
-  // MUST equal `endpoint` of the service entry in connect.yaml.
-  app.use('/service', serviceRouter);
+  // SERVICE_BASE_PATH MUST equal `endpoint` of the service entry in connect.yaml.
+  app.use(SERVICE_BASE_PATH, serviceRouter);
 
   // Synchronous throw: Express catches it and forwards to errorMiddleware.
   app.use('*', () => {
