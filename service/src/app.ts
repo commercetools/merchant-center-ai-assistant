@@ -10,7 +10,9 @@ import type { AppConfig } from './config';
 import CustomError from './errors/custom.error';
 import { initRequestContext } from './middleware/context.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
+import { verifyMcSession } from './middleware/mc-session.middleware';
 import { serviceRouter } from './routes/service.route';
+import { registerFeedbackBodyParser } from './utils/feedback-body-parser';
 import { requestUrlForLog } from './utils/log-url.utils';
 import { logger } from './utils/logger.utils';
 
@@ -36,15 +38,11 @@ export function createApp(config: AppConfig): Express {
   // No CORS middleware: traffic is server-to-server from the Merchant Center
   // gateway (/proxy/forward-to), never a browser.
 
-  // Feedback snapshots carry the client's whole in-memory useChat array and
-  // exceed the 100kb body-parser default. Registered BEFORE the global parser:
-  // body-parser sets req._body and the global instance short-circuits on it, so
-  // a route-level parser (or one registered later) would never run. The path
-  // must be the FULL mount path because this is registered on `app`.
-  app.use(
-    '/service/feedback/submit',
-    bodyParser.json({ limit: config.server.feedbackBodyLimit })
-  );
+  // Feedback snapshots carry the client's whole in-memory useChat array and exceed the 100kb
+  // body-parser default. Registered BEFORE the global parser (body-parser sets req._body and
+  // the global instance short-circuits on it) and AFTER session verification, so an anonymous
+  // caller cannot make the service parse a large body. See utils/feedback-body-parser.ts.
+  registerFeedbackBodyParser(app, verifyMcSession);
 
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));

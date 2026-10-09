@@ -5,6 +5,8 @@
  */
 
 import { Router } from 'express';
+import { backofficeRouter } from './backoffice.route';
+import { feedbackRouter } from './feedback.route';
 import { mcAuthRouter } from './mc-auth.route';
 import { statusRouter } from './status.route';
 
@@ -13,4 +15,6 @@ export const serviceRouter = Router();
 
 serviceRouter.use('/', statusRouter);
 serviceRouter.use('/auth', mcAuthRouter);
-// D..N mount their routers here.
+serviceRouter.use('/feedback', feedbackRouter);
+serviceRouter.use('/backoffice', backofficeRouter);
+// Other changes mount their routers here.
