@@ -6,6 +6,7 @@
 
 import { entityLinkSource } from './entity-link.source';
 import { exportSource } from './export.source';
+import { imageGenerationSource } from './image-generation.source';
 import { createToolSourceRegistry } from './registry';
 import type { ToolSource } from './types';
 import { visualizeSource } from './visualize.source';
@@ -17,6 +18,7 @@ export {
 } from './registry';
 export type { ResolveOptions, ToolSourceRegistry } from './registry';
 export { installRegistryProviders } from './providers';
+export { getImageUploader, setImageUploader } from './image-uploader';
 export type {
   ImageUploader,
   MenuEntry,
@@ -33,13 +35,18 @@ export const registerToolSource = (...sources: ToolSource[]): void => {
   registry.register(...sources);
 };
 
-// H: the three always-on built-in sources.
-registerToolSource(entityLinkSource, visualizeSource, exportSource);
+// H: the three always-on built-in sources, and image generation (enabled only while change L
+// has registered an ImageUploader).
+registerToolSource(
+  entityLinkSource,
+  visualizeSource,
+  exportSource,
+  imageGenerationSource
+);
 
 /*
  * Composition. A new tool source is one file plus one line here.
  *
- *   registerToolSource(imageGenerationSource);                             // H (gated by an ImageUploader, L)
  *   // registerToolSource(createCommercetoolsIdentitySource(...));         // I
  *   // registerToolSource(knowledgeSource, contentstackSource, algoliaSource, stripeSource); // J
  *   // registerToolSource(nimbusSource);                                   // K

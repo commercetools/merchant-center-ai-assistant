@@ -32,6 +32,7 @@ describe('built-in sources', () => {
       'visualize_data',
     ]);
     expect(contributing.map((s) => s.name)).toEqual(['entity-link', 'visualize', 'export']);
+    expect(registry.list().map((s) => s.name)).toContain('imageGeneration');
   });
 
   it('they have no menu group', async () => {

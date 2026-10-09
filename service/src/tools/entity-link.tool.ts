@@ -79,22 +79,6 @@ interface EntityLinkOutput {
 }
 
 /**
- * Output structure for the entity link tool
- */
-interface EntityLinkToolOutput {
-  success: true;
-  links: EntityLinkOutput[];
-}
-
-interface EntityLinkToolError {
-  success: false;
-  error: string;
-  hint: string;
-}
-
-type EntityLinkResult = EntityLinkToolOutput | EntityLinkToolError;
-
-/**
  * Factory function to create the entity link tool with projectKey injected
  */
 export const createEntityLinkToolFactory = (projectKey: string) => ({
