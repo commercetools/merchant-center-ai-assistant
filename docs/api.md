@@ -14,7 +14,7 @@ Merchant Center gateway (`/proxy/forward-to`), not by browsers directly. The rou
   Exceptions that are not enveloped: `GET /service/status` and `GET /service/health` (a plain status object), `GET /service/status/nimbus`, the stream, the image route (binary) and the OAuth callback (an HTML page).
 - **Error envelope**: `{ "success": false, "error": "<text>", "message": "<text>", "code": "<optional code>" }` with the HTTP status. Persistence problems use fixed texts (404 `Not found`, 409 `Conflict, please retry`,
   413 `Payload too large`, 503 `Storage temporarily unavailable, please retry`); unexpected errors answer 500 `Internal server error` without details.
-- **Correlation**: send `X-Correlation-Id` (at most 128 characters) to find the request in the logs. The service does not echo it.
+- **Correlation**: send `X-Correlation-Id` (at most 128 characters) to find the request in the logs. The service echoes the id (or, when none was sent or it is not visible ASCII, a generated one) in the `X-Correlation-Id` response header.
 - **Body limits**: JSON bodies are limited to 100 kB (413 above it), except `POST /service/feedback/submit`, which accepts 10 MB, and only after the caller has been authenticated, so an anonymous caller cannot make the service read a large body.
   A feedback transcript is stored up to 8 MiB.
 - **Identity**: the service never reads a user ID, e-mail address or admin flag from a header, body or query parameter. The optional `userLabel` in session and feedback bodies is stored as an unverified, sanitised display label only.
