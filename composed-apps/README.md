@@ -17,7 +17,7 @@ The app is a pure Merchant Center GraphQL client. It never calls the AI service,
 
 ## Prerequisites
 
-Register a Custom Application in the Merchant Center (manual step M6) and note its application
+Register a Custom Application in the Merchant Center (see the [deployment guide](../docs/deployment.md#order-of-operations)) and note its application
 id. Its entry point URI path must differ from the chat application's.
 
 ## Configuration
@@ -85,3 +85,7 @@ apart from `.env.example`).
 
 Not applicable: the app has no events, jobs or lifecycle scripts, so there is nothing to
 replay.
+
+## More
+
+Root documentation: [README](../README.md), [configuration](../docs/configuration.md), [permissions](../docs/permissions.md), [operations](../docs/operations.md), [troubleshooting](../docs/troubleshooting.md), [CONTRIBUTING](../CONTRIBUTING.md).
