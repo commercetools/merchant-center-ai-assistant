@@ -33,6 +33,8 @@ export class StubToolSource implements ToolSource {
       name: string;
       tools?: ToolSet;
       prompt?: string;
+      /** Builds the prompt from the context the registry passes (for example `ctx.hasTool`). */
+      onPrompt?: (ctx: ToolContext) => string;
       enabled?: boolean;
       delayMs?: number;
       throws?: boolean;
@@ -73,7 +75,8 @@ export class StubToolSource implements ToolSource {
     return this.menu;
   }
 
-  getPrompt(): string {
+  getPrompt(ctx?: ToolContext): string {
+    if (this.o.onPrompt && ctx) return this.o.onPrompt(ctx);
     return this.o.prompt ?? '';
   }
 }

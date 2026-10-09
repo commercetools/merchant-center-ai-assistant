@@ -48,6 +48,19 @@ describe('composed page tool source', () => {
     expect(tools.create_composed_page.description).toContain('5.0');
   });
 
+  it('the prompt mentions Nimbus tools only when the merged set has them (ctx.hasTool)', () => {
+    // Kill switch says "enabled" but the merged set has no Nimbus tool: no mention.
+    const ctx = ctxWith({ NIMBUS_MCP_ENABLED: 'true' });
+    expect(composedPageSource.getPrompt({ ...ctx, hasTool: () => false })).not.toContain(
+      'get_components'
+    );
+    expect(composedPageSource.getPrompt({ ...ctx, hasTool: () => true })).toContain(
+      'get_components'
+    );
+    // Without hasTool it falls back to the kill switch.
+    expect(composedPageSource.getPrompt(ctx)).toContain('get_components');
+  });
+
   it('is not part of the custom-view selection', async () => {
     expect(CUSTOM_VIEW_SOURCES as readonly string[]).not.toContain(
       composedPageSource.name

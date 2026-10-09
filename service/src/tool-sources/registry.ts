@@ -148,17 +148,29 @@ export const createToolSourceRegistry = (
         merged[name] = tools[name];
       }
       contributing.push(source);
-      let fragment = '';
-      try {
-        fragment = source.getPrompt(ctx);
-      } catch (error) {
-        ctx.logger.warn(`ToolSource ${source.name} prompt skipped`, {
-          reason: error instanceof Error ? error.message : String(error),
-        });
+    }
+
+    // Prompts are built after the merge, so `ctx.hasTool` answers for the final tool set.
+    // Fragment order is still the merge order. The SAME ctx object is passed (a source may
+    // key per-request state on it, see identity-mcp), so `hasTool` is set on it for the
+    // duration of the prompt loop only.
+    ctx.hasTool = (name) => Object.prototype.hasOwnProperty.call(merged, name);
+    try {
+      for (const source of contributing) {
+        let fragment = '';
+        try {
+          fragment = source.getPrompt(ctx);
+        } catch (error) {
+          ctx.logger.warn(`ToolSource ${source.name} prompt skipped`, {
+            reason: error instanceof Error ? error.message : String(error),
+          });
+        }
+        if (fragment) {
+          fragments.push(`\n\n# ${source.displayName}\n\n${fragment}`);
+        }
       }
-      if (fragment) {
-        fragments.push(`\n\n# ${source.displayName}\n\n${fragment}`);
-      }
+    } finally {
+      delete ctx.hasTool;
     }
 
     return {

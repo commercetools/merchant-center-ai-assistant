@@ -22,7 +22,7 @@ runtime is `registry.ts`. See also the [how it works](../../../docs/how-it-works
 | `isEnabled(ctx)` | `false` = contributes nothing. Must not throw. |
 | `getTools(ctx)` | The tool set; the keys are the tool names shown in the menu. |
 | `listForMenu(ctx)` | `{ toolNames }` or `null` (no menu group). Independent of `isEnabled`. |
-| `getPrompt(ctx)` | Prompt fragment, `''` when none. **Never embed the project system prompt**: the orchestrator adds it once. |
+| `getPrompt(ctx)` | Prompt fragment, `''` when none. **Never embed the project system prompt**: the orchestrator adds it once. While it runs, `ctx.hasTool(name)` tells whether the merged tool set of the turn has a tool, so a prompt only mentions tools that exist. |
 
 ## What the registry does for you (do not re-implement)
 

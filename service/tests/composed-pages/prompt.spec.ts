@@ -37,6 +37,42 @@ describe('page-generation prompt', () => {
     expect(off).toContain('PageContent*');
   });
 
+  it('with hasTool: mentions only the Nimbus tools the merged set has', () => {
+    const only = new Set([NIMBUS_LOOKUP_TOOLS.getComponents, NIMBUS_LOOKUP_TOOLS.searchIcons]);
+    const prompt = getCommercetoolsUIPrompt(
+      { locale: 'en' },
+      { nimbusTools: true, hasTool: (n) => only.has(n as never) }
+    );
+    expect(prompt).toContain('`get_components`');
+    expect(prompt).toContain('`search_icons`');
+    for (const gone of [
+      NIMBUS_LOOKUP_TOOLS.listComponents,
+      NIMBUS_LOOKUP_TOOLS.getTokens,
+      NIMBUS_LOOKUP_TOOLS.searchDocs,
+      NIMBUS_LOOKUP_TOOLS.getDocsPage,
+      NIMBUS_LOOKUP_TOOLS.migrateFromUikit,
+    ]) {
+      expect(prompt).not.toContain(gone);
+    }
+  });
+
+  it('with hasTool saying none: identical to nimbusTools false, whatever nimbusTools says', () => {
+    const none = getCommercetoolsUIPrompt(
+      { locale: 'de' },
+      { nimbusTools: true, hasTool: () => false }
+    );
+    expect(none).toBe(off);
+  });
+
+  it('with hasTool and no get_components: no batching rule that names it', () => {
+    const prompt = getCommercetoolsUIPrompt(
+      { locale: 'en' },
+      { nimbusTools: true, hasTool: (n) => n === NIMBUS_LOOKUP_TOOLS.getTokens }
+    );
+    expect(prompt).toContain('`get_tokens`');
+    expect(prompt).not.toContain('get_components');
+  });
+
   it('always: tool name, versions, no imports, SQL rule, locale', () => {
     for (const prompt of [on, off]) {
       expect(prompt).toContain('create_composed_page');

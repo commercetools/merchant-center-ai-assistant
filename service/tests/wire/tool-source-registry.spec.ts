@@ -115,6 +115,48 @@ describe('deterministic merge', () => {
     expect(contributing.map((s) => s.name)).toEqual(['slow', 'fast']);
   });
 
+  it('answers ctx.hasTool for the MERGED tool set while prompts are built, a later source included', async () => {
+    const registry = createToolSourceRegistry();
+    const seen: Record<string, boolean> = {};
+    registry.register(
+      new StubToolSource({
+        name: 'early',
+        order: 10,
+        tools: { echo },
+        onPrompt: (ctx) => {
+          seen.later = ctx.hasTool?.('ping') ?? false;
+          seen.own = ctx.hasTool?.('echo') ?? false;
+          seen.missing = ctx.hasTool?.('nope') ?? false;
+          return 'EARLY';
+        },
+      }),
+      new StubToolSource({ name: 'late', order: 20, tools: { ping } })
+    );
+    const ctx = ctxFor();
+    await registry.resolve(ctx);
+    expect(seen).toEqual({ later: true, own: true, missing: false });
+    expect(ctx.hasTool).toBeUndefined();
+  });
+
+  it('hasTool does not see tools the session switched off', async () => {
+    const registry = createToolSourceRegistry();
+    let sawPing: boolean | undefined;
+    registry.register(
+      new StubToolSource({
+        name: 'multi',
+        tools: { echo, ping },
+        onPrompt: (ctx) => {
+          sawPing = ctx.hasTool?.('ping');
+          return 'P';
+        },
+      })
+    );
+    await registry.resolve(
+      ctxFor({ session: { disabledTools: { multi: ['ping'] } } })
+    );
+    expect(sawPing).toBe(false);
+  });
+
   it('breaks order ties by name', async () => {
     const registry = createToolSourceRegistry();
     registry.register(
