@@ -11,10 +11,11 @@ import { freshConfig } from '../helpers/env';
 
 /**
  * The published route table (openspec change G, capability rest-api-contract, rows 1-25 and
- * 28; rows 26 and 27 are matched by prefix). `pendingUntil` rows belong to a change that has
- * not landed yet: they are skipped while absent. Remove the marker in that change's tasks.
+ * 28, plus rows 29 and 30 for the liveness alias of change C and the Nimbus readiness route of
+ * change K). Rows 26 and 27 (changes I and J) are matched by prefix. Every change has landed,
+ * so every row must be mounted.
  */
-type Row = { n: number; method: string; path: string; pendingUntil?: 'H' | 'N' | 'L' };
+type Row = { n: number; method: string; path: string };
 
 const TABLE: Row[] = [
   { n: 1, method: 'GET', path: '/service/status' },
@@ -36,21 +37,19 @@ const TABLE: Row[] = [
   { n: 17, method: 'GET', path: '/service/tool-call-logs' },
   { n: 18, method: 'PUT', path: '/service/tool-call-logs' },
   { n: 19, method: 'POST', path: '/service/ai-chat/:sessionId/message/stream' },
-  { n: 20, method: 'POST', path: '/service/feedback/submit', pendingUntil: 'N' },
-  { n: 21, method: 'GET', path: '/service/feedback/fetch', pendingUntil: 'N' },
-  { n: 22, method: 'GET', path: '/service/feedback/fetch/:feedbackId', pendingUntil: 'N' },
-  { n: 23, method: 'GET', path: '/service/backoffice/is-admin', pendingUntil: 'N' },
-  { n: 24, method: 'POST', path: '/service/backoffice/threads', pendingUntil: 'N' },
-  { n: 25, method: 'GET', path: '/service/backoffice/threads/:sessionId', pendingUntil: 'N' },
+  { n: 20, method: 'POST', path: '/service/feedback/submit' },
+  { n: 21, method: 'GET', path: '/service/feedback/fetch' },
+  { n: 22, method: 'GET', path: '/service/feedback/fetch/:feedbackId' },
+  { n: 23, method: 'GET', path: '/service/backoffice/is-admin' },
+  { n: 24, method: 'POST', path: '/service/backoffice/threads' },
+  { n: 25, method: 'GET', path: '/service/backoffice/threads/:sessionId' },
   { n: 28, method: 'GET', path: '/service/files/:sessionId/:fileName' },
+  { n: 29, method: 'GET', path: '/service/health' },
+  { n: 30, method: 'GET', path: '/service/status/nimbus' },
 ];
 
 /** Rows 26 and 27 (changes I and J) are matched by prefix. */
 const PREFIXES = ['/service/managed-mcp-identity', '/service/mcp'];
-
-/** Change C's liveness alias of row 1 (not in the published table; see notes). */
-// Routes added by later changes (health: C; nimbus readiness: K).
-const EXTRA_ALLOWED = ['GET /service/health', 'GET /service/status/nimbus'];
 
 type Layer = {
   name?: string;
@@ -92,7 +91,7 @@ export function collectRoutes(app: Express): string[] {
 
 /** Routes that are in neither the table nor an allowed prefix. */
 export function unlisted(actual: string[]): string[] {
-  const known = new Set([...TABLE.map((r) => `${r.method} ${r.path}`), ...EXTRA_ALLOWED]);
+  const known = new Set(TABLE.map((r) => `${r.method} ${r.path}`));
   return actual.filter((route) => {
     const path = route.split(' ')[1];
     return !known.has(route) && !PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
@@ -104,9 +103,8 @@ const build = (): Express => createApp(freshConfig({ MC_AUTH_DISABLED: 'true' })
 describe('route table contract', () => {
   const actual = collectRoutes(build());
 
-  it('every published row that has landed is mounted', () => {
-    const missing = TABLE.filter((r) => !r.pendingUntil)
-      .map((r) => `${r.method} ${r.path}`)
+  it('every published row is mounted', () => {
+    const missing = TABLE.map((r) => `${r.method} ${r.path}`)
       .filter((route) => !actual.includes(route));
     expect(missing).toEqual([]);
   });
