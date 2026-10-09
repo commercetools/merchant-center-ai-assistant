@@ -102,6 +102,11 @@ export const createSendAiChatMessage =
         sessionId,
         onFinish: ({ messages }) => {
           // Persist what the turn produced; ids that are already stored are skipped.
+          // Known and intended (TA-20): when the incoming message is an ASSISTANT message
+          // (the browser auto-sent after a client-side tool result) the SDK continues that
+          // message under its stored id, so the added parts are not persisted. The product
+          // has no client-side tools (change P design D-P5 removed `sendAutomaticallyWhen`),
+          // so the case does not occur; re-open this if a browser-answered tool is added.
           void services.messages
             .appendMissing(sessionId, processMessagesForStorage(messages))
             .catch((error) => logger.error('Error storing messages', error));
