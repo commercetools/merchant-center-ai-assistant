@@ -6,12 +6,16 @@
 
 import { readConfiguration, resetConfigurationForTests } from '../../src/config';
 
+/** Fixed 32-byte test key (base64); never used outside tests. */
+export const TEST_ENCRYPTION_KEY = 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=';
+
 /** Smallest valid environment (memory driver relaxes the credentials). */
 export const baseEnv = (extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv => ({
   NODE_ENV: 'test',
   CTP_PROJECT_KEY: 'p',
   CTP_REGION: 'us-central1.gcp',
   PERSISTENCE_DRIVER: 'memory',
+  ENCRYPTION_KEY: TEST_ENCRYPTION_KEY,
   ...extra,
 });
 

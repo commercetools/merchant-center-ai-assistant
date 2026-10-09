@@ -50,6 +50,8 @@ const SERVICE_STANDARD = {
   GCP_BUCKET_LOCATION: { default: 'us-central1' },
   IMAGE_URL_MODE: { default: 'private' },
   MCP_TOOLS_TTL_MS: { default: '1800000' },
+  PERSISTENCE_CONCURRENCY: { default: '8' },
+  SETTINGS_CACHE_TTL_MS: { default: '5000' },
   LOG_LEVEL: { default: 'info' },
   ADMIN_USER_IDS: { optional: true },
   CONTENTSTACK_BRANCH: { optional: true },
@@ -60,6 +62,7 @@ const SERVICE_STANDARD = {
 const SERVICE_SECURED = {
   GCP_SA_KEY_BASE64: { required: true },
   ENCRYPTION_KEY: { required: true },
+  ENCRYPTION_KEY_PREVIOUS: { optional: true },
   CONTENTSTACK_API_KEY: { optional: true },
   CONTENTSTACK_MANAGEMENT_TOKEN: { optional: true },
   ALGOLIA_MCP_URL: { optional: true },
