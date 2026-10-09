@@ -42,7 +42,7 @@ import {
 } from '@commercetools/nimbus-icons';
 
 /**
- * The icon vocabulary the router may choose from when it describes a session or a suggested
+ * The icon vocabulary the service may choose from when it describes a session or a suggested
  * prompt.
  *
  * Names are Material Symbols in snake_case, which is what the design specifies and what the
@@ -51,7 +51,7 @@ import {
  *
  * This list is deliberately short and domain-flavoured. A model given all 2,123 Material
  * icons picks badly and unpredictably; a curated set keeps the session list visually
- * coherent. It is mirrored on the server as `DIGEST_ICON_NAMES` in the router's
+ * coherent. It is mirrored on the server as `DIGEST_ICON_NAMES` in the service's
  * `src/constants.ts`, where it is enforced as a zod enum - the two lists must be changed
  * together, and anything unrecognised falls back to `auto_awesome` here regardless.
  *

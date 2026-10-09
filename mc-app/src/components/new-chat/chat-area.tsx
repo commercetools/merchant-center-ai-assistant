@@ -148,8 +148,8 @@ const ChatArea = ({
       },
       // No `headers`: the request goes through the Merchant Center gateway, which builds
       // them. The transport's own Content-Type becomes the outer header inside
-      // forwardToFetch, so it is never duplicated on the router hop. A 401 no longer means
-      // "router token expired" - a lapsed MC session is renewed inside forwardToFetch, and
+      // forwardToFetch, so it is never duplicated on the service hop. A 401 no longer means
+      // "service token expired" - a lapsed MC session is renewed inside forwardToFetch, and
       // a persisting one surfaces through onError like any other failure.
       fetch: forwardToFetch,
     }),

@@ -47,14 +47,14 @@ export interface GetSessionResponse {
 export interface GetMessagesResponse {
   success: boolean;
   /**
-   * AI SDK `UIMessage`s, NOT the local `ChatMessage` shape above. The router stores and
+   * AI SDK `UIMessage`s, NOT the local `ChatMessage` shape above. The service stores and
    * returns what `useChat` consumes (`role` + `parts`), and this is fed straight into it
    * as `initialMessages`. The declaration said `ChatMessage[]` while nothing type-checked
    * against it; it is corrected here rather than left to mislead the next reader.
    */
   data: UIMessage[];
   /**
-   * True when the router answered 404, i.e. the session id does not exist for this
+   * True when the service answered 404, i.e. the session id does not exist for this
    * project and user. This is how a stale `localStorage` id is detected now that the app
    * no longer spends a round trip validating one before asking for its messages - see
    * `SessionProvider.initializeSessionFromStorage`. Distinct from a generic
@@ -71,7 +71,7 @@ export interface GetSessionsResponse {
 /**
  * One row of `GET session/all`.
  *
- * `description` and `icon` come from the session digest, which the router writes after
+ * `description` and `icon` come from the session digest, which the service writes after
  * each completed turn. They are optional because a session only has them once its first
  * turn has finished, and sessions created before the digest existed will never have them -
  * those rows fall back to a truncated first message for the title, no description, and the
@@ -106,7 +106,7 @@ export interface NextPrompt {
 }
 
 /**
- * `GET session/:id/digest`. `pending` means the router has not finished digesting the
+ * `GET session/:id/digest`. `pending` means the service has not finished digesting the
  * turn yet - it is a normal, expected answer, not an error.
  */
 /** The digest projection itself, shared by the endpoint and the session bootstrap. */

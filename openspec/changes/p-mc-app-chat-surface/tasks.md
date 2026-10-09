@@ -45,104 +45,104 @@ Conventions used by every task below:
 
 ## 6. Shell
 
-- [ ] 6.1 PR `components/shell/view-tabs.ts` and `components/new-chat/{layout.ts,theme.ts,types.ts}`. **Done when:** typecheck passes.
-- [ ] 6.2 PR `components/new-chat/{agent-avatar.tsx,user-avatar.tsx}`. **Watch out:** `user-avatar` uses `useGravatar` (`utils/gravatar.ts`); keep (D-P8).
-- [ ] 6.3 Rail atoms. PR `components/shell/app-rail/{rail-item.tsx,rail-badge.tsx,new-chat-tile.tsx}`.
-- [ ] 6.4 Rail container. **Where:** `N/components/shell/app-rail/index.tsx` <- `$L/components/shell/app-rail/index.tsx`. **How:** PR; `DrawerId = 'chats' | 'pages' | 'mcp' | 'config'` stays, but render only New chat, Chats, Pages, Help; leave a `{/* Q: Connections (admin) and Settings items go here */}` comment between Pages and the spacer. Remove `useIsAssistantAdmin` import. **Done when:** typecheck passes.
-- [ ] 6.5 Contexts used by the rail. PR `contexts/tabbed-header-context.tsx` (134 lines) - it drives the Pages highlight.
-- [ ] 6.6 Conversation header. PR `components/shell/conversation-header/{index.tsx,header-actions.tsx,session-meta.tsx,session-title.tsx,view-switcher.tsx}`. **Watch out:** the header shows the number of reachable tools: it reads `sessionTools` from `useSession()`; confirm the field names after 4.1.
-- [ ] 6.7 Create the `YourUserId` component and mount it in the user menu. **Why:** an operator must be able to learn their own Merchant Center user id to put it into `ADMIN_USER_IDS`. **Where:** new `mc-app/src/components/your-user-id/index.tsx` (+SPDX); mounted by editing `components/new-chat/user-avatar.tsx` / the rail container so the user avatar opens a small Nimbus popover (the user menu) containing it (create the popover if the rail has none). **How:** `const { userId } = useAuth(); if (!userId) return null;` render a text line `Your user ID:` followed by the id in a monospace `Text` and a Nimbus `Button` "Copy" calling `navigator.clipboard.writeText(userId)` (fallback: select the text) that shows "Copied" for 2 s; no `input`, no link, no e-mail, no request; accept an optional `variant: 'compact' | 'footer'` prop for S and Q. **Done when:** typecheck and lint pass; `grep -n "input\|mailto" mc-app/src/components/your-user-id/index.tsx` prints nothing. **Watch out:** show it to non-admins too (do not call `useIsAssistantAdmin`); Q reuses this exact component in Settings > About.
+- [x] 6.1 PR `components/shell/view-tabs.ts` and `components/new-chat/{layout.ts,theme.ts,types.ts}`. **Done when:** typecheck passes.
+- [x] 6.2 PR `components/new-chat/{agent-avatar.tsx,user-avatar.tsx}`. **Watch out:** `user-avatar` uses `useGravatar` (`utils/gravatar.ts`); keep (D-P8).
+- [x] 6.3 Rail atoms. PR `components/shell/app-rail/{rail-item.tsx,rail-badge.tsx,new-chat-tile.tsx}`.
+- [x] 6.4 Rail container. **Where:** `N/components/shell/app-rail/index.tsx` <- `$L/components/shell/app-rail/index.tsx`. **How:** PR; `DrawerId = 'chats' | 'pages' | 'mcp' | 'config'` stays, but render only New chat, Chats, Pages, Help; leave a `{/* Q: Connections (admin) and Settings items go here */}` comment between Pages and the spacer. Remove `useIsAssistantAdmin` import. **Done when:** typecheck passes.
+- [x] 6.5 Contexts used by the rail. PR `contexts/tabbed-header-context.tsx` (134 lines) - it drives the Pages highlight.
+- [x] 6.6 Conversation header. PR `components/shell/conversation-header/{index.tsx,header-actions.tsx,session-meta.tsx,session-title.tsx,view-switcher.tsx}`. **Watch out:** the header shows the number of reachable tools: it reads `sessionTools` from `useSession()`; confirm the field names after 4.1.
+- [x] 6.7 Create the `YourUserId` component and mount it in the user menu. **Why:** an operator must be able to learn their own Merchant Center user id to put it into `ADMIN_USER_IDS`. **Where:** new `mc-app/src/components/your-user-id/index.tsx` (+SPDX); mounted by editing `components/new-chat/user-avatar.tsx` / the rail container so the user avatar opens a small Nimbus popover (the user menu) containing it (create the popover if the rail has none). **How:** `const { userId } = useAuth(); if (!userId) return null;` render a text line `Your user ID:` followed by the id in a monospace `Text` and a Nimbus `Button` "Copy" calling `navigator.clipboard.writeText(userId)` (fallback: select the text) that shows "Copied" for 2 s; no `input`, no link, no e-mail, no request; accept an optional `variant: 'compact' | 'footer'` prop for S and Q. **Done when:** typecheck and lint pass; `grep -n "input\|mailto" mc-app/src/components/your-user-id/index.tsx` prints nothing. **Watch out:** show it to non-admins too (do not call `useIsAssistantAdmin`); Q reuses this exact component in Settings > About.
 
 ## 7. Chats drawer
 
-- [ ] 7.1 PR `components/panels/chats-drawer/{chat-group.tsx,chat-row.tsx,delete-chat-dialog.tsx,index.tsx}`. **Done when:** typecheck passes. **Watch out:** search matches title AND description; grouping is by day (uses `utils/relative-time.ts`).
+- [x] 7.1 PR `components/panels/chats-drawer/{chat-group.tsx,chat-row.tsx,delete-chat-dialog.tsx,index.tsx}`. **Done when:** typecheck passes. **Watch out:** search matches title AND description; grouping is by day (uses `utils/relative-time.ts`).
 
 ## 8. Conversation core
 
-- [ ] 8.1 PR `components/new-chat/{thinking-pill.tsx,typing-indicator/index.tsx,typing-indicator/cute-text-animator.tsx,typing-indicator/cute-text-phrases.ts,typing-indicator/use-typewriter.ts}`.
-- [ ] 8.2 PR `components/new-chat/{message.tsx,follow-up-chip.tsx,follow-up-chips.tsx}`. (They import `parts/*`; if typecheck fails on missing parts, do section 12 first and come back - or create empty stubs `export const PartRenderer = () => null` and delete the stub when 12 lands.)
-- [ ] 8.3 `chat-area.tsx`, part 1 (port). **Where:** `N/components/new-chat/chat-area.tsx` (421 lines) <- legacy same. **How:** PR; keep as is for now. **Done when:** file exists (typecheck may fail until sections 9-12 land; if so, list the missing imports in the commit message).
-- [ ] 8.4 `chat-area.tsx`, part 2 (changes). **How:** delete `sendAutomaticallyWhen: hasClientSideToolCallsPending` and the import; remove `userEmail` from `submitFeedback(...)` calls (two sites) ; keep `MAX_RETRIES = 2`, `RETRY_DELAY_MS`, `messagesRef`, `useFlipTransition`, `pendingPrompt` effect. **Done when:** `grep -n "userEmail\|hasClientSide" N/components/new-chat/chat-area.tsx` prints nothing.
-- [ ] 8.5 `new-chat/tools/index.ts`. **Where:** `N/components/new-chat/tools/index.ts`. **How:** PR then delete `CLIENT_TOOLS` and its comment; keep the other three exports. **Watch out:** `SUBAGENT_TOOLS` contains `bigquery` - correct, L keeps BigQuery.
-- [ ] 8.6 Stream URL. **Where:** `N/components/new-chat/index.tsx` (175 lines, `url` memo). **How:** `new URLSearchParams({ locale: dataLocale })`; no `userEmail`. See 13.x for the rest of the file. **Done when:** the string `userEmail` does not appear in the file.
+- [x] 8.1 PR `components/new-chat/{thinking-pill.tsx,typing-indicator/index.tsx,typing-indicator/cute-text-animator.tsx,typing-indicator/cute-text-phrases.ts,typing-indicator/use-typewriter.ts}`.
+- [x] 8.2 PR `components/new-chat/{message.tsx,follow-up-chip.tsx,follow-up-chips.tsx}`. (They import `parts/*`; if typecheck fails on missing parts, do section 12 first and come back - or create empty stubs `export const PartRenderer = () => null` and delete the stub when 12 lands.)
+- [x] 8.3 `chat-area.tsx`, part 1 (port). **Where:** `N/components/new-chat/chat-area.tsx` (421 lines) <- legacy same. **How:** PR; keep as is for now. **Done when:** file exists (typecheck may fail until sections 9-12 land; if so, list the missing imports in the commit message).
+- [x] 8.4 `chat-area.tsx`, part 2 (changes). **How:** delete `sendAutomaticallyWhen: hasClientSideToolCallsPending` and the import; remove `userEmail` from `submitFeedback(...)` calls (two sites) ; keep `MAX_RETRIES = 2`, `RETRY_DELAY_MS`, `messagesRef`, `useFlipTransition`, `pendingPrompt` effect. **Done when:** `grep -n "userEmail\|hasClientSide" N/components/new-chat/chat-area.tsx` prints nothing.
+- [x] 8.5 `new-chat/tools/index.ts`. **Where:** `N/components/new-chat/tools/index.ts`. **How:** PR then delete `CLIENT_TOOLS` and its comment; keep the other three exports. **Watch out:** `SUBAGENT_TOOLS` contains `bigquery` - correct, L keeps BigQuery.
+- [x] 8.6 Stream URL. **Where:** `N/components/new-chat/index.tsx` (175 lines, `url` memo). **How:** `new URLSearchParams({ locale: dataLocale })`; no `userEmail`. See 13.x for the rest of the file. **Done when:** the string `userEmail` does not appear in the file.
 
 ## 9. Composer
 
-- [ ] 9.1 PR `components/new-chat/composer/{disclaimer.tsx,send-hint.tsx,send-button.tsx,attach-button.tsx,selected-files.tsx,tools-button.tsx,sources-panel.tsx}`.
-- [ ] 9.2 PR `components/new-chat/composer/index.tsx` (175 lines). **Watch out:** one mounted instance across empty and chat states; do not add `key` props that remount it. Accepted types constant stays `['.txt', '.csv', '.log', 'image/*']`.
+- [x] 9.1 PR `components/new-chat/composer/{disclaimer.tsx,send-hint.tsx,send-button.tsx,attach-button.tsx,selected-files.tsx,tools-button.tsx,sources-panel.tsx}`.
+- [x] 9.2 PR `components/new-chat/composer/index.tsx` (175 lines). **Watch out:** one mounted instance across empty and chat states; do not add `key` props that remount it. Accepted types constant stays `['.txt', '.csv', '.log', 'image/*']`.
 
 ## 10. Empty state and suggestions
 
-- [ ] 10.1 PR `components/new-chat/empty-state/{section-label.tsx,greeting.tsx,default-suggestions.ts,suggestion-card.tsx,suggestion-cards.tsx,recent-chat-row.tsx,recent-chats.tsx,index.tsx}`. **How:** in `default-suggestions.ts` reword any text mentioning "team". **Done when:** `grep -in team N/components/new-chat/empty-state` prints nothing.
-- [ ] 10.2 Port `hooks/use-suggestions.ts`. **How:** PR; call `getSuggestions(dataLocale)` (no email); keep the `hasFetched` ref (one request per mount); on failure show nothing (defaults render). Replace `console.warn`. **Done when:** typecheck passes.
+- [x] 10.1 PR `components/new-chat/empty-state/{section-label.tsx,greeting.tsx,default-suggestions.ts,suggestion-card.tsx,suggestion-cards.tsx,recent-chat-row.tsx,recent-chats.tsx,index.tsx}`. **How:** in `default-suggestions.ts` reword any text mentioning "team". **Done when:** `grep -in team N/components/new-chat/empty-state` prints nothing.
+- [x] 10.2 Port `hooks/use-suggestions.ts`. **How:** PR; call `getSuggestions(dataLocale)` (no email); keep the `hasFetched` ref (one request per mount); on failure show nothing (defaults render). Replace `console.warn`. **Done when:** typecheck passes.
 
 ## 11. Follow-ups, actions, feedback
 
-- [ ] 11.1 Port `hooks/use-next-prompts.ts`. **How:** PR; remove `workspace` seeding and the email argument: `getSessionDigest(sessionId, 0)` / `(sessionId, turnFinishedAt)`; keep `POLL_SCHEDULE_MS = [900, 1800, 2500, 3000]`, clear on session change, cancel on unmount. **Done when:** typecheck passes.
-- [ ] 11.2 PR `components/new-chat/message-actions.tsx`, `components/new-chat/feedback-popup.tsx`. **How:** feedback popup calls `submitFeedback(body)` with no `userEmail`; the body MAY carry `userLabel` (display-only, from `useCurrentUser().email`, unverified; the service sanitises it and the backoffice shows it as text marked "(unverified)"). **Watch out:** never send the label anywhere but the JSON body; popup stays open with typed comment on failure.
+- [x] 11.1 Port `hooks/use-next-prompts.ts`. **How:** PR; remove `workspace` seeding and the email argument: `getSessionDigest(sessionId, 0)` / `(sessionId, turnFinishedAt)`; keep `POLL_SCHEDULE_MS = [900, 1800, 2500, 3000]`, clear on session change, cancel on unmount. **Done when:** typecheck passes.
+- [x] 11.2 PR `components/new-chat/message-actions.tsx`, `components/new-chat/feedback-popup.tsx`. **How:** feedback popup calls `submitFeedback(body)` with no `userEmail`; the body MAY carry `userLabel` (display-only, from `useCurrentUser().email`, unverified; the service sanitises it and the backoffice shows it as text marked "(unverified)"). **Watch out:** never send the label anywhere but the JSON body; popup stays open with typed comment on failure.
 
 ## 12. Message-part renderers
 
-- [ ] 12.1 PR `parts/{text-part.tsx,json-block.tsx,file-part.tsx,source-part.tsx}`.
-- [ ] 12.1b Private image loading (owner decision Q9).
+- [x] 12.1 PR `parts/{text-part.tsx,json-block.tsx,file-part.tsx,source-part.tsx}`.
+- [x] 12.1b Private image loading (owner decision Q9).
   **Why:** the browser cannot attach the forward-to JWT to `<img src>`, and the service streams images only to authenticated callers (change L, `GET /files/:sessionId/:fileName`); spec "Private images load through the service".
   **Where:** create `N/hooks/use-service-image.ts`; edit `N/components/new-chat/parts/file-part.tsx` (ported in 12.1) to use it.
   **How:** `useServiceImage(url?: string)`: `useState` for `{status, objectUrl}`; `useEffect([url, attempt])`: if `url` does not start with `/files/` -> `{status:'idle'}`; else create an `AbortController`, call `forwardToFetch` via the request helper from 3.1 (add `requestBlob(path, signal)` next to `request`: same URL building `${chatServiceEndpointUrl}${path}`, `!res.ok` -> throw `ForwardToError`), verify `blob.type.startsWith('image/')`, `const objectUrl = URL.createObjectURL(blob)`, set state; cleanup: `controller.abort()` and `URL.revokeObjectURL(objectUrl)` of the URL created by THIS effect run; a module-level `Map<string, Promise<Blob>>` de-duplicates concurrent identical requests (delete the entry when it settles; do not cache blobs across mounts). `retry()` increments `attempt`. `file-part.tsx`: image media type + `/files/` -> use the hook (skeleton box 4:3 while `loading`, `<img src=objectUrl alt=filename ?? 'Generated image' loading="lazy">` when `ready`, placeholder text "Image unavailable" + Retry button when `error`); absolute `https://` URL -> plain `<img referrerPolicy="no-referrer">`; anything else -> render nothing. Use Nimbus primitives already used by sibling parts for the skeleton/button; no `console.*`.
   **Done when:** `yarn typecheck` passes; the four scenarios of "Private images load through the service" are exercised manually in E2E-P-15; grep shows `createObjectURL` only in this hook and every call has a matching `revokeObjectURL` in the cleanup.
   **Watch out:** React 18 StrictMode mounts effects twice in development: the cleanup revoke makes the first object URL invalid, so never store an object URL outside the effect that created it; do not set `<img src>` to the relative `/files/...` path anywhere (it would hit the Merchant Center origin, not the service). The same hook is copied by change S and used by Q's transcript views.
-- [ ] 12.2 PR `parts/{reasoning-part.tsx,subagent-part.tsx}`. **Watch out:** `subagent-part` recurses into `PartRenderer`; import cycles are intended (lazy through `parts/index.tsx`).
-- [ ] 12.3 PR `parts/tool-steps/{collect-tool-steps.ts,humanize-tool.ts,tool-step-row.tsx,index.tsx}`.
-- [ ] 12.4 PR `parts/export-part.tsx`.
-- [ ] 12.5 Visualization. PR `parts/visualization/{types.ts,chart-renderer.tsx,visualization-part.tsx,index.tsx}`. **Watch out:** 16 chart kinds in `types/chart.ts`; `DonutChart` -> `PieChart` + `pieHole`; wrap `Chart` render in try/catch fallback text for malformed specs (spec "Bad spec").
-- [ ] 12.6 PR `parts/gen-ui-part.tsx` (needs `compose-preview-context`, task 16.x - create a stub import only after 16.1 is done; do 16.1 first).
-- [ ] 12.7 PR `parts/annotations-part.tsx` (needs `preview-annotations/annotation-payload.ts` from 18.1).
-- [ ] 12.8 PR `parts/index.tsx` (159 lines, the dispatcher). **Done when:** typecheck passes with all parts present; remove the temporary stub from 8.2.
+- [x] 12.2 PR `parts/{reasoning-part.tsx,subagent-part.tsx}`. **Watch out:** `subagent-part` recurses into `PartRenderer`; import cycles are intended (lazy through `parts/index.tsx`).
+- [x] 12.3 PR `parts/tool-steps/{collect-tool-steps.ts,humanize-tool.ts,tool-step-row.tsx,index.tsx}`.
+- [x] 12.4 PR `parts/export-part.tsx`.
+- [x] 12.5 Visualization. PR `parts/visualization/{types.ts,chart-renderer.tsx,visualization-part.tsx,index.tsx}`. **Watch out:** 16 chart kinds in `types/chart.ts`; `DonutChart` -> `PieChart` + `pieHole`; wrap `Chart` render in try/catch fallback text for malformed specs (spec "Bad spec").
+- [x] 12.6 PR `parts/gen-ui-part.tsx` (needs `compose-preview-context`, task 16.x - create a stub import only after 16.1 is done; do 16.1 first).
+- [x] 12.7 PR `parts/annotations-part.tsx` (needs `preview-annotations/annotation-payload.ts` from 18.1).
+- [x] 12.8 PR `parts/index.tsx` (159 lines, the dispatcher). **Done when:** typecheck passes with all parts present; remove the temporary stub from 8.2.
 
 ## 13. Tool-call-logs and the shell page
 
-- [ ] 13.1 Port `contexts/tool-call-logs-config.tsx` (232 lines). **How:** PR; on mount `GET tool-call-logs` (do not wait for `isAuthenticated=false`); initial `mode: 'none'` until loaded (Q-P2); seed from `useAuth().toolCallLogs` when the bootstrap supplied it (change G contributes it), otherwise fetch. Exposes `showToolCalls`, `showReasoning`, `state`, `setMode`, `saveConfig`, `loadConfig`. **Done when:** typecheck passes.
-- [ ] 13.2 Port `components/interactive-tab-content/index.tsx` and `components/new-chat/index.tsx` (rest of the file after 8.6). **How:** PR; in `NewChat` remove `ManageMcpPanel`, `SettingsDrawer` imports and mounts (Q re-adds), remove `workspace`/email; keep suggestions + next-prompts hooks at this level (Explore finding 7). **Done when:** typecheck passes after sections 16-18.
+- [x] 13.1 Port `contexts/tool-call-logs-config.tsx` (232 lines). **How:** PR; on mount `GET tool-call-logs` (do not wait for `isAuthenticated=false`); initial `mode: 'none'` until loaded (Q-P2); seed from `useAuth().toolCallLogs` when the bootstrap supplied it (change G contributes it), otherwise fetch. Exposes `showToolCalls`, `showReasoning`, `state`, `setMode`, `saveConfig`, `loadConfig`. **Done when:** typecheck passes.
+- [x] 13.2 Port `components/interactive-tab-content/index.tsx` and `components/new-chat/index.tsx` (rest of the file after 8.6). **How:** PR; in `NewChat` remove `ManageMcpPanel`, `SettingsDrawer` imports and mounts (Q re-adds), remove `workspace`/email; keep suggestions + next-prompts hooks at this level (Explore finding 7). **Done when:** typecheck passes after sections 16-18.
 
 ## 14. Per-session tool menu
 
-- [ ] 14.1 PR `components/new-chat/server-tools/{group.tsx,tools-panel.tsx}`. **How:** `tools-panel` keeps local draft state; Save calls `updateTools(fullGroupedList)`; closing resets the draft; filter is client-side. **Done when:** typecheck passes. **Watch out:** "dismissing discards unsaved toggles on purpose" - do not add auto-save.
+- [x] 14.1 PR `components/new-chat/server-tools/{group.tsx,tools-panel.tsx}`. **How:** `tools-panel` keeps local draft state; Save calls `updateTools(fullGroupedList)`; closing resets the draft; filter is client-side. **Done when:** typecheck passes. **Watch out:** "dismissing discards unsaved toggles on purpose" - do not add auto-save.
 
 ## 15. Providers wiring (partial)
 
-- [ ] 15.1 Edit `N/contexts/index.tsx` (O wrote it). **How:** add `ToolCallLogsConfigProvider`, `TabbedHeaderProvider`, `ComposedPagesProvider` (after 16.x), `SessionProvider autoCreateSession` in the legacy nesting order; leave `// Q: BackofficeProvider, McpProvidersProvider, SystemPromptConfigProvider` placeholders. **Done when:** typecheck passes.
+- [x] 15.1 Edit `N/contexts/index.tsx` (O wrote it). **How:** add `ToolCallLogsConfigProvider`, `TabbedHeaderProvider`, `ComposedPagesProvider` (after 16.x), `SessionProvider autoCreateSession` in the legacy nesting order; leave `// Q: BackofficeProvider, McpProvidersProvider, SystemPromptConfigProvider` placeholders. **Done when:** typecheck passes.
 
 ## 16. Composed pages infrastructure
 
-- [ ] 16.1 PR `contexts/compose-preview-context.tsx` (159), `contexts/composed-page-context.tsx` (126).
-- [ ] 16.2 PR `types/composed-page.ts` (255) and `utils/schema-helpers.ts` (97) (identical to composed-apps' copy; R may add it to `scripts/check-duplicates.mjs`).
-- [ ] 16.3 PR `utils/nimbus-surface.generated.ts` is produced by O; verify `ls N/utils/nimbus-surface.generated.ts`.
-- [ ] 16.4 `utils/babel-renderer.tsx`, commit 1: copy 1294 lines (PR) only. **Done when:** file exists.
-- [ ] 16.5 `babel-renderer.tsx`, commit 2: read the file top to bottom once and write a 10-line comment block at the top summarising `IMPORT_MAP` (react, react-router-dom v5 helpers, `commercetools` = whole Nimbus surface, `Icons` namespace), error phases (`decode|transpile|execute|render|data-fetch`) and the `data-ct-component` tagging; remove legacy comments mentioning the router repo path. **Done when:** typecheck passes. **Watch out:** do not change logic; behaviour is tested only in Chrome (E2E-P-11).
-- [ ] 16.6 PR `components/ui-error-boundary/index.tsx` (400) and `components/composed-page-chart/index.tsx` (224).
-- [ ] 16.7 PR `components/page-renderer/index.tsx` (283).
-- [ ] 16.8 PR `contexts/data-sources-context.tsx` (478). **How:** at the two `target === 'BIG_QUERY'` guards (legacy lines ~185 and ~344) keep behaviour but make the message a visible per-component notice "This data source is no longer supported" instead of silent skip, per spec.
-- [ ] 16.9 PR `hooks/use-graphql/index.ts`, `hooks/use-composed-pages-connector/*.ctp.graphql` (4 files), `graphql.d.ts`; check the webpack loader for `.graphql` is provided by `mc-scripts` (legacy builds with it) by running `yarn build`.
-- [ ] 16.10 PR `hooks/use-composed-pages-storage/{index.ts,use-composed-pages-storage.ts}` (459) and `contexts/composed-pages-context.tsx` (244). **Watch out:** container key is `SHARED_COMPOSED_PAGES_CONTAINER_KEY` from `constants.ts`; M decides the final name.
+- [x] 16.1 PR `contexts/compose-preview-context.tsx` (159), `contexts/composed-page-context.tsx` (126).
+- [x] 16.2 PR `types/composed-page.ts` (255) and `utils/schema-helpers.ts` (97) (identical to composed-apps' copy; R may add it to `scripts/check-duplicates.mjs`).
+- [x] 16.3 PR `utils/nimbus-surface.generated.ts` is produced by O; verify `ls N/utils/nimbus-surface.generated.ts`.
+- [x] 16.4 `utils/babel-renderer.tsx`, commit 1: copy 1294 lines (PR) only. **Done when:** file exists.
+- [x] 16.5 `babel-renderer.tsx`, commit 2: read the file top to bottom once and write a 10-line comment block at the top summarising `IMPORT_MAP` (react, react-router-dom v5 helpers, `commercetools` = whole Nimbus surface, `Icons` namespace), error phases (`decode|transpile|execute|render|data-fetch`) and the `data-ct-component` tagging; remove legacy comments mentioning the router repo path. **Done when:** typecheck passes. **Watch out:** do not change logic; behaviour is tested only in Chrome (E2E-P-11).
+- [x] 16.6 PR `components/ui-error-boundary/index.tsx` (400) and `components/composed-page-chart/index.tsx` (224).
+- [x] 16.7 PR `components/page-renderer/index.tsx` (283).
+- [x] 16.8 PR `contexts/data-sources-context.tsx` (478). **How:** at the two `target === 'BIG_QUERY'` guards (legacy lines ~185 and ~344) keep behaviour but make the message a visible per-component notice "This data source is no longer supported" instead of silent skip, per spec.
+- [x] 16.9 PR `hooks/use-graphql/index.ts`, `hooks/use-composed-pages-connector/*.ctp.graphql` (4 files), `graphql.d.ts`; check the webpack loader for `.graphql` is provided by `mc-scripts` (legacy builds with it) by running `yarn build`.
+- [x] 16.10 PR `hooks/use-composed-pages-storage/{index.ts,use-composed-pages-storage.ts}` (459) and `contexts/composed-pages-context.tsx` (244). **Watch out:** container key is `SHARED_COMPOSED_PAGES_CONTAINER_KEY` from `constants.ts`; M decides the final name.
 
 ## 17. Preview and Code tabs, pages drawer and route
 
-- [ ] 17.1 PR `components/compose-preview/{index.ts,compose-preview.tsx}` (321) and `components/code-preview/{index.ts,code-preview.tsx}`.
-- [ ] 17.2 PR `components/panels/composed-page-panel/{index.tsx,composed-pages-list.tsx,page-row.tsx,pages-empty-hint.tsx}`.
-- [ ] 17.3 PR `components/composed-page-view/{index.ts,composed-page-view.tsx,composed-page-settings.tsx}` (skip `messages.ts`, dead).
+- [x] 17.1 PR `components/compose-preview/{index.ts,compose-preview.tsx}` (321) and `components/code-preview/{index.ts,code-preview.tsx}`.
+- [x] 17.2 PR `components/panels/composed-page-panel/{index.tsx,composed-pages-list.tsx,page-row.tsx,pages-empty-hint.tsx}`.
+- [x] 17.3 PR `components/composed-page-view/{index.ts,composed-page-view.tsx,composed-page-settings.tsx}` (skip `messages.ts`, dead).
 
 ## 18. Annotations (Agentation)
 
-- [ ] 18.1 PR `components/preview-annotations/{annotation-payload.ts,build-annotation-payload.ts}` (typed contract + payload builder). **Watch out:** the header comment names the router file path - rewrite it to "the service module defined by change H (`annotation-part`)".
-- [ ] 18.2 PR `components/preview-annotations/{agentation-shadow-root.ts,seed-agentation-defaults.ts,use-agentation-theme.ts}`.
-- [ ] 18.3 PR `components/preview-annotations/{use-annotation-scope.ts,use-feedback-mode-sync.ts}`.
-- [ ] 18.4 PR `components/preview-annotations/{annotate-toggle.tsx,preview-annotations.tsx,index.ts}`; wire into `compose-preview.tsx` as legacy does. **Done when:** typecheck passes; `grep -n "ct-component" N/utils/babel-renderer.tsx` finds the tagging.
-- [ ] 18.5 Confirm `chat-area.tsx` consumes `pendingPrompt` with `parts` and sends `{ type: 'text', text }` + `data-ct-annotations`; **Done when:** read-through matches legacy lines 245-285.
+- [x] 18.1 PR `components/preview-annotations/{annotation-payload.ts,build-annotation-payload.ts}` (typed contract + payload builder). **Watch out:** the header comment names the router file path - rewrite it to "the service module defined by change H (`annotation-part`)".
+- [x] 18.2 PR `components/preview-annotations/{agentation-shadow-root.ts,seed-agentation-defaults.ts,use-agentation-theme.ts}`.
+- [x] 18.3 PR `components/preview-annotations/{use-annotation-scope.ts,use-feedback-mode-sync.ts}`.
+- [x] 18.4 PR `components/preview-annotations/{annotate-toggle.tsx,preview-annotations.tsx,index.ts}`; wire into `compose-preview.tsx` as legacy does. **Done when:** typecheck passes; `grep -n "ct-component" N/utils/babel-renderer.tsx` finds the tagging.
+- [x] 18.5 Confirm `chat-area.tsx` consumes `pendingPrompt` with `parts` and sends `{ type: 'text', text }` + `data-ct-annotations`; **Done when:** read-through matches legacy lines 245-285.
 
 ## 19. Routes and final wiring
 
-- [ ] 19.1 Edit `N/routes.tsx` (O's skeleton). **How:** port the router tree from `$L/routes.tsx` for P's routes only: `<Route path={`${match.path}/composed/:pageKey`}>` wrapped in `SuspendedRoute` + `WrappedContent` + `ComposedPageView urlToParent={match.url}`, and the fallback `<Route><NewChat /></Route>`; leave Q's two route blocks as comments. Remove the foundation placeholder text. **Done when:** `yarn typecheck && yarn lint && yarn build` pass.
-- [ ] 19.2 Dead-code scan. **How:** `node scripts/check-frontend-leftovers.mjs`; `grep -rn "userEmail\|workspace\|x-mc-team\|CLIENT_TOOLS" mc-app/src` -> only Q's pending files may match. **Done when:** no matches in P files.
-- [ ] 19.3 SPDX check: `node scripts/spdx-check.mjs`. **Done when:** exit 0.
+- [x] 19.1 Edit `N/routes.tsx` (O's skeleton). **How:** port the router tree from `$L/routes.tsx` for P's routes only: `<Route path={`${match.path}/composed/:pageKey`}>` wrapped in `SuspendedRoute` + `WrappedContent` + `ComposedPageView urlToParent={match.url}`, and the fallback `<Route><NewChat /></Route>`; leave Q's two route blocks as comments. Remove the foundation placeholder text. **Done when:** `yarn typecheck && yarn lint && yarn build` pass.
+- [x] 19.2 Dead-code scan. **How:** `node scripts/check-frontend-leftovers.mjs`; `grep -rn "userEmail\|workspace\|x-mc-team\|CLIENT_TOOLS" mc-app/src` -> only Q's pending files may match. **Done when:** no matches in P files.
+- [x] 19.3 SPDX check: `node scripts/spdx-check.mjs`. **Done when:** exit 0.
 
 ## 20. Chrome scenarios (E2E-P-nn)
 
@@ -167,11 +167,11 @@ Preconditions for all: change G/H deployed to the sandbox (or tunnel) service, t
 
 ## 21. Verification
 
-- [ ] 21.1 Unit tests: none (legacy has none; decision recorded in O D-O11). Instead add compile-time guards: none required.
-- [ ] 21.2 Gates: `cd mc-app && yarn typecheck && yarn lint && yarn build` -> exit 0.
+- [x] 21.1 Unit tests: none (legacy has none; decision recorded in O D-O11). Instead add compile-time guards: none required.
+- [x] 21.2 Gates: `cd mc-app && yarn typecheck && yarn lint && yarn build` -> exit 0.
 - [ ] 21.3 Root gates: `node scripts/check-duplicates.mjs` (OK), `node scripts/check-frontend-leftovers.mjs` (exit 0), `node scripts/spdx-check.mjs` (exit 0), `commercetools connect validate` (if B in place).
 - [ ] 21.4 Chrome scenarios E2E-P-01 .. E2E-P-16 pass; evidence saved; list failures with the exact network/console excerpt.
-- [ ] 21.5 `openspec validate p-mc-app-chat-surface --strict`.
+- [x] 21.5 `openspec validate p-mc-app-chat-surface --strict`.
 
 ## 22. Docs to update (for change W)
 

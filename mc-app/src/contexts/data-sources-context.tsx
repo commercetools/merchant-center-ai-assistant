@@ -194,7 +194,7 @@ export function DataSourcesProvider({
         if ((dataSource.target as string) === 'BIG_QUERY') {
           return {
             error: new Error(
-              `Data source "${dataSource.id}" uses a BigQuery SQL query, which pages no longer support. Ask the assistant to rebuild this page.`
+              `This data source is no longer supported ("${dataSource.id}" uses a BigQuery SQL query). Ask the assistant to rebuild this page.`
             ),
           };
         } else {

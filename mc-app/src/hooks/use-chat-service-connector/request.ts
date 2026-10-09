@@ -40,7 +40,7 @@ const buildUrl = (endpoint: string | undefined, path: string): string => {
  */
 export const createServiceRequest =
   (endpoint: string | undefined): ServiceRequest =>
-  <T>(method: string, path: string, body?: unknown): Promise<T> =>
+  async <T>(method: string, path: string, body?: unknown): Promise<T> =>
     forwardToJson<T>(buildUrl(endpoint, path), {
       method,
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),

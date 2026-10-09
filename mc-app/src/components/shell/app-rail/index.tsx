@@ -11,13 +11,15 @@ import {
   Forum,
   HelpOutline,
 } from '@commercetools/nimbus-icons';
-import { Box, Toolbar } from '@commercetools/nimbus';
+import { Box, Popover, Toolbar } from '@commercetools/nimbus';
 import {
   useComposedPagesContext,
   useTabbedHeaderContext,
 } from '../../../contexts';
 import { useSession } from '../../../contexts/session';
 import { useMotion } from '../../../motion';
+import { UserAvatar } from '../../new-chat/user-avatar';
+import { YourUserId } from '../../your-user-id';
 import { NewChatTile } from './new-chat-tile';
 import { RailItem } from './rail-item';
 
@@ -124,6 +126,28 @@ export const AppRail: React.FC<Props> = ({
         label="Help"
         onPress={() => window.open(HELP_URL, '_blank', 'noopener,noreferrer')}
       />
+
+      {/*
+       * The user menu. It holds the signed-in user's own user ID, which an operator needs
+       * to put into ADMIN_USER_IDS; it is shown to every user, not only administrators.
+       */}
+      <Popover.Root placement="right bottom">
+        <Popover.Trigger asChild>
+          <Box
+            as="button"
+            aria-label="Account"
+            background="transparent"
+            border="none"
+            cursor="pointer"
+            padding="100"
+          >
+            <UserAvatar />
+          </Box>
+        </Popover.Trigger>
+        <Popover.Content aria-label="Account" maxWidth="4800">
+          <YourUserId variant="compact" />
+        </Popover.Content>
+      </Popover.Root>
     </Toolbar>
   );
 };

@@ -45,8 +45,10 @@ export interface ToolCallLogsConfigContextType {
   showReasoning: boolean;
 }
 
+// `none` until the first answer: an administrator may have hidden reasoning or tool calls,
+// and rendering them for a moment before the setting arrives would leak what was hidden.
 const defaultState: ToolCallLogsConfigState = {
-  mode: 'all',
+  mode: 'none',
   isLoading: true,
   isSaving: false,
   error: null,
@@ -71,7 +73,7 @@ export const ToolCallLogsConfigProvider: React.FC<
   const { isAuthenticated, toolCallLogs: bootstrapMode } = useAuth();
 
   const [state, setState] = useState<ToolCallLogsConfigState>(defaultState);
-  const [originalMode, setOriginalMode] = useState<ToolCallLogsMode>('all');
+  const [originalMode, setOriginalMode] = useState<ToolCallLogsMode>('none');
 
   /**
    * Load configuration from server
@@ -154,23 +156,19 @@ export const ToolCallLogsConfigProvider: React.FC<
   }, [state.mode, state.hasChanges, setToolCallLogsConfig]);
 
   /**
-   * Seeded from the session bootstrap, NOT from its own request.
+   * Read once when the app opens, in parallel with the session list and the suggestions.
    *
    * This is the one project setting the transcript reads - `showToolCalls` and
    * `showReasoning` decide whether tool calls and reasoning render - so unlike the other
    * settings it cannot wait for a drawer to be opened; it is needed on first paint, for
-   * any conversation that already has messages. It is also a plain field on the project
-   * document the router loads to authenticate the bootstrap, so carrying it there costs
-   * nothing and removes a request from the first-paint burst entirely.
-   *
-   * The `undefined` branch is the deploy window: this app and the router ship separately,
-   * so new app code can reach a router that does not send the field yet. Falling back to
-   * the endpoint keeps the old behaviour rather than silently rendering against the
-   * default. Delete it once the router is rolled out everywhere.
+   * any conversation that already has messages. When the bootstrap carries the mode
+   * (optional `toolCallLogs`), it is used and no request is made; otherwise
+   * `GET tool-call-logs` provides it.
    */
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    // No mode in the bootstrap: ask the service.
     if (bootstrapMode === undefined) {
       void loadConfig();
       return;

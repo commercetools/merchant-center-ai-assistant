@@ -5,30 +5,21 @@
  */
 
 /**
- * Babel Renderer Utility
+ * Babel renderer: turns a composed page (schema v5.0, LLM-authored JSX) into React.
  *
- * MIRRORED FILE - this file is byte-identical to
- *   mc-app/src/utils/babel-renderer.tsx
- * There is no workspace root to share it from, so both copies must be edited
- * together. If you change the generated-code scope here, change it there too.
- *
- * The scope the prompts advertise is NOT hand-maintained any more: it is derived from the
- * installed Nimbus package by mc-app/scripts/generate-nimbus-surface.mjs, which records
- * which exports are components and which are compound namespace objects (`<PageContent>` is
- * an object - React error #130). `yarn generate:nimbus-surface` in mc-app rewrites that
- * manifest and the router's copy of it; run it after a Nimbus bump or any change to how this
- * scope is built.
- *
- * Renders composed page content using @babel/standalone for JSX transpilation.
- * This replaces the JSON component renderer with a more powerful JSX-based approach.
- *
- * Components are defined with a "componentBody" that can include:
- * - React hooks (useState, useEffect, useMemo, etc.)
- * - Custom state management
- * - Helper functions and logic
- * - JSX return statement
- *
- * The renderer wraps the component body in a function component automatically.
+ * - IMPORT_MAP is the whole scope generated code can use: `react`, the react-router-dom v5
+ *   helpers (Route, Switch, Link, hooks), and `commercetools`, which is the full Nimbus
+ *   surface (derived from the installed package by `scripts/generate-nimbus-surface.mjs`,
+ *   `yarn generate:nimbus-surface`) with the icons namespaced as `Icons`, plus `Chart` and
+ *   `ComposedPageChart`. Nothing else is injected.
+ * - Errors are classified by phase: `decode | transpile | execute | render | data-fetch`,
+ *   so the error boundary can say which stage failed and for which component.
+ * - Every rendered component is wrapped in an element tagged `data-ct-component=<name>`
+ *   (`display: contents`); the annotation toolbar reads it to name what the user clicked.
+ * - The code runs in the app origin through `new Function` (CSP allows `unsafe-eval` for
+ *   this on purpose); it never gets credentials of its own.
+ * - Components are defined by a `componentBody` (hooks, state, helpers, a JSX return) that
+ *   this file wraps into a function component. Behaviour is verified in a browser only.
  */
 
 import React, {
@@ -441,7 +432,7 @@ function buildBaseScope(): Record<string, unknown> {
    *   Link        -> react-router's Link, kept for `to=` navigation
    *
    * The shadowed Nimbus components are re-exposed below under unambiguous names.
-   * Keep this in sync with the scope table in the router's commercetools-ui prompt.
+   * Keep this in sync with the scope table in the service's generated-page prompt.
    */
   Object.assign(scope, IMPORT_MAP.commercetools);
   Object.assign(scope, IMPORT_MAP.react);

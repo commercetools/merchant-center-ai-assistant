@@ -4,10 +4,13 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
+import { SuspendedRoute } from '@commercetools-frontend/application-shell';
 import { useApplicationContext } from '@commercetools-frontend/application-shell-connectors';
-import { Box, NimbusProvider, Text } from '@commercetools/nimbus';
-import { useHistory } from 'react-router-dom';
-import { AllProviders, useAuth } from './contexts';
+import { Box, NimbusProvider } from '@commercetools/nimbus';
+import { Route, Switch, useHistory, useRouteMatch } from 'react-router-dom';
+import ComposedPageView from './components/composed-page-view';
+import NewChat from './components/new-chat';
+import { AllProviders } from './contexts';
 
 /** Root shell. */
 const AppWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -16,32 +19,46 @@ const AppWrapper = ({ children }: { children: React.ReactNode }) => (
   </Box>
 );
 
-const Foundation = () => {
-  const { projectKey, userId, isAdmin } = useAuth();
-  return (
-    <Box padding="600">
-      <Text>AI Assistant foundation ready</Text>
-      <Text>
-        Project {projectKey}, user {userId}, admin {String(isAdmin)}
-      </Text>
-    </Box>
-  );
-};
+/** Padded page frame for the routed sub-pages. */
+const WrappedContent = ({ children }: { children: React.ReactNode }) => (
+  <Box padding="600" height="100%" overflowY="auto">
+    {children}
+  </Box>
+);
 
-// Change P adds the chat route and change Q the guarded admin routes.
 const ApplicationRoutes = () => {
+  const match = useRouteMatch();
   const history = useHistory();
   const dataLocale = useApplicationContext((context) => context.dataLocale);
 
   return (
+    /**
+     * NimbusProvider has to live inside ApplicationShell so it can read the project's
+     * data locale, and `loadFonts` must be off because app-kit already loads Inter.
+     * `router` is wired to react-router v5's history so Nimbus `Link href` and
+     * `Button href` navigate client-side instead of doing a full page load.
+     */
     <NimbusProvider
       locale={dataLocale ?? 'en'}
       loadFonts={false}
-      router={{ navigate: (path: string) => history.push(path) }}
+      router={{ navigate: (href: string) => history.push(href) }}
     >
       <AllProviders>
         <AppWrapper>
-          <Foundation />
+          <Switch>
+            {/* Q: the guarded backoffice routes (`/backoffice/:sessionId`, `/backoffice`) go here. */}
+            <Route path={`${match.path}/composed/:pageKey`}>
+              <SuspendedRoute>
+                <WrappedContent>
+                  <ComposedPageView urlToParent={match.url} />
+                </WrappedContent>
+              </SuspendedRoute>
+            </Route>
+            {/* Q: the managed MCP page route goes here if Q keeps it. */}
+            <Route>
+              <NewChat />
+            </Route>
+          </Switch>
         </AppWrapper>
       </AllProviders>
     </NimbusProvider>

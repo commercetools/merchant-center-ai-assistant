@@ -36,7 +36,7 @@ interface SessionContextValue {
   isLoadingTools: boolean;
   allSessions: SessionSummary[];
   /**
-   * Re-read the session list. Called after a turn finishes, because the router's digest
+   * Re-read the session list. Called after a turn finishes, because the service's digest
    * renames the session a second or two later and the rail badge, the recent list and the
    * conversation header all read from here.
    */
@@ -247,7 +247,7 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
    * Adopt the stored session id WITHOUT a round trip, and let the messages read prove it.
    *
    * This used to `GET /session/:id` purely to check the id was still valid, then throw the
-   * response away and fetch the messages - which the router validates all over again, and
+   * response away and fetch the messages - which the service validates all over again, and
    * 404s on exactly the same condition. Two serial round trips where one would do, and the
    * first was on the critical path for first paint: nothing could render until it
    * returned. `useChatConnector` now reports a 404 from the messages read back through

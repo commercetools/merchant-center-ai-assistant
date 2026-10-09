@@ -45,7 +45,7 @@ type TExtractedPreviewData = {
  *
  * This is the render gate for the "UI Preview generated" button in the chat
  * transcript (see parts/index.tsx and parts/subagent-part.tsx), so the version
- * here has to track the version the router's create_composed_page tool emits.
+ * here has to track the version the service's create_composed_page tool emits.
  *
  * v4.0 outputs are deliberately rejected: their JSX targets commercetools UI Kit
  * names the renderer no longer has in scope, so offering a preview button would

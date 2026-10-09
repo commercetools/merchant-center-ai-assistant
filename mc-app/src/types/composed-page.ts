@@ -32,7 +32,7 @@ export type TDataSource = {
   query: string; // GraphQL query string
   variables?: TGraphQLVariable[];
   /**
-   * Kept as a single-value union, matching the router's one-member enum: stored pages
+   * Kept as a single-value union, matching the service's one-member enum: stored pages
    * carry `target` on every data source, and dropping the field would silently
    * reinterpret them.
    */

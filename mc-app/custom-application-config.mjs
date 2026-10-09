@@ -39,7 +39,7 @@ const config = {
         "'unsafe-inline'",
         "'unsafe-eval'",
       ],
-      'img-src': ['*.gstatic.com', '*.gravatar.com', 'gravatar.com'],
+      'img-src': ['*.gstatic.com', '*.gravatar.com', 'gravatar.com', 'blob:'],
       'font-src': ['*.gstatic.com'],
       'style-src': ['*.gstatic.com'],
     },

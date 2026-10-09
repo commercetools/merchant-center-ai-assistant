@@ -9,17 +9,15 @@ import type { Annotation } from 'agentation';
 /**
  * The annotation data part: what the annotation toolbar puts on a chat message.
  *
- * MIRRORED CONTRACT - the consumer is
- *   multitenant-ai-assistant-router/service/src/functional-agent/annotation-part.ts
- * which hands it to the model. There is no shared package between the two repositories (see
- * the note in `utils/babel-renderer`), so a change here needs the matching change there. The
- * router also has to let the part through `processMessagesForStorage`, or it is dropped from
- * history.
+ * MIRRORED CONTRACT - the consumer is the service module defined by change H
+ * (`annotation-part`), which hands it to the model. There is no shared package between the
+ * frontend and the service, so a change here needs the matching change there. The service
+ * also has to let the part through when it stores messages, or it is dropped from history.
  *
  * Why a data part rather than more text in the message: the message text is rendered
  * verbatim in the transcript, so selectors, class names and component source appeared in the
  * author's own bubble as a wall of markup. A `data-` part is carried alongside the text -
- * persisted verbatim for user messages (`chat.service.sendMessage` stores `parts` as given),
+ * persisted verbatim for user messages (the service stores `parts` as given),
  * rendered by whatever component we choose, and handed to the model through
  * `convertToModelMessages`'s `convertDataPart` hook. Nothing is parsed back out of a string.
  *

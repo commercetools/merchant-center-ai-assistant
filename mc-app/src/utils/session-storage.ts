@@ -8,7 +8,7 @@
  * Where the browser remembers which conversation it had open.
  *
  * Extracted from `SessionProvider` because two places now read it: the provider, and the
- * session bootstrap - which sends the remembered id so the router can return that
+ * session bootstrap - which sends the remembered id so the service can return that
  * session's messages in the same response instead of the app asking for them afterwards.
  * A second copy of the literal is exactly the kind of thing that survives a rename in one
  * file and not the other, and the symptom would be every reload silently opening a
