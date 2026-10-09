@@ -15,7 +15,7 @@ import type {
 export type { DisabledTools, FeatureFlags, NextPrompt, TemporaryTable };
 export type { PromptSuggestion, UserSuggestions } from '../persistence';
 
-/** The session as stored and as returned by the API (no tenant or e-mail fields). */
+/** The session as stored and as returned by the API (no project or e-mail fields). */
 export type ChatSession = SessionRecord;
 export type { SessionRecord };
 
