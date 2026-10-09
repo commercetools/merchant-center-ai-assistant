@@ -4,6 +4,7 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
+import { composedPageSource } from '../composed-pages/tool-source';
 import { nimbusSource } from '../nimbus';
 import { entityLinkSource } from './entity-link.source';
 import { exportSource } from './export.source';
@@ -47,6 +48,9 @@ registerToolSource(
 
 // K: the embedded Nimbus design-system documentation tools.
 registerToolSource(nimbusSource);
+
+// M: composed pages (`create_composed_page`).
+registerToolSource(composedPageSource);
 
 /*
  * Composition. A new tool source is one file plus one line here.

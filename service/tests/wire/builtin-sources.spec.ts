@@ -35,11 +35,13 @@ describe('built-in sources', () => {
     contexts.push(ctx);
     const { tools, contributing } = await registry.resolve(ctx);
     expect(Object.keys(tools).sort()).toEqual([
+      'create_composed_page',
       'create_entity_link',
       'export_data',
       'visualize_data',
     ]);
     expect(contributing.map((s) => s.name)).toEqual([
+      'commercetoolsUI',
       'entity-link',
       'visualize',
       'export',

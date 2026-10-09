@@ -141,6 +141,7 @@ describe('buildOrchestrator', () => {
       realRegistry
     );
     expect(Object.keys(allTools).sort()).toEqual([
+      'create_composed_page',
       'create_entity_link',
       'export_data',
       'visualize_data',
