@@ -47,13 +47,16 @@ type StreamErrorLike = {
  */
 export function describeStreamError(context: string, error: unknown): string {
   const err: StreamErrorLike =
-    typeof error === 'object' && error !== null ? (error as StreamErrorLike) : {};
+    typeof error === 'object' && error !== null
+      ? (error as StreamErrorLike)
+      : {};
 
   const detail: Record<string, unknown> = {};
   if (err.name) detail.name = err.name;
   if (err.statusCode !== undefined) detail.statusCode = err.statusCode;
   if (err.url) detail.url = err.url;
-  if (err.responseBody) detail.responseBody = String(err.responseBody).slice(0, 2000);
+  if (err.responseBody)
+    detail.responseBody = String(err.responseBody).slice(0, 2000);
   if (err.data !== undefined) detail.data = err.data;
   if (err.cause) {
     detail.cause =

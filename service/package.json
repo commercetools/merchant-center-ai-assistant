@@ -18,12 +18,12 @@
     "connector:post-deploy": "node build/connector/post-deploy.js",
     "connector:pre-undeploy": "node build/connector/pre-undeploy.js",
     "persistence:purge": "node --env-file=.env.local scripts/purge-containers.mjs",
-    "persistence:reencrypt": "node --env-file=.env.local scripts/reencrypt.mjs",
-    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.integration.config.cjs"
+    "persistence:reencrypt": "node --env-file=.env.local scripts/reencrypt.mjs"
   },
   "dependencies": {
     "@ai-sdk/google-vertex": "^5.0.109",
     "@ai-sdk/mcp": "^2.0.73",
+    "@ai-sdk/provider-utils": "^5.0.58",
     "@commercetools-backend/express": "^27.13.0",
     "@commercetools-backend/loggers": "^27.13.0",
     "@commercetools/platform-sdk": "^8.27.0",

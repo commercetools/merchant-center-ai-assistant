@@ -101,7 +101,8 @@ export const getAccumulatedUsage = (
   return messages.reduce((acc, message) => {
     const m = message as MessageWithUsage;
     let next = addUsages(acc, extractUsage(m.metadata?.usage));
-    if (Array.isArray(m.parts)) next = addUsages(next, getUsageFromParts(m.parts));
+    if (Array.isArray(m.parts))
+      next = addUsages(next, getUsageFromParts(m.parts));
     return next;
   }, zero());
 };

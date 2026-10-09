@@ -36,9 +36,12 @@ export const logUnserializableToolSchemas = (
       void asSchema(schema as Parameters<typeof asSchema>[0]).jsonSchema;
     } catch (error) {
       broken.push(name);
-      logger.error(`[tool-schema] ${context}: "${name}" has an unserializable inputSchema`, {
-        reason: error instanceof Error ? error.message : String(error),
-      });
+      logger.error(
+        `[tool-schema] ${context}: "${name}" has an unserializable inputSchema`,
+        {
+          reason: error instanceof Error ? error.message : String(error),
+        }
+      );
     }
   }
 

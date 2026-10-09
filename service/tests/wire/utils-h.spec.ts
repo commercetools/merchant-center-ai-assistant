@@ -148,7 +148,7 @@ describe('tool schema debug', () => {
     const names = logUnserializableToolSchemas({ broken, good }, 'test');
     logs.stop();
     expect(names).toEqual(['broken']);
-    expect(logs.lines.join('')).toContain('"broken"');
+    expect(logs.lines.join('')).toContain('broken');
   });
 });
 

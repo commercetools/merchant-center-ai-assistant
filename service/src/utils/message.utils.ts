@@ -33,7 +33,10 @@ const textOf = (entries: unknown[]): string =>
   entries
     .filter(
       (e): e is Loose & { text: string } =>
-        isLoose(e) && e.type === 'text' && typeof e.text === 'string' && e.text !== ''
+        isLoose(e) &&
+        e.type === 'text' &&
+        typeof e.text === 'string' &&
+        e.text !== ''
     )
     .map((e) => e.text)
     .join(' ');
@@ -64,7 +67,9 @@ export const sanitizeMessages = (
     : objects;
 
   let result = considered.map((msg): SanitizedMessage => {
-    const role = (typeof msg.role === 'string' && msg.role ? msg.role : 'user') as MessageRole;
+    const role = (
+      typeof msg.role === 'string' && msg.role ? msg.role : 'user'
+    ) as MessageRole;
 
     if (Array.isArray(msg.parts)) {
       return { role, content: textOf(msg.parts) || nonTextPlaceholder };
