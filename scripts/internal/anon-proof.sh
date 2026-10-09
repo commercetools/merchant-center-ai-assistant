@@ -20,7 +20,7 @@ SKIPPED=()
 run() {
   local name="$1" dir="$2"; shift 2
   echo "=== STEP $name" >> "$LOG"
-  ( cd "$W/repo/$dir" && env -i HOME="$W/home" PATH="$PATH" NODE_ENV= CI=true bash -c "$*" ) >> "$LOG" 2>&1
+  ( cd "$W/repo/$dir" && env -i HOME="$W/home" PATH="$PATH" CI=true bash -c "$*" ) >> "$LOG" 2>&1
   local rc=$?
   echo "=== EXIT $name $rc" >> "$LOG"
   echo "$name -> $rc"
