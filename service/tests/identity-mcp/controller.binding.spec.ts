@@ -228,6 +228,45 @@ describe('PUT /managed-mcp-identity', () => {
   });
 });
 
+describe('PUT /managed-mcp-identity: rebind cleanup (TA-21)', () => {
+  it("removes the old binding's token records of every user, revoking them best effort", async () => {
+    const fake = fakeAuth2();
+    const net = routedFetch(fakeMcp().responder, auth2Responder(fake));
+    const { app, rig } = makeIdentityApp(net.fetchFn);
+    await rig.stores.binding.set(bindingFixture());
+    await rig.stores.binding.setClient(legacyClient());
+    for (const id of ['u1', 'u2'])
+      await rig.stores.tokens.put(tokenRecordFixture({ userId: id }));
+
+    const res = await request(app)
+      .put(BASE)
+      .set(ADMIN)
+      .send({ serverKey: SERVER_KEY });
+    expect(res.status).toBe(200);
+    for (const id of ['u1', 'u2'])
+      expect(await rig.stores.tokens.get(id)).toBeNull();
+    expect(fake.revocations).toHaveLength(2);
+  });
+
+  it('an unreachable revocation endpoint does not block the rebind', async () => {
+    const real = routedFetch(fakeMcp().responder, auth2Responder(fakeAuth2()));
+    const flaky = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).includes('revoke')) throw new Error('offline');
+      return real.fetchFn(input, init);
+    }) as typeof fetch;
+    const { app, rig } = makeIdentityApp(flaky);
+    await rig.stores.binding.set(bindingFixture());
+    await rig.stores.binding.setClient(legacyClient());
+    await rig.stores.tokens.put(tokenRecordFixture({ userId: 'u1' }));
+    const res = await request(app)
+      .put(BASE)
+      .set(ADMIN)
+      .send({ serverKey: SERVER_KEY });
+    expect(res.status).toBe(200);
+    expect(await rig.stores.tokens.get('u1')).toBeNull();
+  });
+});
+
 describe('DELETE /managed-mcp-identity', () => {
   it('a non-admin gets 403 and nothing is deleted', async () => {
     const { app, rig } = makeIdentityApp(identityNetwork().fetchFn);
