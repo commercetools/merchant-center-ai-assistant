@@ -1,16 +1,16 @@
 ## 0. Read first
 
-- [ ] 0.1 Read `proposal.md`, `design.md` (Explore findings F1-F11, P1-P3; Decisions D1-D8), and the three specs in `specs/`.
+- [x] 0.1 Read `proposal.md`, `design.md` (Explore findings F1-F11, P1-P3; Decisions D1-D8), and the three specs in `specs/`.
 - [ ] 0.2 Read the legacy files (read-only): `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/service/src/middleware/{mc-session,admin,session,user-email}.middleware.ts` (admin.middleware.ts only to see what NOT to do), `src/controllers/mc-auth.controller.ts`, `src/routes/mc-auth.route.ts`, `tests/wire/mc-gateway-auth.spec.ts`.
 - [ ] 0.3 Read the MC docs: https://docs.commercetools.com/merchant-center-customizations/concepts/integrate-with-your-own-api.md (sections "Validate the JSON Web Token", "Configure the audience policy"; note that the token has no e-mail but a signed `sub`).
-- [ ] 0.4 Skim the library you will call: `service/node_modules/@commercetools-backend/express/dist/commercetools-backend-express.esm.js` (lines 143-203) after installing it in C.
+- [x] 0.4 Skim the library you will call: `service/node_modules/@commercetools-backend/express/dist/commercetools-backend-express.esm.js` (lines 143-203) after installing it in C.
 
 You should now be able to explain: (a) what a forward-to JWT proves and what it does not (it is an identity assertion, not a commercetools API token); (b) why the audience includes the request path; (c) why an unverified `?userEmail=` (or any browser-sent e-mail) can never prove anything and why the gateway JWT has no e-mail; (c2) why admin = the verified `sub` listed in `ADMIN_USER_IDS` (design D1) and how an administrator learns their own user id (bootstrap `userId`, shown by the frontends); (d) why `MC_AUDIENCE` cannot be required at boot; (e) why a wrong-project token is 403 and a bad token 401.
 
 ## 1. Setup
 
-- [ ] 1.1 Confirm spec C is merged: `ls service/src/config/index.ts service/src/app.ts` exist and `cd service && npm test` is green. If not, STOP.
-- [ ] 1.2 Branch and test dependency.
+- [x] 1.1 Confirm spec C is merged: `ls service/src/config/index.ts service/src/app.ts` exist and `cd service && npm test` is green. If not, STOP.
+- [x] 1.2 Branch and test dependency.
   ```bash
   git checkout -b spec/d-mc-session-auth
   cd service && npm install -D jose@^5 msw     # jose is already a transitive dep of @commercetools-backend/express; pin the same major (^5.10)
@@ -20,7 +20,7 @@ You should now be able to explain: (a) what a forward-to JWT proves and what it 
 
 ## 2. Configuration section and types
 
-- [ ] 2.1 Replace the placeholder `auth` section.
+- [x] 2.1 Replace the placeholder `auth` section.
   **Why:** fail-fast, typed auth config (specs `mc-session-verification`, `mc-admin-authorization`).
   **Where:** `service/src/config/sections/auth.ts` (exists as a placeholder from spec C task 3.4 - keep the exported type name `AuthConfig`).
   **How:**
@@ -37,7 +37,7 @@ You should now be able to explain: (a) what a forward-to JWT proves and what it 
   **Done when:** `tests/unit/config.auth.spec.ts` passes: origin-only enforcement (path rejected), default and override issuer, bypass refused in production, missing audience allowed, `ADMIN_USER_IDS` normalisation (spec example `" u1, u2 ;u1,, "` gives `{u1,u2}`), invalid entry names position 2 and not the value, 51 entries rejected, empty/unset gives an empty set and the boot warning.
   **Watch out:** never log the audience value as a secret - it is public - but do log it once at boot at `info` to ease debugging. The user ids are personal data: never log them.
 
-- [ ] 2.2 `isAdminUser` helper.
+- [x] 2.2 `isAdminUser` helper.
   **Why:** the service, not the browser, decides who is admin (spec `mc-admin-authorization`, design D1).
   **Where:** `service/src/auth/admin.ts` (new).
   **How:**
@@ -49,7 +49,7 @@ You should now be able to explain: (a) what a forward-to JWT proves and what it 
   **Done when:** `tests/unit/admin.spec.ts` covers every scenario of spec `mc-admin-authorization`: listed id, unlisted id, look-alikes (`U-ADMIN-1`, `u-admin-1x`), empty set, parsing (whitespace, `;`, duplicates, empty entries), invalid entry, 51 entries.
   **Watch out:** never read an id or e-mail from the request; the signature takes only the verified `userId` on purpose. Do not export the set.
 
-- [ ] 2.3 Request types.
+- [x] 2.3 Request types.
   **Why:** one typed user contract; no permissions list.
   **Where:** `service/src/types/request.types.ts` (created by C with a provisional `RequestUser`; you now own it).
   **How:**
@@ -62,7 +62,7 @@ You should now be able to explain: (a) what a forward-to JWT proves and what it 
 
 ## 3. Middleware
 
-- [ ] 3.1 `verifyMcSession` - real verification path.
+- [x] 3.1 `verifyMcSession` - real verification path.
   **Why:** the heart of the spec.
   **Where:** `service/src/middleware/mc-session.middleware.ts` (new); legacy `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/service/src/middleware/mc-session.middleware.ts`.
   **How:**
@@ -73,7 +73,7 @@ You should now be able to explain: (a) what a forward-to JWT proves and what it 
   **Done when:** `tests/wire/mc-session-auth.spec.ts` "valid token" and "rejection matrix" (task 5.2) pass.
   **Watch out:** `req.originalUrl` includes the `/service` prefix - the audience is `MC_AUDIENCE + /service/auth/session`, so the frontend `uri` must be built from the same origin and path. Do NOT use `app.use('/service', ...)`-relative `req.url`. Accept only `Bearer ` tokens; the library tolerates a raw token - do not add leniency.
 
-- [ ] 3.2 Single-project guard and development bypass.
+- [x] 3.2 Single-project guard and development bypass.
   **Where:** same file; helper `service/src/auth/project-guard.ts`.
   **How:**
   ```ts
@@ -90,7 +90,7 @@ You should now be able to explain: (a) what a forward-to JWT proves and what it 
   **Done when:** tests in 5.3 pass (foreign project 403 with neither key in body; bypass identity and `x-dev-admin`; query params ignored; `x-dev-admin` ignored when the bypass is off).
   **Watch out:** the guard compares strings exactly - project keys are case-sensitive in commercetools.
 
-- [ ] 3.3 `requireAdmin`.
+- [x] 3.3 `requireAdmin`.
   **Why:** one gate for every admin route (spec `mc-admin-authorization`).
   **Where:** `service/src/middleware/require-admin.middleware.ts` (new).
   **How:**
@@ -108,7 +108,7 @@ You should now be able to explain: (a) what a forward-to JWT proves and what it 
   Extend C's error envelope if `CustomError` cannot carry a `code`.
   **Done when:** `tests/wire/mc-admin.spec.ts`: admin passes; non-admin with `?userEmail=admin@x&userId=<listed id>`, header `x-admin-email: admin@x` and body `{"userLabel":"admin@x","userId":"<listed id>"}` gets 403 `ADMIN_REQUIRED` (forged scenario); missing user gets 401; a gateway token that carries a permissions claim does not create admin; `auditAdminAction` output has `userId` and no e-mail.
 
-- [ ] 3.4 Ownership rule.
+- [x] 3.4 Ownership rule.
   **Where:** `service/src/auth/ownership.ts` (new); legacy logic in `.../middleware/session.middleware.ts:50-77` (drop the e-mail branch).
   **How:** `export const isOwner = (session: { userId?: string }, user: Pick<RequestUser,'userId'>) => Boolean(session.userId) && session.userId === user.userId;`
   **Done when:** `tests/unit/ownership.spec.ts`: different user false; missing owner false for everyone; same user true.
@@ -116,7 +116,7 @@ You should now be able to explain: (a) what a forward-to JWT proves and what it 
 
 ## 4. Bootstrap endpoint
 
-- [ ] 4.1 Contributor registry.
+- [x] 4.1 Contributor registry.
   **Where:** `service/src/auth/bootstrap-registry.ts` (new).
   **How:**
   ```ts
@@ -143,7 +143,7 @@ You should now be able to explain: (a) what a forward-to JWT proves and what it 
   **Done when:** `tests/unit/bootstrap-registry.spec.ts`: merge, failure omitted, key collision throws, duplicate name throws.
   **Watch out:** reserve core keys (`projectKey`, `userId`, `isAdmin`) - a contributor returning them is a collision.
 
-- [ ] 4.2 Controller, route, mount.
+- [x] 4.2 Controller, route, mount.
   **Where:** `service/src/controllers/mc-auth.controller.ts`, `service/src/routes/mc-auth.route.ts`, edit `service/src/routes/service.route.ts` (add `serviceRouter.use('/auth', mcAuthRouter);`). Legacy: `.../controllers/mc-auth.controller.ts`, `.../routes/mc-auth.route.ts`.
   **How:** route `mcAuthRouter.post('/session', verifyMcSession, bootstrapSession)`. Controller returns `{ success: true, data: { projectKey, userId, isAdmin, ...await runContributors(req) } }` using only `req.user` (never `req.body`); 500 path uses the legacy envelope `{ success:false, error:'Failed to establish session' }`.
   **Done when:** `tests/wire/mc-bootstrap.spec.ts` passes (exact payload; 401 before contributors; body fields not echoed).
@@ -151,45 +151,45 @@ You should now be able to explain: (a) what a forward-to JWT proves and what it 
 
 ## 5. Tests with the real verifier
 
-- [ ] 5.1 JWT test kit.
+- [x] 5.1 JWT test kit.
   **Where:** `service/tests/helpers/mc-jwt.ts` (new).
   **How:** with `jose`: `generateKeyPair('RS256')`, export public JWK with `kid`; msw handler `http.get('https://mc-api.us-central1.gcp.commercetools.com/.well-known/jwks.json', ...)`; `signToken({ aud, iss, sub, projectKey, extraClaims, expiresIn, alg, key })` that sets the public claim `${iss}/claims/project_key` (name verified in F10) and optionally arbitrary extra claims (used to prove that a permissions claim is ignored). Export `GATEWAY_HEADERS = { 'x-mc-api-cloud-identifier': 'gcp-us', 'x-mc-api-forward-to-version': 'v2' }`. Start msw with `onUnhandledRequest: 'error'`.
   **Done when:** a smoke test signs a token, verifies through the real library via `createApp(testConfig)` and gets 200.
   **Watch out:** `createRemoteJWKSet` caches keys per issuer for the process lifetime; in the "different key" case sign with a second key pair (same `kid` is fine) instead of swapping the JWKS response mid-run. For HS256 / `alg:none`, craft the token manually (`base64url(header).base64url(payload).`).
 
-- [ ] 5.2 Rejection matrix (parameterised).
+- [x] 5.2 Rejection matrix (parameterised).
   **Where:** `service/tests/wire/mc-session-auth.spec.ts`.
   **How:** `describe.each` over: missing header, malformed (`Bearer abc`), `alg none`, HS256 with a shared secret, wrong key, wrong issuer (`iss` of the EU gateway), wrong audience (other path), wrong audience (other origin), expired (`exp` in the past), no marker headers, no `MC_AUDIENCE` (separate case, message differs) - each expects 401 and the generic message (except the no-audience case) and asserts the handler spy was **not** called.
   **Done when:** all rows pass and a final "valid token accepted" row passes.
 
-- [ ] 5.3 Guard, admin, bypass tests.
+- [x] 5.3 Guard, admin, bypass tests.
   **Where:** `tests/wire/mc-session-auth.spec.ts` (guard), `tests/wire/mc-admin.spec.ts`, `tests/wire/mc-bypass.spec.ts`.
   **How:** cover every scenario in the three specs (foreign project 403 and body has neither key; incomplete session 401; admin through `ADMIN_USER_IDS` in the test config: token `sub` listed -> `isAdmin:true`, not listed -> false, empty list -> false for everyone and `/status.adminConfigured:false`; forged e-mail/label/header/body/query -> 403 `ADMIN_REQUIRED`; permissions claim ignored; bypass headers incl. `x-dev-admin`; query params ignored; `readConfiguration` refuses bypass in production - reuse C's config tests style).
   **Done when:** `npm test -- mc-` is green.
 
-- [ ] 5.4 Bootstrap tests.
+- [x] 5.4 Bootstrap tests.
   **Where:** `tests/wire/mc-bootstrap.spec.ts` (+ unit tests from 4.1). Port the intent of legacy tests `reports readiness ... issues no token` and `never touches ... for a request that bypassed the gateway` (legacy file lines 317-387) but with the new payload.
 
 ## 6. Gates
 
-- [ ] 6.1 Grep gate and docs for U/O.
+- [x] 6.1 Grep gate and docs for U/O.
   **Where:** extend `service/scripts/check-foundation.mjs` (from C) with: no match for `validateAdmin|validateUserEmail|req\.query\.userEmail|user_permissions|userPermissions|x-dev-permissions` anywhere in `src/`, and no match for `ADMIN_USER_IDS|adminUserIds` outside `src/config/sections/auth.ts`, `src/auth/admin.ts`, `src/middleware/mc-session.middleware.ts`, `src/index.ts`, the status handler, tests (the allowlist is only ever compared inside `isAdminUser`), and no match for `ADMIN_EMAILS|verified-?email` anywhere in `src/`; `MC_AUTH_DISABLED` / `x-dev-admin` only in `src/config/sections/auth.ts`, `src/middleware/mc-session.middleware.ts`, tests.
   **Done when:** `npm run check:foundation` exits 0; adding `req.query.userEmail` to a scratch file makes it exit 1 (revert).
   Record documentation needs in "Docs to update" below (spec W writes the docs).
 
 ## 7. Live verification (needs the sandbox and change I; run during spec V/U; do not block merge)
 
-- [ ] 7.1 Add a debug-only log of the admin decision inputs (never the token, never any e-mail): `logger.debug('MC session admin check', { userId, allowlistSize, isAdmin })`.
+- [x] 7.1 Add a debug-only log of the admin decision inputs (never the token, never any e-mail): `logger.debug('MC session admin check', { userId, allowlistSize, isAdmin })`.
   **Done when:** with `LOG_LEVEL=debug` a test request prints it.
 - [ ] 7.2 When the first sandbox deployment exists (spec U) with the two scratch-project users (user A whose user id is in `ADMIN_USER_IDS`, user B who is not; manual step M10), call `POST /service/auth/session` as each. Scenario ids: `E2E-D-01` (with `ADMIN_USER_IDS` empty user A gets `isAdmin:false` and sees `userId`; after `configure ADMIN_USER_IDS=<A's id>` and a redeploy A gets `true`), `E2E-D-02` (user B stays `false`; a forged `userLabel`/e-mail/header does not change it), `E2E-D-03` (project mismatch cannot be produced from the UI - covered by wire test only).
   **Watch out:** the user id to configure is read from the app's "Your user ID" line (or the bootstrap response), never guessed.
 
 ## Last: Verification
 
-- [ ] V.1 Unit/wire tests (all under `cd service && npm test`): `tests/unit/config.auth.spec.ts`, `tests/unit/admin.spec.ts`, `tests/unit/ownership.spec.ts`, `tests/unit/bootstrap-registry.spec.ts`, `tests/wire/mc-session-auth.spec.ts`, `tests/wire/mc-admin.spec.ts`, `tests/wire/mc-bypass.spec.ts`, `tests/wire/mc-bootstrap.spec.ts`.
+- [x] V.1 Unit/wire tests (all under `cd service && npm test`): `tests/unit/config.auth.spec.ts`, `tests/unit/admin.spec.ts`, `tests/unit/ownership.spec.ts`, `tests/unit/bootstrap-registry.spec.ts`, `tests/wire/mc-session-auth.spec.ts`, `tests/wire/mc-admin.spec.ts`, `tests/wire/mc-bypass.spec.ts`, `tests/wire/mc-bootstrap.spec.ts`.
 - [ ] V.2 `npm run typecheck && npm run lint && npm run check:foundation && npm run build`; `commercetools connect application test` (service) exit 0; `commercetools connect validate` exit 0 (confirm `MC_AUTH_DISABLED` is not in `connect.yaml`: `grep -c MC_AUTH_DISABLED ../connect.yaml` -> `0`).
 - [ ] V.3 Chrome scenarios (after U and I): `E2E-D-01`, `E2E-D-02` from task 7.2; evidence under `plans/evidence/d/`.
-- [ ] V.4 Definition of Done (`plans/04-workflow.md` section 4): SPDX, no `console.log`, no `any`, no tenant words.
+- [x] V.4 Definition of Done (`plans/04-workflow.md` section 4): SPDX, no `console.log`, no `any`, no tenant words.
 
 ## Docs to update (for spec W)
 
