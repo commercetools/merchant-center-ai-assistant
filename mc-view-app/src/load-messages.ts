@@ -29,11 +29,8 @@ const loadMessages = async (locale: string): Promise<TMessageTranslations> => {
   try {
     const chunkImport = await getChunkImport(locale);
     return parseChunkImport(chunkImport);
-  } catch (error) {
-    console.warn(
-      `Something went wrong while loading the app messages for ${locale}`,
-      error
-    );
+  } catch {
+    // Missing app messages are not fatal: the shell falls back to its own translations.
     return {};
   }
 };

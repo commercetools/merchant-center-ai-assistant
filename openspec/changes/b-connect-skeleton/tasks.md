@@ -2,7 +2,7 @@
 
 About 1 hour. You must be able to answer the questions at the bottom before editing files.
 
-- [ ] 0.1 Read the change documents and the plan
+- [x] 0.1 Read the change documents and the plan
   - `openspec/changes/b-connect-skeleton/{proposal.md,design.md,specs/connect-skeleton/spec.md}` - read "Platform facts" PF1-PF12 twice.
   - `plans/02-target-architecture.md` sections 1-2 (layout and config keys), `plans/00-overview.md` decisions D3, D4, D7, D8, D9.
   - Official guidance (installed skill `commercetools-connect`): `references/project-structure.md`, `references/merchant-center-customizations.md` Pattern 5, `references/merchant-center-cli.md`, `references/lifecycle-scripts.md`.
@@ -22,7 +22,7 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
 
 ## 2. Root `connect.yaml`
 
-- [ ] 2.1 Write `connect.yaml` with the comment header and the service entry
+- [x] 2.1 Write `connect.yaml` with the comment header and the service entry
   **Why:** it is the install contract; everything else hangs off it.
   **Where:** `connect.yaml` (create at repo root).
   **How:**
@@ -111,7 +111,7 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
   ```
   **Done when:** `node -e "const y=require('fs').readFileSync('connect.yaml','utf8');console.log(y.includes('CONNECT_SERVICE_URL'))"` prints `true` (file will be completed in 2.2).
   **Watch out:** never declare `CTP_PROJECT_KEY`, `CTP_CLIENT_ID`, `CTP_CLIENT_SECRET`, `CTP_SCOPE`, `CTP_API_URL`, `CTP_AUTH_URL`, `CTP_REGION` (PF1). Quote numeric defaults as strings. The model ids are copied from the legacy `.env.example` and are unverified (open question BQ1).
-- [ ] 2.2 Add the three Merchant Center entries and `inheritAs`
+- [x] 2.2 Add the three Merchant Center entries and `inheritAs`
   **Where:** `connect.yaml` (append).
   **How:**
   ```yaml
@@ -152,7 +152,7 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
 
 ## 3. Service stub
 
-- [ ] 3.1 Create `service/package.json`, `tsconfig.json`, `.nvmrc`, `.gitignore`
+- [x] 3.1 Create `service/package.json`, `tsconfig.json`, `.nvmrc`, `.gitignore`
   **Why:** lets Connect build and the tests run.
   **Where:** `service/package.json`, `service/tsconfig.json`, `service/.nvmrc` (`22`), `service/.gitignore` (`node_modules`, `build`, `.env`, `.env.local`). Reference: `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/service/package.json` and `tsconfig.json`.
   **How:** `package.json`:
@@ -182,7 +182,7 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
   `tsconfig.json`: `"extends": "@tsconfig/recommended/tsconfig.json"` is NOT needed; use `{ "compilerOptions": { "target": "ES2022", "module": "commonjs", "strict": true, "esModuleInterop": true, "outDir": "build", "rootDir": "src", "skipLibCheck": true }, "include": ["src"] }` and `tsconfig.build.json` excluding nothing extra. Add `jest.config.cjs`: `{ preset: 'ts-jest', testEnvironment: 'node', testMatch: ['**/tests/**/*.spec.ts'] }`.
   **Done when:** `cd service && npm install && npm run typecheck` exits 0 (no sources yet is OK only after 3.2; run both).
   **Watch out:** commit `package-lock.json` (`npm ci` in `connect.yaml` needs it). `@commercetools/platform-sdk@^8` and `@commercetools/ts-client@^4` are added by change C, not here (no unused deps). Do not add `dotenv`.
-- [ ] 3.2 Add the Express stub and its test
+- [x] 3.2 Add the Express stub and its test
   **Where:** `service/src/index.ts`, `service/src/app.ts`, `service/src/routes/service.route.ts`, `service/tests/status.spec.ts` (all with SPDX header).
   **How:**
   ```ts
@@ -205,7 +205,7 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
   Test `tests/status.spec.ts`: `describe('status route')`, `it('returns ok under /service')` expecting 200 and `{status:'ok'}` for `/service/status`, and `it('is not mounted at the root')` expecting 404 for `/status`.
   **Done when:** `cd service && npm test` prints `Tests: 2 passed`.
   **Watch out:** `process.stdout.write`, never `console.log` (Definition of Done). Keep `app` separate from `listen` so supertest never opens a port.
-- [ ] 3.3 Add lifecycle stubs and `.env.example`
+- [x] 3.3 Add lifecycle stubs and `.env.example`
   **Where:** `service/src/connector/post-deploy.ts`, `service/src/connector/pre-undeploy.ts`, `service/.env.example`.
   **How:** each connector file: `process.stdout.write('post-deploy: nothing to do (change U adds the checks)\n');` (resp. pre-undeploy). `.env.example` (policy from change A: secrets empty):
   ```
@@ -236,7 +236,7 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
 
 ## 4. Merchant Center stubs
 
-- [ ] 4.1 Create `mc-app/` from the legacy shell
+- [x] 4.1 Create `mc-app/` from the legacy shell
   **Why:** gives Connect a buildable Custom Application.
   **Where:** `mc-app/` (create). Copy from `/Users/behnam/code/multitenant-ai-assistant/multitenant-chat-app/mc-app/`: `.nvmrc`, `.prettierrc`, `.prettierignore`, `.eslintrc.js`, `intl-formatter.js`, `jest.test.config.js`, `jest.d.ts`, `tsconfig.json`, `@types-extensions/`, `custom-application-config.mjs`, `src/constants.ts`, `src/index.tsx`, `src/components/entry-point/`. Do NOT copy `src/components` other than `entry-point`, `src/hooks`, `src/contexts`, `scripts/`, `public/`, `.env`, `yarn.lock`, `node_modules/`.
   **How:**
@@ -247,12 +247,12 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
   5. `.gitignore`: `node_modules`, `public`, `dist`, `.env`, `.env.local`, `!.env.example`.
   **Done when:** `cd mc-app && yarn install && yarn typecheck && set -a && . ./.env.example && set +a && yarn build; echo $?` ends with `0` and `ls public/index.html` exists.
   **Watch out:** the config file only substitutes `${env:...}` inside its own exported strings (legacy `constants.ts` comment); keep the `entryPointUriPath` derivation from the legacy `constants.ts`. `yarn build` needs the variables exported (the `.env.example` placeholders are enough for a build). Remove every `ngrok`, `run.app`, `localhost:8080` string from CSP. Commit `yarn.lock`.
-- [ ] 4.2 Create `composed-apps/`
+- [x] 4.2 Create `composed-apps/`
   **Where:** `composed-apps/` (same file set as 4.1, from `/Users/behnam/code/multitenant-ai-assistant/multitenant-chat-app/composed-apps/`).
   **How:** same recipe; `name: 'AI Assistant Pages'`; package name `ai-assistant-composed-apps`; **bump all `@commercetools-frontend/*` from `25.1.0` to `27.9.6`** and fix any type errors in the stub (there should be none because the stub is tiny); default `ENTRY_POINT_URI_PATH=ai-assistant-pages` in `.env.example`.
   **Done when:** same commands as 4.1 in `composed-apps/` exit 0.
   **Watch out:** the same `oAuthScopes` as mc-app (including `view_mcp_servers` / `manage_mcp_servers`); the legacy `src/constants.ts` exports `PERMISSIONS` only and the stub keeps it that way: no custom-permission export, no `additionalOAuthScopes`.
-- [ ] 4.3 Create `mc-view-app/`
+- [x] 4.3 Create `mc-view-app/`
   **Where:** `mc-view-app/` (from `/Users/behnam/code/multitenant-ai-assistant/multitenant-chat-app/mc-view-app/`).
   **How:** package `ai-assistant-mc-view-app`; `custom-view-config.mjs`: `name: 'AI Assistant'`, `cloudIdentifier: '${env:CLOUD_IDENTIFIER}'`, `env.production: { customViewId: '${env:CUSTOM_VIEW_ID}', url: '${env:APPLICATION_URL}' }`, `env.development: { initialProjectKey: '${env:INITIAL_PROJECT_KEY}', hostUriPath: '/${env:INITIAL_PROJECT_KEY}/products' }` (NOT the legacy store/product ids), `additionalEnv.chatServiceEndpointUrl`, `oAuthScopes` `view: ['view_key_value_documents', 'view_mcp_servers']` and `manage: ['manage_key_value_documents', 'manage_mcp_servers']`, `type: 'CustomPanel'`, `typeSettings.size: 'SMALL'`, `locators: ['products.product_details.general']` for the stub (change S restores the 65 locators from legacy), same minimal CSP. Declare no custom permission and no `additionalOAuthScopes`. `.env.example` has `CUSTOM_VIEW_ID=` and no entry-point path.
   **Done when:** `cd mc-view-app && yarn install && yarn typecheck && set -a && . ./.env.example && set +a && yarn build; echo $?` ends with `0`.
@@ -260,13 +260,13 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
 
 ## 5. Layout checker
 
-- [ ] 5.1 Create `scripts/package.json` and `scripts/check-connect-layout.mjs`
+- [x] 5.1 Create `scripts/package.json` and `scripts/check-connect-layout.mjs`
   **Why:** enforces the spec rules that `connect validate` does not (config keys, pins, forbidden keys).
   **Where:** `scripts/package.json` (name `ai-assistant-scripts`, private, dependency `yaml` `^2`), `scripts/package-lock.json`, `scripts/check-connect-layout.mjs` (headered).
   **How:** parse `connect.yaml` with `yaml`; export pure functions `checkApplications(doc)`, `checkConfigKeys(doc)`, `checkScopes(doc)`, `checkVersionPins(packageJsons)`; CLI part loads files from the repo root. Rules: exact four names/types/order; names equal root folders with a `package.json`; no other root folder except `scripts` holds a `package.json`; no root `package.json`; MC entries have no `endpoint`/`securedConfiguration`; service keys per spec (required flags, defaults, secured placement; the four provider secrets `CONTENTSTACK_API_KEY`, `CONTENTSTACK_MANAGEMENT_TOKEN`, `ALGOLIA_MCP_URL`, `STRIPE_SECRET_KEY` must be under `securedConfiguration` with `required: false`, and `CONTENTSTACK_BRANCH`, `CONTENTSTACK_REGION`, `STRIPE_CONNECTED_ACCOUNT_ID` under `standardConfiguration`); forbidden injected keys (`CTP_*`); `inheritAs.apiClient.scopes` equals the allowed list and never contains `manage_project`; `ADMIN_USER_IDS` is under `service` `standardConfiguration` with `required: false` and absent elsewhere; each MC config file lists `view_mcp_servers` in `view` and `manage_mcp_servers` in `manage` and contains no `additionalOAuthScopes`; all `@commercetools-frontend/*` versions in the three MC apps are identical and exact (no `^`/`~`); no `workspaces` field anywhere; `.env` not tracked.
   **Done when:** `npm ci --prefix scripts && node scripts/check-connect-layout.mjs` exits 0 and prints `connect layout ok (4 applications)`.
   **Watch out:** treat versions as exact strings; `27.9.6` equals `27.9.6` but not `^27.9.6`.
-- [ ] 5.2 Unit tests for the layout checker
+- [x] 5.2 Unit tests for the layout checker
   **Where:** `scripts/tests/check-connect-layout.test.mjs`.
   **How:** `node:test` cases named: `layout: accepts the canonical document`, `layout: rejects missing application`, `layout: rejects endpoint on mc-app`, `keys: rejects CTP_CLIENT_ID in service`, `keys: secured placement of GCP_SA_KEY_BASE64` (the same test asserts every other GCP_* key and IMAGE_URL_MODE is standard and optional/defaulted, and that the legacy name GCP_LOCATION is rejected), `keys: provider secrets only under securedConfiguration`, `keys: provider non-secrets only under standardConfiguration`, `keys: ADMIN_USER_IDS optional and standard only`, `mcscopes: requires view/manage mcp scopes and rejects additionalOAuthScopes`, `scopes: rejects manage_project`, `pins: rejects drift 25.1.0 vs 27.9.6`, `pins: rejects caret`.
   **Done when:** `node --test scripts/tests/` reports all tests passing (A's 14 plus these 12 = `pass 26`).
@@ -293,7 +293,7 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
   - `node scripts/check-connect-layout.mjs`, `node scripts/spdx-check.mjs`, `node scripts/check-repo-rules.mjs` -> exit 0
   - `commercetools connect validate` -> exit 0
   - `openspec validate b-connect-skeleton --strict` -> valid
-- [ ] V.2 Unit tests added by this change (names)
+- [x] V.2 Unit tests added by this change (names)
   - service: `status route returns ok under /service`, `status route is not mounted at the root`
   - scripts: the 10 layout tests in 5.2
 - [ ] V.3 Chrome scenarios: none in this change (stub UIs). One smoke check only: `yarn start` in `mc-app` serves `http://localhost:3001` (needs M-level login, so it is skipped; real scenarios `E2E-O-*` start in change O).
