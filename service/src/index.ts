@@ -35,6 +35,12 @@ logger.info('auth configuration', {
 for (const warning of config.providers.warnings) {
   logger.warn(warning);
 }
+logger.info(
+  `providers enabled: ${config.providers.status
+    .filter((s) => s.enabled)
+    .map((s) => s.provider)
+    .join(',') || 'none'}`
+);
 
 for (const warning of config.gcp.warnings) {
   logger.warn(warning);

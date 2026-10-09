@@ -11,6 +11,7 @@ import { aiChatRouter } from './ai-chat.route';
 import { backofficeRouter } from './backoffice.route';
 import { feedbackRouter } from './feedback.route';
 import { mcAuthRouter } from './mc-auth.route';
+import { mcpProvidersRouter } from '../mcp-providers/routes';
 import { sessionRouter } from './session.route';
 import { systemPromptRouter, toolCallLogsRouter } from './settings.route';
 import { statusRouter } from './status.route';
@@ -30,4 +31,5 @@ serviceRouter.use('/feedback', feedbackRouter);
 serviceRouter.use('/backoffice', backofficeRouter);
 // L: private generated images, streamed to the session owner or an administrator.
 serviceRouter.use('/files', verifyMcSession, createFilesRouter());
+serviceRouter.use('/mcp', verifyMcSession, mcpProvidersRouter); // J
 // I..M mount their routers here.

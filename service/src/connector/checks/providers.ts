@@ -4,33 +4,21 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-import { ProviderName, providerStatus } from '../../config/provider-status';
+import { evaluateProvider } from '../../mcp-providers/schemas';
+import { PROVIDERS } from '../../mcp-providers/types';
 import type { ProviderEnv } from '../env';
 
 /**
- * The same enablement rule as the service (presence of every required key). Change J adds
- * format validation inside the config section.
- * TODO(J): reuse J's REQUIRED_KEYS / validateProvider so an invalid value is reported as
- * missing, then add the test `providers: invalid stripe key reported as missing`.
- */
-const REQUIRED: Record<ProviderName, readonly (keyof ProviderEnv)[]> = {
-  contentstack: ['CONTENTSTACK_API_KEY', 'CONTENTSTACK_MANAGEMENT_TOKEN'],
-  algolia: ['ALGOLIA_MCP_URL'],
-  stripe: ['STRIPE_SECRET_KEY'],
-};
-
-/**
- * One line per provider. Names of provider and keys only: never a value, a length, a host or
- * a prefix. Informational: never fails the deployment.
+ * One line per provider, from the service's own enablement rule (required keys set AND
+ * valid, `evaluateProvider`). Names of provider and keys only: never a value, a length, a
+ * host or a prefix. Informational: never fails the deployment.
  */
 export function reportProviders(providerEnv: ProviderEnv): { ok: true; lines: string[] } {
-  const lines = (Object.keys(REQUIRED) as ProviderName[]).map((provider) => {
-    const required: Record<string, string | undefined> = {};
-    for (const key of REQUIRED[provider]) required[key] = providerEnv[key];
-    const { status } = providerStatus(provider, required);
-    return status.enabled
-      ? `post-deploy: providers ${provider}: configured`
-      : `post-deploy: providers ${provider}: not configured (missing: ${status.missingKeys.join(', ')})`;
+  const lines = PROVIDERS.map((provider) => {
+    const { status } = evaluateProvider(provider, providerEnv);
+    if (status.enabled) return `post-deploy: providers ${provider}: configured`;
+    const reason = status.configured ? 'invalid' : 'missing';
+    return `post-deploy: providers ${provider}: not configured (${reason}: ${status.missingKeys.join(', ')})`;
   });
   return { ok: true, lines };
 }
