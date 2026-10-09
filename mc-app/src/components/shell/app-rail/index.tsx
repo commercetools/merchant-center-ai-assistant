@@ -10,15 +10,12 @@ import {
   DashboardCustomize,
   Forum,
   HelpOutline,
-  Hub,
-  Tune,
 } from '@commercetools/nimbus-icons';
 import { Box, Toolbar } from '@commercetools/nimbus';
 import {
   useComposedPagesContext,
   useTabbedHeaderContext,
 } from '../../../contexts';
-import { useIsAssistantAdmin } from '../../../hooks/use-assistant-admin';
 import { useSession } from '../../../contexts/session';
 import { useMotion } from '../../../motion';
 import { NewChatTile } from './new-chat-tile';
@@ -35,7 +32,7 @@ type Props = {
 const HELP_URL = 'https://docs.commercetools.com';
 
 /**
- * The left rail: new chat, then the four drawers, with help pinned to the bottom.
+ * The left rail: new chat, then the drawers, with help pinned to the bottom.
  *
  * A Nimbus `Toolbar` so react-aria gives the group roving focus - one tab stop, arrow keys
  * between the items - which is the correct interaction for a strip of related controls and
@@ -51,7 +48,6 @@ export const AppRail: React.FC<Props> = ({
   const { allSessions } = useSession();
   const { pages } = useComposedPagesContext();
   const { highlightedTab, clearHighlight } = useTabbedHeaderContext();
-  const isAssistantAdmin = useIsAssistantAdmin();
 
   const isPagesHighlighted = highlightedTab === 'composed-page';
 
@@ -119,21 +115,7 @@ export const AppRail: React.FC<Props> = ({
         )}
       </RailItem>
 
-      {isAssistantAdmin && (
-        <RailItem
-          icon={Hub}
-          label="Connections"
-          isActive={openDrawer === 'mcp'}
-          onPress={() => onToggleDrawer('mcp')}
-        />
-      )}
-
-      <RailItem
-        icon={Tune}
-        label="Settings"
-        isActive={openDrawer === 'config'}
-        onPress={() => onToggleDrawer('config')}
-      />
+      {/* Q: Connections (admin) and Settings items go here */}
 
       <Box flex="1" />
 

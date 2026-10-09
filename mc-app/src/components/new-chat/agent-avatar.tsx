@@ -31,7 +31,7 @@ import { IconRobot } from '@tabler/icons-react';
  * `ChatMessage`, so with no name here there would be nothing left saying who is speaking.
  */
 export const AgentAvatar: React.FC = () => (
-  <ChatMessage.Avatar aria-label="AI assistant"  colorPalette="primary">
+  <ChatMessage.Avatar aria-label="AI assistant" colorPalette="primary">
     <IconRobot />
   </ChatMessage.Avatar>
 );
