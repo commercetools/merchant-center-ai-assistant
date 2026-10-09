@@ -52,7 +52,7 @@ The legacy router exposes `create_composed_page`: the model writes React compone
 
 **D-M1 Contract module and fixture.** One module and one generated JSON fixture are the contract. Alternatives: types duplicated per repo (drift is the current problem); an npm package shared by service and frontends (too heavy for a monorepo that ships separately). Fixture plus drift test chosen.
 
-**D-M2 Keep container key `shared-composed-pages`.** Alternatives: rename to a deployment-neutral key such as `ai-assistant-composed-pages`. Greenfield single-tenant has no data to migrate, so renaming is cheap now and expensive later; but existing customers who used the legacy app cannot be assumed absent. Default: keep (zero risk, owner question OQ-M1); the constant is the only definition.
+**D-M2 Keep container key `shared-composed-pages`.** Alternatives: rename to a deployment-neutral key such as `ai-assistant-composed-pages`. Greenfield single-tenant has no data to migrate, so renaming is cheap now and expensive later; but existing customers who used the legacy app cannot be assumed absent. Default: keep (zero risk; open question OQ-M1 below); the constant is the only definition.
 
 **D-M3 Keep schema 5.0 and URI scheme.** The frontends parse `/\/v(\d+)$/`; T adds a version through the union.
 
@@ -79,10 +79,10 @@ The legacy router exposes `create_composed_page`: the model writes React compone
 
 ## Migration Plan
 
-Greenfield: no data migration. If the owner chooses a new container key (OQ-M1), no copy is needed.
+Greenfield: no data migration. If a maintainer chooses a new container key, no copy is needed.
 
 ## Open questions
 
-- OQ-M1 Keep `shared-composed-pages` or rename (default keep).
-- OQ-M3 Who regenerates the surface manifest when the mc-app upgrades Nimbus: default CI check in M fails, developer runs the script.
-- OQ-M4 Enforce deny-list as hard errors (default) or warnings.
+- **OQ-M1** Keep `shared-composed-pages` or rename (default keep).
+- **OQ-M3** Who regenerates the surface manifest when the mc-app upgrades Nimbus: default CI check in M fails, developer runs the script.
+- **OQ-M4** Enforce deny-list as hard errors (default) or warnings.

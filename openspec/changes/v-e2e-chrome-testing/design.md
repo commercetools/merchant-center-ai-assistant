@@ -173,8 +173,8 @@ Cards tagged `local` only: restart by `kill`, two-instance proxy, reduced budget
 
 ## Open questions
 
-- RQ8 (DECIDED 2026-10-09, Q12/Q46): the owner provides a scratch commercetools project and TWO Merchant Center users, A (user id in `ADMIN_USER_IDS`) and B (not in it); both have the app's ordinary View/Manage permission through a Team. No permission editing fallback exists.
-- RQ9 (owner): which tunnel tool is installed/allowed (`cloudflared`, `ngrok`)? Default: `cloudflared`.
+- **RQ8** (DECIDED 2026-10-09, Q12/Q46): the owner provides a scratch commercetools project and TWO Merchant Center users, A (user id in `ADMIN_USER_IDS`) and B (not in it); both have the app's ordinary View/Manage permission through a Team. No permission editing fallback exists.
+- **RQ9** (owner): which tunnel tool is installed/allowed (`cloudflared`, `ngrok`)? Default: `cloudflared`.
 - Verify during implementation: exact request header names used by `forward-to` (change O), the callback and authorize paths (change I), the stream-budget variable (change H), the `data-testid` hooks actually delivered (P, Q, S), whether `mc-scripts start` accepts a port option for three simultaneous apps.
 
 ## Changelog

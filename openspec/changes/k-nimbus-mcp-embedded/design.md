@@ -98,7 +98,7 @@ Nothing to migrate. Order: resolve + manager (unit tests with a fake child) -> a
 
 ## Open questions
 
-- **OQ-K1 (owner IQ1 = Q3)** Embed (default) or separate `service`? The sandbox smoke result decides if the default is viable; record it in `plans/evidence/K/`.
+- **OQ-K1 (see `plans/decisions.md`, Q3)** Embed (default) or separate `service`? The sandbox smoke result decides if the default is viable; record it in `plans/evidence/K/`.
 - **OQ-K2** Which Nimbus version: 3.5.1 (legacy) or 3.6.0 (npm latest)? Must match frontends (O) and the surface manifest (M). Default: whatever O pins exactly; K follows.
 - **OQ-K3** (resolved by H's design) there is no per-agent scoping: the `nimbus` source is registered once and takes part in every standard turn; the custom-view orchestrator excludes it by selecting only `commercetools` + `commercetools-knowledge`. Residual: Nimbus tool schemas add ~7 tool definitions to every standard turn (legacy parity); if token cost matters later, gate `isEnabled` on a cheap intent signal.
 - **OQ-K4** Does change C expose a way to add `GET /service/status/nimbus` under the unauthenticated status router? Default: K adds it next to `/status`.

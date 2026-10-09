@@ -146,9 +146,9 @@ Greenfield. H lands with only built-in sources; each of I-M appends its registra
 - **OQ-H1** Amendments to B/C for `CHAT_REQUEST_BUDGET_MS` / `CHAT_FINALIZE_RESERVE_MS` (not owner-only).
 - **OQ-H2** Does the MC `forward-to` gateway or Connect's front proxy impose an idle/stream timeout below 5 minutes? Measure in E2E-H-04; the keep-alive interval (20 s) may need to shrink. (Agent measures on the sandbox.)
 - **OQ-H3** `getModel('main')` return shape and whether Vertex honours `thinkingConfig` options identically (F). Tasks assume `{ model, providerOptions }`.
-- **OQ-H4** Fix the analyzer's size/args interpolation bugs? Default: no. Mirrored as owner question HQ2.
-- **OQ-H5** Auto-offer a "Continue" chip after a time-limit stop? Default: notice text only; P may add UI. Mirrored as HQ3.
-- **OQ-H6** (Resolved 2026-10-09, Q21: DECIDED) Budget stays 270 s with a 30 s reserve; no 240 s variant. Mirrored as HQ1.
+- **OQ-H4** Fix the analyzer's size/args interpolation bugs? Default: no.
+- **OQ-H5** Auto-offer a "Continue" chip after a time-limit stop? Default: notice text only; P may add UI.
+- **OQ-H6** (Resolved 2026-10-09, Q21: DECIDED) Budget stays 270 s with a 30 s reserve; no 240 s variant.
 
 ## Changelog
 

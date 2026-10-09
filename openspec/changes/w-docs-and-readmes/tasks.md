@@ -36,7 +36,7 @@ You should now be able to explain: (a) what a Connect certification reviewer loo
 - [x] 2.2 `scripts/docs/check-links.mjs`.
   **Why:** broken or internal links.
   **Where:** `scripts/docs/check-links.mjs`.
-  **How:** walk `README.md`, `*/README.md`, `docs/**/*.md`, `SUPPORT.md`, `CONTRIBUTING.md`, `FEATURES.md`; check relative link targets exist and anchors (`#heading`, GitHub slug rules) exist; fail on links containing `plans/`, `openspec/`, `.claude`, `/Users/`, `file://`; external http(s) links are not fetched (offline) but listed with `--list-external`.
+  **How:** walk `README.md`, `*/README.md`, `docs/**/*.md`, `SUPPORT.md`, `CONTRIBUTING.md`, `FEATURES.md`; check relative link targets exist and anchors (`#heading`, GitHub slug rules) exist; fail on links containing `plans/`, `openspec/`, `.claude`, `file://`, or an absolute path under a user home directory; external http(s) links are not fetched (offline) but listed with `--list-external`.
   **Done when:** a deliberately broken link makes it exit 1 and prints file:line.
   **Watch out:** headings with backticks and punctuation slugify differently.
 

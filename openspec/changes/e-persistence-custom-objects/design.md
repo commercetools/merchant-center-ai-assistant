@@ -180,7 +180,7 @@ No data migration (owner decision: fresh start). The first write creates contain
 - Q-E2. (Resolved 2026-10-09, Q13/Q25) Messages and feedback are kept forever; no retention job.
 - Q-E3. Container/key charset and length are undocumented in the current reference (P12): verified live by probe; if the probe shows a wider/narrower set, amend `assertSafeName` (not owner-only).
 - Q-E4. Should `createAuthState` sweeping also run from a scheduled Connect `job`? Default no (opportunistic sweep).
-- Q-E5. Does the owner want the e-mail kept as a *display label* (`userLabel`) at all? E-mail is not in the JWT; default: optional, client-supplied, display-only (CQ5).
+- Q-E5. Does the owner want the e-mail kept as a *display label* (`userLabel`) at all? E-mail is not in the JWT; default: optional, client-supplied, display-only (see `plans/decisions.md`, Q6/Q8).
 
 ## Integration-test plan (manual step M3)
 

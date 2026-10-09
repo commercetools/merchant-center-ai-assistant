@@ -99,7 +99,7 @@ No commerce path is affected because no API Extension or Subscription is registe
 
 **D5. Poison/replay statement.** Text: "This connector contains only a `service` application and Merchant Center frontends. It registers no Subscription, API Extension or scheduled job, receives no commercetools messages and therefore has no redelivery, dead-letter or replay behaviour. Recovery paths: ..." in README and `docs/operations.md`.
 
-**D6. Scrub rules** (checked by `check-repo-rules.mjs --prose` plus `scripts/docs/check-docs-claims.mjs --scrub`): forbidden words demo, POC, presales (word boundary); customer or program names from `scripts/internal/leak-patterns.json`; tunnel hosts (`ngrok`, `trycloudflare`); `*.run.app`; real project keys (pattern from the leak list); e-mail addresses other than `@example.com` placeholders; links containing `plans/`, `openspec/`, `.claude/`, `CLAUDE.md`, `file://`, `/Users/`; the word "tenant" except in `CHANGELOG.md`; emojis; sentences like "we are excited"; any statement not backed by code (claims-ledger style: each architectural claim cites a path).
+**D6. Scrub rules** (checked by `check-repo-rules.mjs --prose` plus `scripts/docs/check-docs-claims.mjs --scrub`): forbidden words demo, POC, presales (word boundary); customer or program names from `scripts/internal/leak-patterns.json`; tunnel hosts (`ngrok`, `trycloudflare`); `*.run.app`; real project keys (pattern from the leak list); e-mail addresses other than `@example.com` placeholders; links containing `plans/`, `openspec/`, `.claude/`, `CLAUDE.md`, `file://`, or an absolute path under a user home directory; the word "tenant" except in `CHANGELOG.md`; emojis; sentences like "we are excited"; any statement not backed by code (claims-ledger style: each architectural claim cites a path).
 
 **D7. FEATURES.md as code-derived inventory.** Structure: Repository shape; Authentication and permissions; Persistence; Chat service; Agents and tool sources; Identity MCP; Frontends (mc-app, composed-apps, mc-view-app); Backoffice and feedback; Deployment; Testing. Each bullet: statement + `path` citation. Verified by `check-docs-claims.mjs --citations` (paths exist).
 
@@ -122,8 +122,8 @@ No commerce path is affected because no API Extension or Subscription is registe
 
 ## Open questions
 
-- RQ10 (owner, mirrored in questions inbox): maintainer contact and discussion location for `SUPPORT.md` (default: GitHub Issues disabled? / Discussions of the repository, no SLA).
-- RQ11 (owner): keep the scrubbed known-issues note about Managed MCP Gemini schema incompatibility (default keep) or drop.
+- **RQ10** (owner, mirrored in questions inbox): maintainer contact and discussion location for `SUPPORT.md` (default: GitHub Issues disabled? / Discussions of the repository, no SLA).
+- **RQ11** (owner): keep the scrubbed known-issues note about Managed MCP Gemini schema incompatibility (default keep) or drop.
 - Which file is the final name for U's runbook (read from the archived change).
 - Whether `CHANGELOG.md` should exist at v1 (default: yes, single `0.1.0` entry) - Z decides the version.
 

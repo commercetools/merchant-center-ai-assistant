@@ -66,7 +66,7 @@ You should now be able to explain: (a) the card format, (b) why every tool call 
 - [ ] 3.1 `scripts/e2e/dev-up.sh` and `dev-down.sh`.
   **Why:** one command for the local environment.
   **Where:** `scripts/e2e/dev-up.sh`, `dev-down.sh`.
-  **How:** `set -euo pipefail`; start tunnel (`cloudflared tunnel --url http://localhost:8080 2>&1 | tee .e2e-tunnel.log` in background, parse `https://*.trycloudflare.com`); export `MC_AUDIENCE=<tunnel>/service`-style value as required by the audience policy (read the exact variable and format from `service/src/config` / change D docs); start service (`npm run start:dev` or name from change C) in background writing `.e2e-service.pid`; wait for `curl -sf $SERVICE_URL/service/status`; start the three apps with `mc-scripts start` (ports from task 3.2) writing pids; write `e2e/.env.e2e`; options `--service-only`, `--no-apps`; `dev-down.sh` kills pids and tunnel.
+  **How:** `set -euo pipefail`; start tunnel (`cloudflared tunnel --url http://localhost:8080 2>&1 | tee .e2e-tunnel.log` in background, parse the public tunnel URL from that log); export `MC_AUDIENCE=<tunnel>/service`-style value as required by the audience policy (read the exact variable and format from `service/src/config` / change D docs); start service (`npm run start:dev` or name from change C) in background writing `.e2e-service.pid`; wait for `curl -sf $SERVICE_URL/service/status`; start the three apps with `mc-scripts start` (ports from task 3.2) writing pids; write `e2e/.env.e2e`; options `--service-only`, `--no-apps`; `dev-down.sh` kills pids and tunnel.
   **Done when:** `bash scripts/e2e/dev-up.sh && curl -sf "$SERVICE_URL/service/status"` prints status JSON; `dev-down.sh` leaves no listening ports 8080/3001-3003 (`lsof -i :8080` empty).
   **Watch out:** tunnel URL changes each time, so `MC_AUDIENCE` and the app env `CHAT_SERVICE_ENDPOINT_URL` must be rewritten and the apps restarted.
 
@@ -198,7 +198,7 @@ For every playbook task: read the owning change's `specs/*/spec.md` and `tasks.m
 ## 8. Quality gates
 
 - [x] 8.1 Lint and hygiene.
-  **How:** `node scripts/e2e/extract-scenario-ids.mjs --lint --dangling --trace`; `node scripts/spdx-check.mjs`; scrub `e2e/` and `scripts/e2e/` for internal hosts, project keys, e-mail addresses (`grep -rnE "@commercetools\.com|ngrok|multiplatform"`).
+  **How:** `node scripts/e2e/extract-scenario-ids.mjs --lint --dangling --trace`; `node scripts/spdx-check.mjs`; scrub `e2e/` and `scripts/e2e/` for internal hosts, project keys, e-mail addresses (search for company e-mail domains, tunnel-service host names and the legacy platform name).
   **Done when:** all exit 0 / empty output.
   **Watch out:** `e2e/` is public - no real values.
 
