@@ -51,3 +51,15 @@ export const isAdminRequiredError = (err: unknown): boolean => {
   }
   return false;
 };
+
+/** The text shown for a 403 `ADMIN_REQUIRED`. */
+export const ADMIN_REQUIRED_TEXT = 'Administrator access required';
+
+/**
+ * A short message for a failed admin call: the fixed "Administrator access required" for a
+ * refusal, the error's own message otherwise.
+ */
+export const describeAdminError = (err: unknown, fallback: string): string => {
+  if (isAdminRequiredError(err)) return ADMIN_REQUIRED_TEXT;
+  return err instanceof Error ? err.message : fallback;
+};

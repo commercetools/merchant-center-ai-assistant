@@ -14,9 +14,7 @@ import React, {
   useRef,
 } from 'react';
 import { useAdminConnector } from '../hooks/use-admin-connector';
-import { isAdminRequiredError } from '../utils/admin-error';
-
-const ADMIN_REQUIRED_TEXT = 'Administrator access required';
+import { describeAdminError } from '../utils/admin-error';
 
 /**
  * System Prompt configuration state
@@ -99,11 +97,7 @@ export const SystemPromptConfigProvider: React.FC<
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: isAdminRequiredError(err)
-          ? ADMIN_REQUIRED_TEXT
-          : err instanceof Error
-          ? err.message
-          : 'Failed to load config',
+        error: describeAdminError(err, 'Failed to load config'),
       }));
     }
   }, [getSystemPromptConfig]);
@@ -149,11 +143,7 @@ export const SystemPromptConfigProvider: React.FC<
       setState((prev) => ({
         ...prev,
         isSaving: false,
-        error: isAdminRequiredError(err)
-          ? ADMIN_REQUIRED_TEXT
-          : err instanceof Error
-          ? err.message
-          : 'Failed to save',
+        error: describeAdminError(err, 'Failed to save'),
       }));
       return false;
     }

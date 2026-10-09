@@ -16,29 +16,11 @@ import { useMcpProviders } from '../../../contexts/mcp-providers';
 import { useSystemPromptConfigContext } from '../../../contexts/system-prompt-config';
 import { useToolCallLogsConfigContext } from '../../../contexts/tool-call-logs-config';
 import { useIsAssistantAdmin } from '../../../hooks/use-assistant-admin';
-import { YourUserId } from '../../your-user-id';
 import { AccountCard } from './account-card';
+import { AboutSection } from './about-section';
 import { AdvancedSection } from './advanced-section';
 import { ConnectedSources } from './connected-sources';
 import { DetailLevelControl } from './detail-level-control';
-
-/**
- * About: shown to every user. An operator needs their own user ID to put it into the
- * service's ADMIN_USER_IDS, and they need it before they are an administrator.
- */
-export const AboutSection: React.FC<{ isAdmin: boolean }> = ({ isAdmin }) => (
-  <Stack direction="column" gap="200" aria-label="About">
-    <Text fontWeight="600" fontSize="350">
-      About
-    </Text>
-    <YourUserId variant="footer" />
-    {!isAdmin && (
-      <Text fontSize="300" color="neutral.11">
-        Ask an administrator to add your user ID to ADMIN_USER_IDS
-      </Text>
-    )}
-  </Stack>
-);
 
 type Props = {
   isOpen: boolean;

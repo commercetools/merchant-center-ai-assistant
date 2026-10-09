@@ -8,9 +8,29 @@ import { SuspendedRoute } from '@commercetools-frontend/application-shell';
 import { useApplicationContext } from '@commercetools-frontend/application-shell-connectors';
 import { Box, NimbusProvider } from '@commercetools/nimbus';
 import { Route, Switch, useHistory, useRouteMatch } from 'react-router-dom';
+import { lazy } from 'react';
+import AdminGuard from './components/admin-guard';
 import ComposedPageView from './components/composed-page-view';
 import NewChat from './components/new-chat';
 import { AllProviders } from './contexts';
+
+/*
+ * Lazy: the backoffice pulls in `alasql` (a SQL engine that runs in the browser, ~500 KB of
+ * source) for its thread query tab. Only administrators reach these routes, so it stays out
+ * of the first-paint graph for everyone else.
+ */
+const BackofficeTabs = lazy(
+  () =>
+    import(
+      './components/backoffice/backoffice-tabs' /* webpackChunkName: "backoffice" */
+    )
+);
+const BackofficeSessionDetail = lazy(
+  () =>
+    import(
+      './components/backoffice/session-detail' /* webpackChunkName: "backoffice-session-detail" */
+    )
+);
 
 /** Root shell. */
 const AppWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -46,7 +66,20 @@ const ApplicationRoutes = () => {
       <AllProviders>
         <AppWrapper>
           <Switch>
-            {/* Q: the guarded backoffice routes (`/backoffice/:sessionId`, `/backoffice`) go here. */}
+            <Route path={`${match.path}/backoffice/:sessionId`}>
+              <AdminGuard>
+                <WrappedContent>
+                  <BackofficeSessionDetail />
+                </WrappedContent>
+              </AdminGuard>
+            </Route>
+            <Route path={`${match.path}/backoffice`}>
+              <AdminGuard>
+                <WrappedContent>
+                  <BackofficeTabs />
+                </WrappedContent>
+              </AdminGuard>
+            </Route>
             <Route path={`${match.path}/composed/:pageKey`}>
               <SuspendedRoute>
                 <WrappedContent>
@@ -54,7 +87,6 @@ const ApplicationRoutes = () => {
                 </WrappedContent>
               </SuspendedRoute>
             </Route>
-            {/* Q: the managed MCP page route goes here if Q keeps it. */}
             <Route>
               <NewChat />
             </Route>
