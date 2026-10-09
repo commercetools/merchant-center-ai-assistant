@@ -341,20 +341,30 @@ export function decodeBase64(base64: string): string {
 }
 
 /**
- * Check if transpiled code has a return statement in the function body
+ * Is `script` (the decoded `transpiledCode`) a script that evaluates to the component?
+ * It must parse as a plain script, start with the function declaration `name` and end with
+ * the expression statement `name;`. Same semantics as `isUsableTranspiledCode` in the
+ * service contract (`service/src/composed-pages/contract.ts`, change M); the old regex test
+ * for `return` rejected every component with hooks before its return.
  */
-function hasReturnStatement(transpiledCode: string): boolean {
-  // Look for pattern: function Name({ ... }) { return ... }
-  // The return should be at the function body level, not inside callbacks
-  const functionBodyMatch = transpiledCode.match(
-    /function\s+\w+\s*\([^)]*\)\s*\{([\s\S]*)\}\s*\w+;?\s*$/
-  );
-  if (!functionBodyMatch) return false;
-
-  const functionBody = functionBodyMatch[1];
-  // Check if there's a return statement at the start of the function body (after whitespace)
-  // This handles: { return ... } or { \n  return ... }
-  return /^\s*return\s/.test(functionBody);
+export function isUsableTranspiledCode(script: string, name: string): boolean {
+  try {
+    const { body } = Babel.packages.parser.parse(script, {
+      sourceType: 'script',
+    }).program;
+    if (body.length < 2) return false;
+    const first = body[0];
+    const last = body[body.length - 1];
+    return (
+      first.type === 'FunctionDeclaration' &&
+      first.id?.name === name &&
+      last.type === 'ExpressionStatement' &&
+      last.expression.type === 'Identifier' &&
+      last.expression.name === name
+    );
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -894,9 +904,9 @@ function processComponentDefinition(compDef: TComponentDefinition): {
   if (code.transpiledCode) {
     const decodedTranspiled = decodeBase64(code.transpiledCode);
 
-    // Check if the transpiled code has a proper return statement
-    // If not, re-transpile on the client to fix it
-    if (hasReturnStatement(decodedTranspiled)) {
+    // Use the pre-transpiled script only if it has the contract shape; otherwise
+    // re-transpile on the client
+    if (isUsableTranspiledCode(decodedTranspiled, name)) {
       transpiledCode = decodedTranspiled;
     } else {
       transpiledCode = transpileNamedComponent(name, componentBody);

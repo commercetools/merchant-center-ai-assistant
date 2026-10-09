@@ -6,9 +6,16 @@
 
 import type { Request, RequestHandler, Response } from 'express';
 
-/** The success envelope: `{ success: true, data }`. */
-export const ok = <T>(res: Response, data: T, status = 200): Response =>
-  res.status(status).json({ success: true, data });
+/**
+ * The success envelope: `{ success: true, data }`. `extra` adds sibling members such as
+ * `pagination` for list answers.
+ */
+export const ok = <T>(
+  res: Response,
+  data: T,
+  status = 200,
+  extra: Record<string, unknown> = {}
+): Response => res.status(status).json({ success: true, data, ...extra });
 
 /** Success without data, used by DELETE: `{ success: true, message }`. */
 export const okMessage = (res: Response, message: string): Response =>

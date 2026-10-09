@@ -103,6 +103,9 @@ export function fakeMcp(o: FakeMcpOptions = {}): FakeMcp {
         })),
       });
     }
+    if (body.method === 'tools/call') {
+      return rpc(body.id, { content: [{ type: 'text', text: 'ok' }] });
+    }
     return rpc(body.id, {});
   };
 

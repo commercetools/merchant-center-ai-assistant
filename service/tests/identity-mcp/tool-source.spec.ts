@@ -92,6 +92,22 @@ describe('commercetools tool source', () => {
     ctx.dispose();
   });
 
+  it('routes the tool set through the offload pipeline and keeps a small result unchanged', async () => {
+    const rig = makeRig();
+    await connected(rig);
+    withNetwork(rig);
+    const ctx = ctxFor(rig);
+    const tools = await source.getTools(ctx);
+    const run = (
+      tools.read_orders as {
+        execute: (a: unknown, o: unknown) => Promise<unknown>;
+      }
+    ).execute;
+    const result = await run({}, { messages: [] });
+    expect(JSON.stringify(result)).not.toContain('stored in BigQuery');
+    ctx.dispose();
+  });
+
   it('a user without a token gets exactly the placeholder tool and the reconnect prompt', async () => {
     const rig = makeRig();
     await rig.stores.binding.set(bindingFixture());

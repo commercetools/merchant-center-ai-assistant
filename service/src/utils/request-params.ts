@@ -6,30 +6,15 @@
 
 import type { Response } from 'express';
 import type { ServiceResult } from '../types/feedback.types';
+import { fail, ok } from './api-response';
 
-/**
- * TODO(unify with change G): G defines the shared `ok`/`fail` envelope helpers. Until both
- * branches are merged, change N renders the same `{ success, data | error, message? }` shape.
- */
-export const sendOk = (
-  res: Response,
-  status: number,
-  data: unknown,
-  extra: Record<string, unknown> = {}
-): void => {
-  res.status(status).json({ success: true, data, ...extra });
-};
-
+/** Renders a service outcome through the shared `ok`/`fail` envelope helpers. */
 export const sendResult = <T>(res: Response, result: ServiceResult<T>): void => {
   if ('data' in result) {
-    sendOk(res, result.status, result.data);
+    ok(res, result.data, result.status);
     return;
   }
-  res.status(result.status).json({
-    success: false,
-    error: result.error,
-    ...(result.message ? { message: result.message } : {}),
-  });
+  fail(res, result.status, result.error, result.message);
 };
 
 /** Integer from a query value or body field; `undefined` for anything else (never NaN). */

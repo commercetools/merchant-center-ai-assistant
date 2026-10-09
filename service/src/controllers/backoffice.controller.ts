@@ -8,12 +8,12 @@ import type { NextFunction, Request, Response } from 'express';
 import type { BackofficeService } from '../services/backoffice.service';
 import type { BackofficeFilters } from '../types/feedback.types';
 import type { AuthenticatedRequest } from '../types/request.types';
+import { ok } from '../utils/api-response';
 import {
   parseIntParam,
-  sendOk,
   sendResult,
   stringParam,
-} from '../utils/feedback-response';
+} from '../utils/request-params';
 
 type Handler = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 
@@ -40,7 +40,7 @@ export function backofficeController(getService: () => BackofficeService) {
   const isAdmin: Handler = async (req, res, next) => {
     try {
       const { user } = req as AuthenticatedRequest;
-      sendOk(res, 200, { isAdmin: getService().isAdmin(user) });
+      ok(res, { isAdmin: getService().isAdmin(user) });
     } catch (error) {
       next(error);
     }
@@ -56,7 +56,7 @@ export function backofficeController(getService: () => BackofficeService) {
         offset: parseIntParam(req.query.offset),
         includeMessages: req.query.messages !== 'false',
       });
-      sendOk(res, 200, page.items, { pagination: page.pagination });
+      ok(res, page.items, 200, { pagination: page.pagination });
     } catch (error) {
       next(error);
     }

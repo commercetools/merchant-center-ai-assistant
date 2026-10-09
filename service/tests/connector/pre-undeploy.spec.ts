@@ -69,11 +69,21 @@ describe('pre-undeploy run()', () => {
   });
 
   it('pre-undeploy: api unreachable does not block', async () => {
-    server.use(tokenHandler, http.all(`${API}/p1/*`, () => HttpResponse.json({ statusCode: 503, message: 'x' }, { status: 503 })));
+    // Deterministic: the client does not retry, so a 503 is one request and no backoff timers
+    // (the SDK's own retry used to make this race the jest timeout under load).
+    let apiCalls = 0;
+    server.use(
+      tokenHandler,
+      http.all(`${API}/p1/*`, () => {
+        apiCalls += 1;
+        return HttpResponse.json({ statusCode: 503, message: 'x' }, { status: 503 });
+      })
+    );
     const { deps: d, lines } = deps();
     expect(await run(d)).toBe(0);
+    expect(apiCalls).toBe(1);
     expect(lines.some((l) => l.startsWith('pre-undeploy: warning: cleanup incomplete'))).toBe(true);
-  });
+  }, 2000);
 
   it('pre-undeploy: an incomplete environment does not block', async () => {
     const lines: string[] = [];

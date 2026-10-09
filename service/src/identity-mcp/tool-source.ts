@@ -16,7 +16,7 @@ import {
   IdentityNoPermittedToolsError,
   IdentityReauthRequiredError,
 } from './errors';
-import { withToolResultPipeline } from './result-pipeline';
+import { withToolResultPipeline } from '../analytics/pipeline/pipeline';
 import { getFetchOverride } from './runtime';
 import { getIdentityMcpToolSet } from './toolset';
 import type { IdentityToolSetDeps } from './toolset';
