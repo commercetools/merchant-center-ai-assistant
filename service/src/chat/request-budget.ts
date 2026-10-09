@@ -34,7 +34,7 @@ export class RequestBudget {
   private hardFired = false;
 
   constructor(
-    startedAt: number,
+    readonly startedAt: number,
     budgetMs: number,
     reserveMs: number,
     private readonly clientGone: AbortSignal,
