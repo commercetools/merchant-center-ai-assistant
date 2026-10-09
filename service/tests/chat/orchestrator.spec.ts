@@ -17,6 +17,7 @@ import {
 } from '../../src/chat/orchestrator';
 import { registry as realRegistry } from '../../src/tool-sources';
 import { createToolSourceRegistry } from '../../src/tool-sources/registry';
+import { freshConfig } from '../helpers/env';
 import { scriptedModel, textTurn } from '../helpers/mock-model';
 import { captureLogs } from '../helpers/log-capture';
 import { makeToolContext, StubToolSource } from '../helpers/stub-tool-source';
@@ -133,7 +134,10 @@ describe('buildOrchestrator', () => {
   it('with only the built-in sources it still has the three tools and a valid preamble', async () => {
     useMock();
     const { instructions, allTools } = await buildOrchestrator(
-      ctxOf(),
+      ctxOf({
+        // The registry also holds the nimbus source (change K); keep it from spawning a child.
+        config: freshConfig({ NIMBUS_MCP_ENABLED: 'false' }),
+      }),
       realRegistry
     );
     expect(Object.keys(allTools).sort()).toEqual([

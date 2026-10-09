@@ -7,6 +7,7 @@
 import { AppConfig, readConfiguration } from './config';
 import { createApp } from './app';
 import { logGatedAgentKeys } from './agents/agent-keys';
+import { runShutdownHooks } from './lifecycle';
 import { registry } from './tool-sources';
 import { logger } from './utils/logger.utils';
 
@@ -46,7 +47,12 @@ const server = createApp(config).listen(config.server.port, () => {
   logger.info(`service listening on ${config.server.port}`);
 });
 
-// Connect stops instances with SIGTERM.
-process.on('SIGTERM', () => {
-  server.close(() => process.exit(0));
-});
+// Connect stops instances with SIGTERM. Shutdown hooks (for example the Nimbus child process)
+// run first; a child also exits by itself when this process dies (stdin EOF).
+for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+  process.on(signal, () => {
+    void runShutdownHooks().finally(() =>
+      server.close(() => process.exit(0))
+    );
+  });
+}

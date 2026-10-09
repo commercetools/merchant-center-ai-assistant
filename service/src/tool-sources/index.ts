@@ -4,6 +4,7 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
+import { nimbusSource } from '../nimbus';
 import { entityLinkSource } from './entity-link.source';
 import { exportSource } from './export.source';
 import { imageGenerationSource } from './image-generation.source';
@@ -43,6 +44,9 @@ registerToolSource(
   exportSource,
   imageGenerationSource
 );
+
+// K: the embedded Nimbus design-system documentation tools.
+registerToolSource(nimbusSource);
 
 /*
  * Composition. A new tool source is one file plus one line here.

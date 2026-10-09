@@ -49,7 +49,8 @@ const TABLE: Row[] = [
 const PREFIXES = ['/service/managed-mcp-identity', '/service/mcp'];
 
 /** Change C's liveness alias of row 1 (not in the published table; see notes). */
-const EXTRA_ALLOWED = ['GET /service/health'];
+// Routes added by later changes (health: C; nimbus readiness: K).
+const EXTRA_ALLOWED = ['GET /service/health', 'GET /service/status/nimbus'];
 
 type Layer = {
   name?: string;

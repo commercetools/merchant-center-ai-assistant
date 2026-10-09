@@ -14,6 +14,7 @@ import {
 } from '../../src/agents/agent-keys';
 import { buildPreamble } from '../../src/chat/preamble';
 import { registry } from '../../src/tool-sources';
+import { freshConfig } from '../helpers/env';
 import {
   fakeLog,
   makeToolContext,
@@ -27,7 +28,10 @@ afterEach(() => {
 
 describe('built-in sources', () => {
   it('the process-wide registry resolves the three always-on tools', async () => {
-    const ctx = makeToolContext();
+    const ctx = makeToolContext({
+      // The registry also holds the nimbus source (change K); keep it from spawning a child.
+      config: freshConfig({ NIMBUS_MCP_ENABLED: 'false' }),
+    });
     contexts.push(ctx);
     const { tools, contributing } = await registry.resolve(ctx);
     expect(Object.keys(tools).sort()).toEqual([

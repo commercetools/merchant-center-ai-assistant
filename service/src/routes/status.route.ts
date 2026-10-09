@@ -5,9 +5,12 @@
  */
 
 import { Router } from 'express';
+import { nimbusStatus } from '../controllers/nimbus-status.controller';
 import { status } from '../controllers/status.controller';
 
 export const statusRouter = Router();
 
 statusRouter.get('/status', status);
+// K: readiness of the embedded Nimbus MCP (never part of /status, which must stay cheap).
+statusRouter.get('/status/nimbus', nimbusStatus);
 statusRouter.get('/health', status);
