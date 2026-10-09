@@ -8,12 +8,14 @@ import bodyParser from 'body-parser';
 import express, { Express } from 'express';
 import { installGcpImageUploader } from './analytics/register';
 import type { AppConfig } from './config';
+import { SERVICE_BASE_PATH } from './constants/service-path';
 import CustomError from './errors/custom.error';
 import { initRequestContext } from './middleware/context.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
 import { verifyMcSession } from './middleware/mc-session.middleware';
 import { serviceRouter } from './routes/service.route';
 import { installRegistryProviders, registry } from './tool-sources';
+import { registerChatBodyParser } from './utils/chat-body-parser';
 import { registerFeedbackBodyParser } from './utils/feedback-body-parser';
 import { requestUrlForLog } from './utils/log-url.utils';
 import { logger } from './utils/logger.utils';
@@ -50,6 +52,8 @@ export function createApp(config: AppConfig): Express {
   // the global instance short-circuits on it) and AFTER session verification, so an anonymous
   // caller cannot make the service parse a large body. See utils/feedback-body-parser.ts.
   registerFeedbackBodyParser(app, verifyMcSession);
+  // Chat messages with attached images exceed 100kb too; same ordering rule, own limit.
+  registerChatBodyParser(app, verifyMcSession);
 
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
@@ -64,8 +68,8 @@ export function createApp(config: AppConfig): Express {
     next();
   });
 
-  // MUST equal `endpoint` of the service entry in connect.yaml.
-  app.use('/service', serviceRouter);
+  // SERVICE_BASE_PATH MUST equal `endpoint` of the service entry in connect.yaml.
+  app.use(SERVICE_BASE_PATH, serviceRouter);
 
   // Synchronous throw: Express catches it and forwards to errorMiddleware.
   app.use('*', () => {

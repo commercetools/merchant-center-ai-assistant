@@ -43,6 +43,10 @@ and from the configuration files of the Merchant Center applications by `node sc
 | `CHAT_REQUEST_BUDGET_MS` | standard | no | `270000` | Time one chat reply may take in milliseconds, at most 285000 (Connect times a request out after 5 minutes; the reply is finished gracefully when this is reached) |
 | `CHAT_FINALIZE_RESERVE_MS` | standard | no | `30000` | Part of the chat time budget reserved for the final summary step, in milliseconds (5000 up to half the budget) |
 | `NIMBUS_MCP_ENABLED` | standard | no | `true` | Kill switch of the embedded Nimbus design-system documentation tools (true or false). When false the Nimbus child process is never started |
+| `LOG_HTTP` | standard | no | `false` | true logs one line per request without bodies or credentials (true or false) |
+| `CACHE_MAX_ENTRIES` | standard | no | `5000` | Maximum number of entries of the in-process cache (at least 1) |
+| `CACHE_SWEEP_MS` | standard | no | `60000` | Interval in milliseconds at which expired in-process cache entries are removed (at least 1) |
+| `MCP_HANDSHAKE_TIMEOUT_MS` | standard | no | `10000` | Time in milliseconds a third-party MCP server may take to complete its handshake before it is skipped for the turn (at least 1) |
 | `LOG_LEVEL` | standard | no | `info` | Logger level (error, warn, info, debug) |
 | `ADMIN_USER_IDS` | standard | no |  | Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator |
 | `CONTENTSTACK_BRANCH` | standard | no |  | Optional Contentstack branch name sent with every Content Management API call |
@@ -89,8 +93,7 @@ A redeploy takes effect when the instances restart; the sandbox scales to zero, 
 
 ## Settings that are not in connect.yaml
 
-These can be read from the environment of a local run (`service/.env.example`) but cannot be set on Connect because they are not declared: `PORT` (default 8080), `NODE_ENV` (unset means `production`), `LOG_HTTP`, `CACHE_MAX_ENTRIES` (5,000), `CACHE_SWEEP_MS` (60,000),
-`MCP_HANDSHAKE_TIMEOUT_MS` (10,000), `PERSISTENCE_DRIVER` (`custom-objects`, or `memory` for local runs; refused in production) and `MC_AUTH_DISABLED` (local only; refused in production). `.env.example` files contain empty values or obvious placeholders;
+These can be read from the environment of a local run (`service/.env.example`) but cannot be set on Connect because they are not declared: `PORT` (default 8080), `NODE_ENV` (unset means `production`), `PERSISTENCE_DRIVER` (`custom-objects`, or `memory` for local runs; refused in production) and `MC_AUTH_DISABLED` (local only; refused in production). `.env.example` files contain empty values or obvious placeholders;
 `node scripts/check-repo-rules.mjs` rejects a secret-looking value there.
 
 ## Google Cloud

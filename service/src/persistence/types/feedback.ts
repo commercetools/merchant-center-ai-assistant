@@ -93,8 +93,6 @@ export type FeedbackListItem = Pick<
   (typeof FEEDBACK_LIST_FIELDS)[number]
 >;
 
-export type FeedbackWithSnapshot = FeedbackRecord & { messages: SnapshotMessage[] };
-
 export interface FeedbackListFilters {
   authorUserId?: string;
   /** ISO-8601 UTC. */

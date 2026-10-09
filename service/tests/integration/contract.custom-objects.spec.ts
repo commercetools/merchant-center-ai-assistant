@@ -6,7 +6,7 @@
 
 import { createPersistence, stateKey } from '../../src/persistence';
 import { encryptJson } from '../../src/crypto/envelope';
-import { buildSnapshotChunks } from '../../src/persistence/feedback/chunks';
+import { readTranscript, snapshotChunks } from '../helpers/feedback-chunks';
 import { describeGatewayContract } from '../helpers/gateway-contract';
 import { cleanupRun, live, liveConfig, liveDescribe, liveGateway, newRunPrefix } from './live';
 
@@ -81,7 +81,7 @@ liveDescribe('store level on the real gateway', () => {
   it('feedback: parent last, byte-identical transcript, delete', async () => {
     const stores = p();
     const messages = [{ id: 'm1', role: 'user' as const, parts: [{ text: 'e\u{1F600}'.repeat(300000) }] }];
-    const { chunks } = buildSnapshotChunks(messages);
+    const { chunks, sha256 } = snapshotChunks('it-f1', messages);
     expect(chunks.length).toBeGreaterThan(1);
     await stores.feedback.put(
       {
@@ -102,7 +102,8 @@ liveDescribe('store level on the real gateway', () => {
       },
       chunks
     );
-    expect((await stores.feedback.get('it-f1'))?.messages).toEqual(messages);
+    const parts = await stores.feedback.getParts('it-f1');
+    expect(readTranscript(parts ?? { chunks: [] }, sha256).messages).toEqual(messages);
     expect(await stores.feedback.delete('it-f1')).toBe(true);
   });
 });

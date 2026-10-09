@@ -38,6 +38,29 @@ describe('request context', () => {
     expect(res.body.correlationId).toBe(res.body.before);
   });
 
+  it('echoes the correlation id in the response header', async () => {
+    const res = await request(makeApp())
+      .get('/ctx')
+      .set('x-correlation-id', 'abc-123');
+    expect(res.headers['x-correlation-id']).toBe('abc-123');
+  });
+
+  it('echoes the generated request id when none was sent', async () => {
+    const res = await request(makeApp()).get('/ctx');
+    expect(res.headers['x-correlation-id']).toBe(res.body.before);
+  });
+
+  it('echoes the truncated id and replaces an unsafe one by the request id', async () => {
+    const long = await request(makeApp())
+      .get('/ctx')
+      .set('x-correlation-id', 'a'.repeat(300));
+    expect(long.headers['x-correlation-id']).toHaveLength(128);
+    const unsafe = await request(makeApp())
+      .get('/ctx')
+      .set('x-correlation-id', 'a b\u00e9');
+    expect(unsafe.headers['x-correlation-id']).toBe(unsafe.body.before);
+  });
+
   it('truncates a long correlation id to 128 characters', async () => {
     const res = await request(makeApp())
       .get('/ctx')

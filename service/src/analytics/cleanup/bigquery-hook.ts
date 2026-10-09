@@ -10,7 +10,8 @@ import { gcpConfigured } from '../bigquery/ports';
 import { deleteTable, parseTableRef } from '../bigquery/tables';
 import { CLEANUP_CONCURRENCY } from '../constants';
 
-const sanitise = (value: string): string => value.replace(/[^a-zA-Z0-9_]/g, '_');
+/** The session id as it appears in the temporary table ids (`<id>_<suffix>`). */
+export const sanitise = (value: string): string => value.replace(/[^a-zA-Z0-9_]/g, '_');
 
 /** Runs `work` over `items` with at most `limit` in flight (never rejects). */
 export async function forEachLimited<T>(

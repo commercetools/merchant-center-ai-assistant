@@ -13,8 +13,9 @@ import { getCommercetoolsUIPrompt } from './prompt/commercetools-ui.prompt';
 import { composedPageTool } from './tool';
 
 /**
- * Does the `nimbus` source (change K) contribute tools this turn? The tool context carries no
- * "has tool" query yet, so this reads the same kill switch K's source reads.
+ * Does the `nimbus` source (change K) contribute tools this turn? Used where the merged tool
+ * set is not known yet (`getTools`, the tool description): it reads the kill switch K's source
+ * reads. `getPrompt` asks the merged set itself through `ctx.hasTool`.
  */
 const nimbusToolsEnabled = (
   ctx: Parameters<ToolSource['getPrompt']>[0]
@@ -42,5 +43,8 @@ export const composedPageSource: ToolSource = {
   }),
   listForMenu: async () => null,
   getPrompt: (ctx) =>
-    getCommercetoolsUIPrompt(ctx, { nimbusTools: nimbusToolsEnabled(ctx) }),
+    getCommercetoolsUIPrompt(ctx, {
+      nimbusTools: nimbusToolsEnabled(ctx),
+      hasTool: ctx.hasTool,
+    }),
 };

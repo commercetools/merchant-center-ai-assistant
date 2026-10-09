@@ -49,17 +49,7 @@ export type {
   FeedbackListItem,
   FeedbackRecord,
   FeedbackSnapshotChunk,
-  FeedbackWithSnapshot,
   SnapshotMessage,
 } from './types/feedback';
 export type { PromptSuggestion, UserSuggestions } from './types/suggestion';
 
-export {
-  buildSnapshotChunks,
-  reassembleSnapshot,
-  truncateToBytes,
-} from './feedback/chunks';
-export {
-  FEEDBACK_CHUNK_BYTES,
-  MAX_SNAPSHOT_BYTES,
-} from './limits';

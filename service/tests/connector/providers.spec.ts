@@ -43,6 +43,16 @@ describe('reportProviders', () => {
     expect(lines.every((l) => l.endsWith(': configured'))).toBe(true);
   });
 
+  it('providers: invalid stripe key reported as missing', () => {
+    // A key that fails the service's own validation does not count as configured: the provider
+    // is reported as not configured and only the key NAME is printed (as "invalid", never the value).
+    const { ok, lines } = reportProviders({ STRIPE_SECRET_KEY: 'pk_test_SENTINEL-not-a-secret-key' });
+    expect(ok).toBe(true);
+    const stripe = lines.find((l) => l.includes('providers stripe:'));
+    expect(stripe).toBe('post-deploy: providers stripe: not configured (invalid: STRIPE_SECRET_KEY)');
+    expect(lines.join('\n')).not.toContain('SENTINEL');
+  });
+
   it('providers: an invalid value is reported by key name, never by value', () => {
     const { lines } = reportProviders({
       STRIPE_SECRET_KEY: 'hello-SENTINEL',

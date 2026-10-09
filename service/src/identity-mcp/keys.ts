@@ -5,7 +5,8 @@
  */
 
 import type { AppConfig } from '../config';
-import { IDENTITY_USER_ID_PATTERN, SERVICE_BASE_PATH } from './constants';
+import { SERVICE_BASE_PATH } from '../constants/service-path';
+import { IDENTITY_USER_ID_PATTERN } from './constants';
 import type { IdentityBinding } from './types';
 
 /** Thrown when `MC_AUDIENCE` is not configured (it is optional at boot). */

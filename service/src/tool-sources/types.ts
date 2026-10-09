@@ -36,6 +36,13 @@ export interface ToolContext {
   /** Soft/hard deadlines (capability request-time-budget). */
   budget: RequestBudget;
   logger: Log;
+  /**
+   * Only set while `getPrompt` runs: true when the MERGED tool set of this turn (after
+   * `disabledTools` and name collisions) contains a tool of that name. Lets a prompt mention
+   * only tools that exist, for example the Nimbus lookup tools. Absent in `isEnabled`,
+   * `getTools` and `listForMenu`, where the merged set is not known yet.
+   */
+  hasTool?: (name: string) => boolean;
 }
 
 /** What a source shows in the per-session tools menu. */
