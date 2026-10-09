@@ -18,14 +18,19 @@
     "connector:pre-undeploy": "node build/connector/pre-undeploy.js"
   },
   "dependencies": {
+    "@ai-sdk/google-vertex": "^5.0.109",
     "@ai-sdk/mcp": "^2.0.73",
     "@commercetools-backend/express": "^27.13.0",
     "@commercetools-backend/loggers": "^27.13.0",
     "@commercetools/platform-sdk": "^8.27.0",
     "@commercetools/ts-client": "^4.10.0",
+    "@google-cloud/bigquery": "^8.3.1",
+    "@google-cloud/storage": "^7.22.0",
+    "@google/genai": "^1.52.0",
     "ai": "^7.0.92",
     "body-parser": "^1.20.8",
     "express": "^4.22.3",
+    "google-auth-library": "^10.9.1",
     "uuid": "^13.0.2",
     "winston": "^3.19.0",
     "zod": "^4.6.5"

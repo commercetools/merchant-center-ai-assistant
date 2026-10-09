@@ -23,6 +23,10 @@ for (const warning of config.providers.warnings) {
   logger.warn(warning);
 }
 
+for (const warning of config.gcp.warnings) {
+  logger.warn(warning);
+}
+
 const server = createApp(config).listen(config.server.port, () => {
   logger.info(`service listening on ${config.server.port}`);
 });
