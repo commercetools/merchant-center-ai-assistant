@@ -114,7 +114,7 @@ Read these in order; about 45 minutes. Do not start coding before you can answer
   **Why:** the checker is the safety net; it needs its own net.
   **Where:** `scripts/tests/spdx-check.test.mjs` (create, with header). Refactor `spdx-check.mjs` so the logic is exported functions (`checkHeader(text)`, `checkName(json)`, `isGenerated(path)`) and the CLI part runs only when `import.meta.url === pathToFileURL(process.argv[1]).href`.
   **How:** tests named (use these exact names): `header: accepts block comment after shebang`, `header: rejects missing SPDX`, `header: rejects header without UNSUPPORTED line`, `generated: public/ and lock files are exempt`, `names: accepts scoped and unscoped`, `names: rejects foreign scope`, `names: rejects service-typescript`.
-  **Done when:** `node --test scripts/tests/` reports `pass 7`, `fail 0`.
+  **Done when:** `node --test scripts/tests/*.test.mjs` reports `pass 7`, `fail 0`.
   **Watch out:** test fixtures are strings in memory; do not create files that look like secrets (design E6).
 
 ## 5. Repo rules checker
@@ -152,7 +152,7 @@ Read these in order; about 45 minutes. Do not start coding before you can answer
 - [x] 5.6 Unit-test the rules checker
   **Where:** `scripts/tests/check-repo-rules.test.mjs` (create, headered); export `checkEnvExample`, `matchesForbidden`, `findFraming`, `findDocsHygiene`.
   **How:** tests named: `env: secret-shaped key must be empty`, `env: accepts localhost url and integers`, `env: rejects deployed url`, `ci: workflows path rejected`, `ci: Dockerfile and netlify.toml rejected`, `framing: word boundary (a longer word containing a framing word is fine)`, `framing: the three framing words are rejected`, `docs: absolute path and deployed host reported`, `docs: strict exits non-zero only with findings`.
-  **Done when:** `node --test scripts/tests/` reports `pass 16`, `fail 0`.
+  **Done when:** `node --test scripts/tests/*.test.mjs` reports `pass 16`, `fail 0`.
   **Watch out:** write test strings so they do not themselves trip the prose check: build them with concatenation (`'de' + 'mo'`) or in-memory arrays; run `node scripts/check-repo-rules.mjs` after writing the tests to prove they do not.
 
 ## 6. Wrapper for the private tooling
@@ -218,7 +218,7 @@ Read these in order; about 45 minutes. Do not start coding before you can answer
 ## Last: Verification
 
 - [x] V.1 Run every command and record the output in the PR description
-  - `node --test scripts/tests/` -> `pass 16`, `fail 0`
+  - `node --test scripts/tests/*.test.mjs` -> `pass 16`, `fail 0`
   - `node scripts/spdx-check.mjs` -> exit 0 (`headers ok`, `names ok`, `license ok`)
   - `node scripts/check-repo-rules.mjs` -> exit 0; `node scripts/check-repo-rules.mjs --docs` -> exit 0 and prints the finding count
   - `LABS_PUBLISH_DIR=... scripts/labs-gate.sh ossify | tail -30` -> dry run, no FOREIGN/THIRD-PARTY section

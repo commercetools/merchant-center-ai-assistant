@@ -176,7 +176,7 @@ You should now be able to explain: (a) what a Connect certification reviewer loo
 
 ## 9. Verification
 
-- Unit tests: `node --test scripts/docs/` (four test files above).
+- Unit tests: `node --test scripts/docs/*.test.mjs` (four test files above).
 - Chrome scenarios: none created by W; **E2E-V-08** (service gates) runs the doc checks; a fresh-reader walk-through: follow the README quick start from a clean clone and note any broken step (record in `plans/evidence/w/walkthrough.md`).
 - `openspec validate w-docs-and-readmes --strict`.
 

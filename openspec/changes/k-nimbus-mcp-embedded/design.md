@@ -31,7 +31,7 @@ Change **K** implements decision **D3** (embed the Nimbus MCP gateway in `servic
 13. **[unverified]** Nothing in the Connect docs forbids child processes; the buildpack image is not documented. Must be proven by a sandbox deployment (task 8.2, scenario E2E-K-01). If spawn is blocked or the image lacks `node` on `process.execPath`, Q3 falls to appendix A.
 
 ### Other
-14. **[doc/run]** `@modelcontextprotocol/sdk` latest `1.32.1` (legacy gateway `^1.30.0`, nimbus-mcp wants `^1.27.1`); `ai` latest `7.0.134`, `@ai-sdk/mcp` `2.0.71` (legacy ranges `ai 7.0.92`, `^2.0.44`). Exact versions are chosen by H for the AI SDK and by this change for the MCP SDK.
+14. **[doc/run]** `@modelcontextprotocol/sdk` latest `1.32.1` (legacy gateway `^1.30.0`, nimbus-mcp wants `^1.27.1`); `ai` latest `7.0.134` at the time (the service pins `ai@7.0.136`, see change F), `@ai-sdk/mcp` `2.0.71` (legacy ranges `ai 7.0.92`, `^2.0.44`). Exact versions are chosen by H for the AI SDK and by this change for the MCP SDK.
 
 ## Glossary
 

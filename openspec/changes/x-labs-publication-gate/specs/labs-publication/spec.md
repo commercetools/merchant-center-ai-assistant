@@ -116,7 +116,7 @@ The publication directory SHALL be initialised with `git init -b main` (never by
 - **THEN** `gate.mjs` refuses to run (exit 2) and the procedure restarts from the archive step
 
 ### Requirement: Anonymous-clone proof
-A clone of the single commit into an empty directory, run with a scrubbed environment (no `.env` files, no `LABS_PUBLISH_DIR`, no cloud credentials), SHALL succeed in: `npm ci && npm run build && npm test` in `service/`; `yarn install --frozen-lockfile && yarn typecheck && yarn build` in each of `mc-app/`, `composed-apps/`, `mc-view-app/`; `npm ci --prefix scripts && node --test scripts/tests/`; `node scripts/spdx-check.mjs`; `node scripts/check-repo-rules.mjs`; `node scripts/check-connect-layout.mjs`; and `commercetools connect validate`.
+A clone of the single commit into an empty directory, run with a scrubbed environment (no `.env` files, no `LABS_PUBLISH_DIR`, no cloud credentials), SHALL succeed in: `npm ci && npm run build && npm test` in `service/`; `yarn install --frozen-lockfile && yarn typecheck && yarn build` in each of `mc-app/`, `composed-apps/`, `mc-view-app/`; `npm ci --prefix scripts && node --test scripts/tests/*.test.mjs`; `node scripts/spdx-check.mjs`; `node scripts/check-repo-rules.mjs`; `node scripts/check-connect-layout.mjs`; and `commercetools connect validate`.
 
 #### Scenario: Service builds from scratch
 - **WHEN** `anon-proof.sh` runs the service steps in the clone

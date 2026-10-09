@@ -113,11 +113,12 @@ You should now be able to explain: why the digest is not written into the SSE st
 - [x] Unit/wire tests: `tests/wire/{api-response,session-service,session-summary,session-routes,feature-flags,session-digest,turn-digest,suggestions,tools-service,settings,forged-identity}.spec.ts`, `tests/contract/routes.spec.ts`, `tests/wire/error-envelope.spec.ts`.
 - [x] Local run with `MC_AUTH_DISABLED=true` (D) and the in-memory persistence: `curl -s -XPOST localhost:8080/service/session -H 'content-type: application/json' -d '{}'` -> `{"success":true,"data":{"id":"...","title":"New chat",...}}`.
 - [ ] Chrome E2E (spec V implements; once P exists run against the app): **E2E-G-01** new chat creates a session shown in the drawer; **E2E-G-02** list/limit/delete leaves no orphan (network log shows 200 then 404); **E2E-G-03** digest arrives after a turn (title + chips); **E2E-G-04** `/suggestions` returns four cards for a new user and a model-less run; **E2E-G-05** tools menu toggle persists after reload; **E2E-G-06** admin user (A, user id in `ADMIN_USER_IDS`) saves the system prompt; non-admin user (B) PUT gets 403 `ADMIN_REQUIRED` and the UI hides the control; **E2E-G-07** custom-view session isolation (`customView` flag); **E2E-G-08** tool-call-log mode round trip. Evidence under `plans/evidence/G/`.
+  Created Custom Objects (containers per `e-persistence-custom-objects/design.md` Appendix A) can be listed with `GET /custom-objects/ai-assistant-sessions` through the Merchant Center HTTP API playground or `curl`.
 - [x] `commercetools connect validate` unchanged (no `connect.yaml` edits in G). `node scripts/spdx-check.mjs` clean. `openspec validate g-chat-sessions-and-digest --strict` passes.
 
 ## Docs to update (for change W)
 
-- `docs/api.md`: copy the REST table from `specs/rest-api-contract/spec.md` (rows 1-25 and row 28, the binary image route, which is not enveloped on success) and the envelope rules.
+- `docs/api.md`: copy the REST table from `specs/rest-api-contract/spec.md` (rows 1-25 and 28-30, the binary image route, which is not enveloped on success) and the envelope rules.
 - Architecture doc: sessions/digest/suggestions data flow; digest is detached from the stream.
 - FEATURES.md regeneration: remove `FEATURE_SESSION_DIGEST/NEXT_PROMPTS/SUGGESTIONS`, `migrate:session-tools`, `backfill-session-digests`; state "system prompt and tool-call-log writes need an administrator (Merchant Center user id listed in `ADMIN_USER_IDS`)"; note that sessions/messages are kept forever (no retention job).
 - Config reference: no new env keys from G.

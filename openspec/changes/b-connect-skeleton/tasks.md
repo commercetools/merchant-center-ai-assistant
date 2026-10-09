@@ -110,7 +110,7 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
             required: false
   ```
   **Done when:** `node -e "const y=require('fs').readFileSync('connect.yaml','utf8');console.log(y.includes('CONNECT_SERVICE_URL'))"` prints `true` (file will be completed in 2.2).
-  **Watch out:** never declare `CTP_PROJECT_KEY`, `CTP_CLIENT_ID`, `CTP_CLIENT_SECRET`, `CTP_SCOPE`, `CTP_API_URL`, `CTP_AUTH_URL`, `CTP_REGION` (PF1). Quote numeric defaults as strings. The model ids are copied from the legacy `.env.example` and are unverified (open question BQ1).
+  **Watch out:** never declare `CTP_PROJECT_KEY`, `CTP_CLIENT_ID`, `CTP_CLIENT_SECRET`, `CTP_SCOPE`, `CTP_API_URL`, `CTP_AUTH_URL` (PF1). `CTP_REGION` is NOT injected: the `service` entry declares it as a required standard configuration key (API-host spelling, for example `us-central1.gcp`). Quote numeric defaults as strings. The model ids are copied from the legacy `.env.example` and are unverified (open question BQ1).
 - [x] 2.2 Add the three Merchant Center entries and `inheritAs`
   **Where:** `connect.yaml` (append).
   **How:**
@@ -189,7 +189,7 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
   // routes/service.route.ts
   import { Router } from 'express';
   export const serviceRouter = Router();
-  serviceRouter.get('/status', (_req, res) => { res.status(200).json({ status: 'ok' }); });
+  serviceRouter.get('/status', (_req, res) => { res.status(200).json({ status: 'UP' }); });
   // app.ts
   import express from 'express';
   import { serviceRouter } from './routes/service.route';
@@ -202,7 +202,7 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
   const PORT = Number(process.env.PORT) || 8080;
   app.listen(PORT, () => { process.stdout.write(`service listening on ${PORT}\n`); });
   ```
-  Test `tests/status.spec.ts`: `describe('status route')`, `it('returns ok under /service')` expecting 200 and `{status:'ok'}` for `/service/status`, and `it('is not mounted at the root')` expecting 404 for `/status`.
+  Test `tests/status.spec.ts`: `describe('status route')`, `it('returns UP under /service')` expecting 200 and a body with `status: 'UP'` for `/service/status`, and `it('is not mounted at the root')` expecting 404 for `/status`.
   **Done when:** `cd service && npm test` prints `Tests: 2 passed`.
   **Watch out:** `process.stdout.write`, never `console.log` (Definition of Done). Keep `app` separate from `listen` so supertest never opens a port.
 - [x] 3.3 Add lifecycle stubs and `.env.example`
@@ -269,7 +269,7 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
 - [x] 5.2 Unit tests for the layout checker
   **Where:** `scripts/tests/check-connect-layout.test.mjs`.
   **How:** `node:test` cases named: `layout: accepts the canonical document`, `layout: rejects missing application`, `layout: rejects endpoint on mc-app`, `keys: rejects CTP_CLIENT_ID in service`, `keys: secured placement of GCP_SA_KEY_BASE64` (the same test asserts every other GCP_* key and IMAGE_URL_MODE is standard and optional/defaulted, and that the legacy name GCP_LOCATION is rejected), `keys: provider secrets only under securedConfiguration`, `keys: provider non-secrets only under standardConfiguration`, `keys: ADMIN_USER_IDS optional and standard only`, `mcscopes: requires view/manage mcp scopes and rejects additionalOAuthScopes`, `scopes: rejects manage_project`, `pins: rejects drift 25.1.0 vs 27.9.6`, `pins: rejects caret`.
-  **Done when:** `node --test scripts/tests/` reports all tests passing (A's 14 plus these 12 = `pass 26`).
+  **Done when:** `node --test scripts/tests/*.test.mjs` reports all tests passing (A's 14 plus these 12 = `pass 26`).
   **Watch out:** build fixture objects in code; do not read `connect.yaml` in unit tests.
 
 ## 6. Prove it with the platform tooling
@@ -289,12 +289,12 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
 - [ ] V.1 Commands and expected results
   - `cd service && npm ci && npm run build && npm test` -> `Tests: 2 passed`
   - `cd mc-app && yarn typecheck && yarn build`, same for `composed-apps`, `mc-view-app` -> exit 0 each
-  - `node --test scripts/tests/` -> `pass 26`
+  - `node --test scripts/tests/*.test.mjs` -> `pass 26`
   - `node scripts/check-connect-layout.mjs`, `node scripts/spdx-check.mjs`, `node scripts/check-repo-rules.mjs` -> exit 0
   - `commercetools connect validate` -> exit 0
   - `openspec validate b-connect-skeleton --strict` -> valid
 - [x] V.2 Unit tests added by this change (names)
-  - service: `status route returns ok under /service`, `status route is not mounted at the root`
+  - service: `status route returns UP under /service`, `status route is not mounted at the root`
   - scripts: the 10 layout tests in 5.2
 - [ ] V.3 Chrome scenarios: none in this change (stub UIs). One smoke check only: `yarn start` in `mc-app` serves `http://localhost:3001` (needs M-level login, so it is skipped; real scenarios `E2E-O-*` start in change O).
 - [ ] V.4 Definition of Done from plans/04-workflow.md section 4: no `console.log`, SPDX headers, no tenant words, `connect validate` green, docs delta below recorded.

@@ -240,7 +240,7 @@ You should now be able to explain: (a) why the router is mounted at `/service` a
   commercetools connect validate                                    # expect exit 0
   ```
   **Done when:** all three exit 0; paste the commands (not outputs) into `service/README.dev.md`.
-  **Watch out:** if `validate` complains about keys, the gap belongs to B - add it to `plans/questions-inbox/CDEF-plan-amendments.md` instead of editing `connect.yaml` here.
+  **Watch out:** if `validate` complains about keys, the gap belongs to B - record it in `plans/implementation/c-notes.md` (gaps) as a follow-up for B instead of editing `connect.yaml` here (the `questions-inbox` files named in earlier drafts do not exist in the tree).
 
 ## Last: Verification
 

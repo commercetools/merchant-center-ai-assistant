@@ -121,7 +121,7 @@
 
 - [ ] 6.2 Frontend notes
       **Why:** P/R/O must adopt the fixed check.
-      **Where:** write the amendment text in `plans/questions-inbox/IJKLM-plan-amendments.md` (already drafted); no frontend edits here.
+      **Where:** record the amendment text in `plans/implementation/m-notes.md` (the `questions-inbox` file named in earlier drafts does not exist in the tree); no frontend edits here.
       **Done when:** P, R and O owners acknowledged (comment in their change PRs).
       **Watch out:** until adopted the frontends keep working (they re-transpile).
 
