@@ -9,6 +9,19 @@ process.env.ENABLE_NEW_JSX_TRANSFORM = 'true';
 const mcAppConfig = require('@commercetools-frontend/eslint-config-mc-app');
 
 module.exports = [
-  { ignores: ['public/', 'dist/', 'build/', 'node_modules/'] },
+  {
+    ignores: [
+      'src/utils/nimbus-surface.generated.ts',
+      'public/',
+      'dist/',
+      'build/',
+      'node_modules/',
+    ],
+  },
   ...mcAppConfig,
+  {
+    // The config files use ${env:NAME} placeholders on purpose.
+    files: ['custom-*-config.mjs'],
+    rules: { 'no-template-curly-in-string': 'off' },
+  },
 ];
