@@ -1,0 +1,13 @@
+{
+  "api": {
+    "view_key_value_documents": "Reads sessions, messages, settings, feedback and the other Custom Objects that hold the assistant's state, and reads the composed pages",
+    "manage_key_value_documents": "Creates, updates and deletes those Custom Objects (chat history, settings, encrypted identity tokens, feedback, composed pages)"
+  },
+  "oauth": {
+    "view_key_value_documents": "Reads the composed pages stored as Custom Objects; in the Custom View the list only has to be non-empty",
+    "manage_key_value_documents": "Lets the chat application save and delete composed pages; in the Custom View the list only has to be non-empty",
+    "view_mcp_servers": "Lists Managed MCP servers with the signed-in user's own permissions (administrator setup screen of the chat application; the Custom View declares it for parity and does not use it)",
+    "manage_mcp_servers": "Creates Managed MCP servers with the signed-in user's own permissions (administrator setup screen of the chat application; the Custom View declares it for parity and does not use it)"
+  },
+  "oauthDefault": "Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token"
+}
