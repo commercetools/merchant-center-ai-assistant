@@ -14,6 +14,8 @@ export interface SectionResult<T> {
 
 export interface ParseContext {
   nodeEnv: NodeEnv;
+  /** Sections parsed so far (registry order), for cross-section defaults. */
+  partial: Record<string, unknown>;
 }
 
 export type SectionParser<T> = (

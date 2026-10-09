@@ -41,7 +41,7 @@ export function readConfiguration(
   } else {
     errors.push('NODE_ENV: must be one of development, test, production');
   }
-  const ctx: ParseContext = { nodeEnv };
+  const ctx: ParseContext = { nodeEnv, partial: {} };
 
   const values: Record<string, unknown> = {};
   for (const [name, parse] of Object.entries(SECTIONS)) {
@@ -50,6 +50,7 @@ export function readConfiguration(
     )(env, ctx);
     errors.push(...result.errors);
     values[name] = result.value;
+    ctx.partial[name] = result.value;
   }
 
   if (errors.length > 0) {
