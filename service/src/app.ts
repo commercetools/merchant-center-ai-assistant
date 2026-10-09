@@ -15,6 +15,7 @@ import { errorMiddleware } from './middleware/error.middleware';
 import { verifyMcSession } from './middleware/mc-session.middleware';
 import { serviceRouter } from './routes/service.route';
 import { installRegistryProviders, registry } from './tool-sources';
+import { registerChatBodyParser } from './utils/chat-body-parser';
 import { registerFeedbackBodyParser } from './utils/feedback-body-parser';
 import { requestUrlForLog } from './utils/log-url.utils';
 import { logger } from './utils/logger.utils';
@@ -51,6 +52,8 @@ export function createApp(config: AppConfig): Express {
   // the global instance short-circuits on it) and AFTER session verification, so an anonymous
   // caller cannot make the service parse a large body. See utils/feedback-body-parser.ts.
   registerFeedbackBodyParser(app, verifyMcSession);
+  // Chat messages with attached images exceed 100kb too; same ordering rule, own limit.
+  registerChatBodyParser(app, verifyMcSession);
 
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));

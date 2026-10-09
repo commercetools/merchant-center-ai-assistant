@@ -44,7 +44,7 @@ Command-level problems of the deployment helper are in section 10 of [deployment
 | --- | --- | --- | --- |
 | The stream is cut or the answer ends with "The time limit for a single reply was reached" | The time budget ended the turn (270 s by default; Connect cuts a request at 300 s) | Ask the assistant to continue; split big tasks; keep `CHAT_REQUEST_BUDGET_MS` at most 285,000 | `data-turn-status` in the stored message |
 | The stream ends with an error right away | Vertex AI rejected the call: see the Google section below | Fix the credential, role or model | Service log (`orchestrator stream error`) |
-| 413 when sending a message | The JSON body exceeded 100 kB (large pasted text, annotations or attached images) | Send smaller content | Response `entity.too.large` |
+| 413 when sending a message | The JSON body exceeded 10 MB (very large pasted text or many attached images) | Send smaller content | Response `entity.too.large` |
 | 400 `Request body must include a message` or `Request body was not parsed as JSON` | The client sent no message or a wrong `Content-Type` | Send `Content-Type: application/json` once | Response body |
 | 404 `Session not found` | The session belongs to another user, was deleted, or the ID is wrong | Start a new session | - |
 | 503 `Storage temporarily unavailable, please retry` | Custom Objects were unreachable or rate-limited after the retries | Retry; check the commercetools status | Log with the persistence error class |
