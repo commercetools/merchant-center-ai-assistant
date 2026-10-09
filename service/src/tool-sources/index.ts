@@ -4,8 +4,11 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
+import { entityLinkSource } from './entity-link.source';
+import { exportSource } from './export.source';
 import { createToolSourceRegistry } from './registry';
 import type { ToolSource } from './types';
+import { visualizeSource } from './visualize.source';
 
 export {
   ALL_TOOLS,
@@ -30,10 +33,12 @@ export const registerToolSource = (...sources: ToolSource[]): void => {
   registry.register(...sources);
 };
 
+// H: the three always-on built-in sources.
+registerToolSource(entityLinkSource, visualizeSource, exportSource);
+
 /*
  * Composition. A new tool source is one file plus one line here.
  *
- *   registerToolSource(entityLinkSource, visualizeSource, exportSource);   // H
  *   registerToolSource(imageGenerationSource);                             // H (gated by an ImageUploader, L)
  *   // registerToolSource(createCommercetoolsIdentitySource(...));         // I
  *   // registerToolSource(knowledgeSource, contentstackSource, algoliaSource, stripeSource); // J
