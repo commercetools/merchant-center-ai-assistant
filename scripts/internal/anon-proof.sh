@@ -57,7 +57,7 @@ else
 fi
 
 run "scripts install" . "npm ci --prefix scripts --no-audit --no-fund"
-run "scripts tests" . "node --test scripts/tests/"
+run "scripts tests" . "node --test scripts/tests/*.test.mjs"
 run "spdx-check" . "node scripts/spdx-check.mjs"
 run "check-repo-rules" . "node scripts/check-repo-rules.mjs"
 run "check-connect-layout" . "node scripts/check-connect-layout.mjs"
