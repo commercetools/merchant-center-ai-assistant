@@ -38,7 +38,7 @@ describe('errorMiddleware', () => {
     freshConfig();
     const res = await request(makeApp()).get('/custom');
     expect(res.status).toBe(403);
-    expect(res.body).toEqual({ message: 'nope' });
+    expect(res.body).toEqual({ success: false, error: 'nope', message: 'nope' });
   });
 
   it('renders body-parser errors as 413, not 500', async () => {

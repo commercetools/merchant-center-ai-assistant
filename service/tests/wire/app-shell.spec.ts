@@ -17,13 +17,21 @@ describe('app shell', () => {
   it('answers an unknown path with the 404 shape', async () => {
     const res = await request(createApp(freshConfig())).get('/nope');
     expect(res.status).toBe(404);
-    expect(res.body).toEqual({ message: 'Path not found.' });
+    expect(res.body).toEqual({
+      success: false,
+      error: 'Path not found.',
+      message: 'Path not found.',
+    });
   });
 
   it('answers an unknown path under /service with the 404 shape', async () => {
     const res = await request(createApp(freshConfig())).get('/service/nope');
     expect(res.status).toBe(404);
-    expect(res.body).toEqual({ message: 'Path not found.' });
+    expect(res.body).toEqual({
+      success: false,
+      error: 'Path not found.',
+      message: 'Path not found.',
+    });
   });
 
   it('does not advertise Express', async () => {

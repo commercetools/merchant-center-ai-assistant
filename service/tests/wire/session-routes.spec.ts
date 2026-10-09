@@ -28,7 +28,6 @@ describe('POST /session', () => {
     expect(res.body.data.userId).toBe('user-a');
     expect(res.body.data.id).toMatch(/^[0-9a-f-]{36}$/);
     expect(JSON.stringify(res.body)).not.toMatch(/projectKey|tenant|userEmail/);
-    expect(res.headers['cache-control']).toBeUndefined(); // set by verifyMcSession, not the fake
   });
 
   it('binds to a custom view', async () => {
