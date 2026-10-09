@@ -41,7 +41,7 @@ Conventions used by every task below:
 
 ## 5. Motion
 
-- [ ] 5.1 PR `motion/{index.ts,tokens.ts,presets.ts,use-motion.ts,use-reduced-motion.ts,use-flip-transition.ts}` (6 files). **Done when:** typecheck passes. **Watch out:** the folder rule "no component declares its own `animation*`/`transition*` props" - keep it; copy `motion/README.md` into `mc-app/src/motion/README.md` unchanged (W will relocate it).
+- [x] 5.1 PR `motion/{index.ts,tokens.ts,presets.ts,use-motion.ts,use-reduced-motion.ts,use-flip-transition.ts}` (6 files). **Done when:** typecheck passes. **Watch out:** the folder rule "no component declares its own `animation*`/`transition*` props" - keep it; copy `motion/README.md` into `mc-app/src/motion/README.md` unchanged (W will relocate it).
 
 ## 6. Shell
 
