@@ -49,3 +49,9 @@ export const KEEPALIVE_PART_TYPE = 'data-keepalive';
 /** Text appended after a reply cut by the hard deadline. */
 export const TIME_LIMIT_NOTICE =
   '_The time limit for a single reply was reached, so this answer may be incomplete. Ask me to continue._';
+
+/**
+ * How many of the newest generated images (outputs of the image tool) are sent back to the
+ * model with the history, so they can be edited. Older ones are text only (cost bound).
+ */
+export const HISTORY_IMAGES_FOR_MODEL = 2;

@@ -6,12 +6,16 @@
 
 import { convertToModelMessages, type ModelMessage, type UIMessage } from 'ai';
 import type { MessageService } from '../services/message.service';
+import {
+  IMAGE_GENERATION_TOOL,
+  imageGenerationHistoryTools,
+} from '../tool-sources/image-generation.source';
 import { getImageUploader } from '../tool-sources/image-uploader';
 import type { AiSdkChatMessage } from '../types/chat.types';
 import { logger } from '../utils/logger.utils';
 import { stripSystemMessages } from '../utils/message.utils';
 import { convertAnnotationDataPart } from './annotation-part';
-import { CHAT_HISTORY_MESSAGES } from './constants';
+import { CHAT_HISTORY_MESSAGES, HISTORY_IMAGES_FOR_MODEL } from './constants';
 
 export type IncomingMessage = Pick<AiSdkChatMessage, 'id' | 'role' | 'parts'> &
   Partial<Pick<AiSdkChatMessage, 'metadata'>>;
@@ -23,6 +27,56 @@ export interface LoadedHistory {
   storageMessages: AiSdkChatMessage[];
 }
 
+type Json = Record<string, unknown>;
+
+const isRecord = (value: unknown): value is Json =>
+  typeof value === 'object' && value !== null;
+
+const isImageToolPart = (part: unknown): part is Json & { output: Json } =>
+  isRecord(part) &&
+  part.type === `tool-${IMAGE_GENERATION_TOOL}` &&
+  isRecord(part.output) &&
+  Array.isArray(part.output.parts);
+
+/**
+ * Keeps the files nested in the outputs of the newest `keep` image generations and strips them
+ * from older ones. Every kept image is downloaded and sent to the model on EVERY later turn,
+ * so the count is bounded. Works on copies.
+ */
+export const keepNewestGeneratedImages = (
+  messages: UIMessage[],
+  keep: number
+): UIMessage[] => {
+  let remaining = keep;
+  const out = [...messages];
+  for (let i = out.length - 1; i >= 0; i -= 1) {
+    const parts = out[i].parts;
+    if (!Array.isArray(parts)) continue;
+    let changed = false;
+    const next = [...parts];
+    for (let j = next.length - 1; j >= 0; j -= 1) {
+      const part: unknown = next[j];
+      if (!isImageToolPart(part)) continue;
+      const nested = part.output.parts as unknown[];
+      if (!nested.some((p) => isRecord(p) && p.type === 'file')) continue;
+      if (remaining > 0) {
+        remaining -= 1;
+        continue;
+      }
+      next[j] = {
+        ...part,
+        output: {
+          ...part.output,
+          parts: nested.filter((p) => !(isRecord(p) && p.type === 'file')),
+        },
+      } as UIMessage['parts'][number];
+      changed = true;
+    }
+    if (changed) out[i] = { ...out[i], parts: next };
+  }
+  return out;
+};
+
 /**
  * The model input of one turn (capability chat-stream-endpoint, "History window").
  *
@@ -32,7 +86,8 @@ export interface LoadedHistory {
  * 3. `system`-role messages removed (ai v7 rejects them in `messages`);
  * 4. stored service-relative `/files/...` images converted to base64 by the image uploader
  *    (when one is registered), so a relative URL never reaches the provider;
- * 5. `convertToModelMessages` with the annotation data-part converter, because data parts are
+ * 5. `convertToModelMessages` (with the image tool's `toModelOutput`, so the newest generated
+ *    images reach the model as images and can be edited) with the annotation data-part converter, because data parts are
  *    invisible to the model otherwise.
  */
 export const loadHistory = async (params: {
@@ -64,12 +119,16 @@ export const loadHistory = async (params: {
   );
 
   const uploader = getImageUploader();
-  const asUi = withoutSystem as unknown as UIMessage[];
+  const asUi = keepNewestGeneratedImages(
+    withoutSystem as unknown as UIMessage[],
+    HISTORY_IMAGES_FOR_MODEL
+  );
   const uiMessages = uploader?.toModelMessages
     ? await uploader.toModelMessages(asUi, { sessionId })
     : asUi;
 
   const modelMessages = await convertToModelMessages(uiMessages, {
+    tools: imageGenerationHistoryTools,
     // Data parts are UI-only unless converted. Without this the annotations the preview
     // toolbar attaches would render in the transcript and never reach the model.
     convertDataPart: (part) =>

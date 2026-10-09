@@ -11,6 +11,7 @@ import {
   type UIMessage,
   type UIMessageChunk,
 } from 'ai';
+import type { ToolResultOutput } from '@ai-sdk/provider-utils';
 import { z } from 'zod';
 import type { ToolContext } from '../tool-sources/types';
 import type { AgentKey } from './agent-keys';
@@ -38,10 +39,7 @@ export interface AgentDefinition {
   /** Transform a streamed message before it is yielded (for example upload a generated image). */
   processMessage?(message: UIMessage, ctx: ToolContext): Promise<UIMessage>;
   /** Override how the subagent result is shown to the parent model. */
-  toModelOutput?: (args: { output: UIMessage | undefined }) => {
-    type: 'text';
-    value: string;
-  };
+  toModelOutput?: (args: { output: UIMessage | undefined }) => ToolResultOutput;
 }
 
 /**
