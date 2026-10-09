@@ -56,7 +56,7 @@ Facts verified on 2026-10-08. `L:` = legacy file under `/Users/behnam/code/multi
 | `src/cache/cache.types.ts`, `memory-cache.ts`, `index.ts` | `src/cache/*` | KEEP (limits from config; drop `PROJECT` namespace) |
 | `src/cache/mcp-tools.cache.ts` | (spec J / I) | DEFER: MCP-specific, ported with its first consumer; reads TTLs from `AppConfig.cache` |
 | `src/controllers/health.controller.ts`, `routes/health.route.ts` | `src/controllers/status.controller.ts`, `src/routes/status.route.ts` | CHANGE: `/status` + `/health` alias, `UP` body |
-| `src/routes/service.route.ts` | `src/routes/service.route.ts` | CHANGE: only status router now; D..N add theirs; drop `/gecx/config` |
+| `src/routes/service.route.ts` | `src/routes/service.route.ts` | CHANGE: only status router now; D..N add theirs; drop the legacy widget bootstrap route |
 | `src/utils/region.ts` | `src/config/region.ts` | CHANGE: keep API-region <-> MC cloud-identifier mapping only; MCP URL helpers move to spec I |
 | `src/types/service.types.ts` (`Project`, `AuthenticatedRequest`) | `src/types/request.types.ts` | CHANGE: `AuthenticatedRequest` defined by D; `Project` DROP |
 | `package.json`, `tsconfig.json`, `jest.config.cjs`, `.eslintrc.cjs`, `.prettierrc`, `.nvmrc`, `.env.example` | same names | CHANGE (pins, scripts, rules; see tasks) |
@@ -146,7 +146,7 @@ No data. Copy files from the legacy repo (read-only), edit, test. Execute tasks 
 
 - Q-C1. Does Connect inject `PORT`, and which? Default 8080 for now. Verify during first sandbox deploy (U). Not owner-only.
 - Q-C2. Is a request body of 25 MB accepted by the Connect ingress? Unknown; affects `FEEDBACK_BODY_LIMIT` (spec N verifies; see CQ in `plans/questions-inbox/CDEF-questions.md`).
-- Q-C3. May we bump `platform-sdk`/`ts-client` to the newest majors (9.x/5.x)? Default: no (follow skill). Mirrored as CQ1 (owner/Connect-skill question).
+- Q-C3. May we bump `platform-sdk`/`ts-client` to the newest majors (9.x/5.x)? Default: no (follow skill). Open for the maintainers (Connect skill guidance).
 
 ### D10. Third-party provider keys live in a `providers` section (owner decision Q4)
 Contentstack, Algolia and Stripe credentials are Connect deployment configuration (secrets in `securedConfiguration`, non-secrets in `standardConfiguration`), read once here like every other key. A provider is **enabled iff all of its required keys are set and valid** (Contentstack: `CONTENTSTACK_API_KEY` + `CONTENTSTACK_MANAGEMENT_TOKEN`; Algolia: `ALGOLIA_MCP_URL`; Stripe: `STRIPE_SECRET_KEY`). A partial or invalid set never fails startup (providers are optional): the section returns `warnings` (key names only, never values), the provider is disabled, and `providers.status` carries `{ provider, configured, enabled, missingKeys[] }` for the read-only `GET /service/mcp/providers` endpoint (change J). Change C ships presence-only logic and the final exported types; change J replaces the validators (zod formats, Contentstack region, Algolia SSRF guard) inside the same section file. Alternative: fail fast on partial sets - rejected: one typo in an optional integration must not take the whole assistant down.

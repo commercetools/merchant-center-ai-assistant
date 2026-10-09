@@ -132,7 +132,7 @@ New deployment: nothing to migrate (legacy data is not imported - OAuth consent 
 - **OQ-I2** Does auth2 rotate refresh tokens and with what reuse grace? Unknown; decide whether DI-3 is enough after E2E-I-06.
 - **OQ-I3** Local development: https callback required; allow `http://localhost` when `MC_AUTH_DISABLED`? Default: no, document a tunnel.
 - **OQ-I4** Does change H expose a typed stream notice so the UI can show a "Reconnect" button mid-turn? Default: prompt-fragment only.
-- **OQ-I5** (owner, mirrored as IQ1) Binding writes admin-only (admin = `ADMIN_USER_IDS`; decided 2026-10-09). (owner, IQ2) Unbind sweeps all users' MCP tokens - confirm.
+- **OQ-I5** Binding writes admin-only (admin = `ADMIN_USER_IDS`; decided 2026-10-09). Unbind sweeps all users' MCP tokens - confirm.
 - **OQ-I6** E's design settles the settings object (`identityMcp?: IdentityMcpBindingRecord`, with `client` touched by `setClient`) - confirm its record carries `client` (encrypted), `discovery` and `majorVersion`, and add the version-aware token read/delete + `deleteAllTokens()` (plan amendment PA-I1; plan 05 lists only `identityMcp:{serverKey,url,connectedAt}`).
 - **OQ-I7** Apply a completion handshake to the MCP connect flow (login-CSRF, finding 26)? Default: not in v1 (legacy parity), recorded as hardening.
 

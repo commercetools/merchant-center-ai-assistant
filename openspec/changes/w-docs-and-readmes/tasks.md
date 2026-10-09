@@ -36,7 +36,7 @@ You should now be able to explain: (a) what a Connect certification reviewer loo
 - [x] 2.2 `scripts/docs/check-links.mjs`.
   **Why:** broken or internal links.
   **Where:** `scripts/docs/check-links.mjs`.
-  **How:** walk `README.md`, `*/README.md`, `docs/**/*.md`, `SUPPORT.md`, `CONTRIBUTING.md`, `FEATURES.md`; check relative link targets exist and anchors (`#heading`, GitHub slug rules) exist; fail on links containing `plans/`, `openspec/`, `.claude`, `/Users/`, `file://`; external http(s) links are not fetched (offline) but listed with `--list-external`.
+  **How:** walk `README.md`, `*/README.md`, `docs/**/*.md`, `SUPPORT.md`, `CONTRIBUTING.md`, `FEATURES.md`; check relative link targets exist and anchors (`#heading`, GitHub slug rules) exist; fail on links containing `plans/`, `openspec/`, `.claude`, `file://`, or an absolute path under a user home directory; external http(s) links are not fetched (offline) but listed with `--list-external`.
   **Done when:** a deliberately broken link makes it exit 1 and prints file:line.
   **Watch out:** headings with backticks and punctuation slugify differently.
 
@@ -50,7 +50,7 @@ You should now be able to explain: (a) what a Connect certification reviewer loo
 - [x] 2.4 `scripts/docs/check-docs-claims.mjs`.
   **Why:** certification content and scrub rules machine-checked.
   **Where:** `scripts/docs/check-docs-claims.mjs`.
-  **How:** modes `--certify` (README has headings "Configuration", "Administrator access", "Required scopes", "Fail-open and fail-closed behaviour", "Poison messages and replay"; tables non-empty; every `connect.yaml` key appears in README or docs/configuration.md), `--citations` (each `##` section of architecture/how-it-works/FEATURES contains a backticked path that exists or a docs URL), `--scrub` (design D6 patterns; patterns file read from `scripts/internal-paths.json`/leak list if present, plus built-ins), `--stale` (FEATURES/README/docs grep for tenant|firestore|team mcp|data warehouse|gecx|anthropic|openai|assistant-admin|permission group|cloud run|pub/sub; `ADMIN_USER_IDS` is NOT stale vocabulary).
+  **How:** modes `--certify` (README has headings "Configuration", "Administrator access", "Required scopes", "Fail-open and fail-closed behaviour", "Poison messages and replay"; tables non-empty; every `connect.yaml` key appears in README or docs/configuration.md), `--citations` (each `##` section of architecture/how-it-works/FEATURES contains a backticked path that exists or a docs URL), `--scrub` (design D6 patterns; patterns file read from `scripts/internal-paths.json`/leak list if present, plus built-ins), `--stale` (FEATURES/README/docs grep for tenant|firestore|team mcp|data warehouse|g[e]cx|anthropic|openai|assistant-admin|permission group|cloud run|pub/sub; `ADMIN_USER_IDS` is NOT stale vocabulary).
   **Done when:** unit tests `check-docs-claims.test.mjs` cover one pass and one failure per mode.
   **Watch out:** the allowed exception: the word "tenant" in `CHANGELOG.md`.
 

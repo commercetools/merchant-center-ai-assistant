@@ -267,7 +267,7 @@ is edited by any card. User ids are replaced by `<user-id-a>` and `<user-id-b>` 
   2. mcp__chrome-devtools__take_snapshot {pageId: $P, filePath: "$TMPDIR/e2e/$RUN/E2E-V-11/snapshot-settings.txt"}
   3. mcp__chrome-devtools__list_network_requests {pageId: $P, resourceTypes: ["fetch"], pageSize: 100}
   4. MACRO REPLAY-FORWARD GET /mcp/configs null null
-  5. MACRO REPLAY-FORWARD GET /gecx/config/x null null
+  5. MACRO REPLAY-FORWARD GET /widget/config/x null null
 - Assert:
   A1 [DOM] the snapshots of every screen (chat, Chats, Pages, Settings, Connections, backoffice) contain neither "Team MCP" nor "Data Warehouse".
   A2 [NET] no request carries the header `x-mc-team-id` or a `data-warehouse` path.

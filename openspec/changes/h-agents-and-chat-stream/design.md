@@ -146,11 +146,11 @@ Greenfield. H lands with only built-in sources; each of I-M appends its registra
 - **OQ-H1** Amendments to B/C for `CHAT_REQUEST_BUDGET_MS` / `CHAT_FINALIZE_RESERVE_MS` (not owner-only).
 - **OQ-H2** Does the MC `forward-to` gateway or Connect's front proxy impose an idle/stream timeout below 5 minutes? Measure in E2E-H-04; the keep-alive interval (20 s) may need to shrink. (Agent measures on the sandbox.)
 - **OQ-H3** `getModel('main')` return shape and whether Vertex honours `thinkingConfig` options identically (F). Tasks assume `{ model, providerOptions }`.
-- **OQ-H4** Fix the analyzer's size/args interpolation bugs? Default: no. Mirrored as owner question HQ2.
-- **OQ-H5** Auto-offer a "Continue" chip after a time-limit stop? Default: notice text only; P may add UI. Mirrored as HQ3.
-- **OQ-H6** (Resolved 2026-10-09, Q21: DECIDED) Budget stays 270 s with a 30 s reserve; no 240 s variant. Mirrored as HQ1.
+- **OQ-H4** Fix the analyzer's size/args interpolation bugs? Default: no.
+- **OQ-H5** Auto-offer a "Continue" chip after a time-limit stop? Default: notice text only; P may add UI.
+- **OQ-H6** (Resolved 2026-10-09, Q21: DECIDED) Budget stays 270 s with a 30 s reserve; no 240 s variant.
 
 ## Changelog
 
 - 2026-10-09 (owner decision Q9): D-H8 clarified for private images: `ImageUploader.upload` returns a service-relative `/files/...` path (or the public bucket URL in `public` mode); `toModelMessages` is applied by the history loader to all model input; the storage filter keeps non-`data:` file parts including such relative paths.
-- 2026-10-09 (owner decisions Q21, Q7, admin by user id): the chat budget stays 270 s with a 30 s reserve (OQ-H6 resolved); there is no GECX widget stream (no `/gecx/*`, no gecx-react) so the only chat entry point is `POST /service/chat/stream`; the project system prompt injected by D-H4 is written by an administrator listed in `ADMIN_USER_IDS` (settings write is `requireAdmin` in change G), and this change reads it without any admin check (every member's chat uses it).
+- 2026-10-09 (owner decisions Q21, Q7, admin by user id): the chat budget stays 270 s with a 30 s reserve (OQ-H6 resolved); there is no legacy widget stream (no legacy widget bootstrap route, no widget client package) so the only chat entry point is `POST /service/chat/stream`; the project system prompt injected by D-H4 is written by an administrator listed in `ADMIN_USER_IDS` (settings write is `requireAdmin` in change G), and this change reads it without any admin check (every member's chat uses it).

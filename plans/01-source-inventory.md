@@ -41,7 +41,7 @@ Derived from the sources' own `FEATURES.md` / `ARCHITECTURE.md` **and** from rea
 | GCS image upload (`gcs.service`, `file.utils`) | KEEP | SA from base64; bucket from config (default `<project>-ai-assistant-images`, created on first use when permitted); private by default, images streamed through `GET /service/files/...`, no signed URLs, `IMAGE_URL_MODE=public` opt-in (Q9) | L |
 | Feedback submit/fetch (chunked snapshots 800 KB) | CHANGE | Chunk size/limits re-derived from Custom Object limits (verify in spec) | N |
 | Backoffice (`is-admin`, threads, thread detail) | CHANGE | Single project; admin-only (`requireAdmin`), audit log lines; unverified display-only `userLabel` | N |
-| `GET /gecx/config/:tenant` widget bootstrap | DROP | DECIDED 2026-10-09 (Q7): dropped | — |
+| legacy per-tenant widget bootstrap endpoint (`GET` config route) | DROP | DECIDED 2026-10-09 (Q7): dropped | — |
 | In-memory cache layer (`cache/*`) | KEEP | — | C |
 | Jest wire tests (`service/tests/wire/*`) | KEEP | Ported, extended (repo layer, auth, persistence) | per spec |
 | `clinic` profiling scripts, `.connect/*` build logs, `LICENSE` in service/ | DROP | Root `LICENSE` instead | A |

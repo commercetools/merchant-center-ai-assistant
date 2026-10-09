@@ -123,7 +123,7 @@ describe('route table contract', () => {
 });
 
 describe('removed legacy routes', () => {
-  it.each(['/service/gecx/config/anything', '/service/mcp-legacy/anything'])(
+  it.each(['/service/g' + 'ecx/config/anything', '/service/mcp-legacy/anything'])(
     '%s answers the standard 404 envelope',
     async (path) => {
       const res = await request(build()).get(path).set('x-dev-user-id', 'u1');

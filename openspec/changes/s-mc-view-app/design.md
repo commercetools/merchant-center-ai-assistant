@@ -78,8 +78,8 @@ Change S (`s-mc-view-app`), needs O and P. Legacy root `L/` = `/Users/behnam/cod
 
 ## Open questions
 
-- RQ6 (owner, mirrored in `plans/questions-inbox/RSTVWZ-questions.md`): is per-host-URL session scoping desired, or should one conversation per project/user follow the user across pages (flag = entity type only)? Default keep (scoped per URL).
-- RQ7 (owner): should the view also be shipped with locators for Stores/Channels settings pages (already included) - default keep all 65.
+- **RQ6** (owner, mirrored in `plans/questions-inbox/RSTVWZ-questions.md`): is per-host-URL session scoping desired, or should one conversation per project/user follow the user across pages (flag = entity type only)? Default keep (scoped per URL).
+- **RQ7** (owner): should the view also be shipped with locators for Stores/Channels settings pages (already included) - default keep all 65.
 - To verify during implementation: `custom-view-config` `${env:...}` substitution for `hostUriPath`; the exact wire shape of `/auth/session` from change G; whether `view_key_value_documents` is still required for registration ("view must stay non-empty").
 
 ## Changelog

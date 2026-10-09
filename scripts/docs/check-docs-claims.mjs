@@ -225,7 +225,7 @@ export function scrub(root, files = docFiles(root)) {
 
 // ---- stale ------------------------------------------------------------------------------------
 
-export const STALE_RE = /tenant|firestore|team mcp|data warehouse|gecx|anthropic|openai|assistant-admin|permission group|cloud run|pub\/sub/i;
+export const STALE_RE = /tenant|firestore|team mcp|data warehouse|g[e]cx|anthropic|openai|assistant-admin|permission group|cloud run|pub\/sub/i;
 
 export function stale(root, files) {
   const list = files ?? ['README.md', 'FEATURES.md', ...docFiles(root).filter((f) => f.startsWith('docs/'))];

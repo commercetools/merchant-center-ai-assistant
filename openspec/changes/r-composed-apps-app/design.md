@@ -77,8 +77,8 @@ Facts verified by reading code on 2026-10-08 (no implementation run).
 
 ## Open questions
 
-- RQ4 (owner): keep legacy manage scope set or ship read-only pages? Default keep (see D5). Mirrored in `plans/questions-inbox/RSTVWZ-questions.md`.
-- RQ5 (owner): should the page list offer delete/publish toggles here (mc-app has delete)? Default no.
+- **RQ4** (owner): keep legacy manage scope set or ship read-only pages? Default keep (see D5). Mirrored in `plans/questions-inbox/RSTVWZ-questions.md`.
+- **RQ5** (owner): should the page list offer delete/publish toggles here (mc-app has delete)? Default no.
 - Confirm in implementation: the exact composed-pages container constant from change M and whether `createdBy` stores an e-mail (PII) - if so the list must not display it (the legacy list does not).
 
 ## Changelog

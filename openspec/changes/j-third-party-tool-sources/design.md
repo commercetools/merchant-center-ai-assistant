@@ -116,7 +116,7 @@ Fresh deployment; no data import (legacy secrets are in another project's Firest
 ## Open questions
 
 - **OQ-J1** (resolved) H's `getPrompt` is synchronous; the memo approach (DJ-10) stands. Residual: confirm H resolves tools before building instructions (spec "Orchestrator composition") so the memo is warm.
-- **OQ-J2** Allow-list for Algolia hosts or syntactic guard only? Default: syntactic guard. (owner-visible as IQ3)
+- **OQ-J2** Allow-list for Algolia hosts or syntactic guard only? Default: syntactic guard.
 - **OQ-J3** (resolved, Q4) Credentials are Connect `securedConfiguration`; no UI, no Custom Objects.
 - **OQ-J4** (resolved, Q2) Contentstack is kept; `CONTENTSTACK_REGION` (default `na`) is the only addition.
 - **OQ-J5** (resolved) The Algolia URL is a secured key (`ALGOLIA_MCP_URL`) because it may embed a key; no store, no version handling.

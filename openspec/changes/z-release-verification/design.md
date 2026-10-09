@@ -130,7 +130,7 @@ Change Z (`z-release-verification`), wave 11, needs X (and T if unblocked). It i
 
 **D5. "Blocks release" classification**: an open item blocks if it (a) makes a readiness box FAIL, (b) leaves a requirement R1-R10 without evidence, (c) is a security question, (d) is a known data-loss bug. Everything else gets a target (v0.1.x or backlog).
 
-**D6. Post-v1 backlog (initial, with size)**: (1) optional retention job for messages/feedback (`RETENTION_DAYS`, Connect `job`, size M; NOT planned: messages and feedback are kept forever by decision Q13/Q25, built only if the owner reverses it); (2) identity token exchange via jwt-bearer if auth2 starts advertising it (S, watch); (3) public marketplace certification (M); (4) Lighthouse/accessibility pass for the three UIs (M); (5) load and soak testing of the SSE stream and Custom Object limits (M); (6) shared frontend package or Connect support for `shared/` in MC apps (L, only if platform allows); (8) additional locators for the Custom View (S); (9) internationalisation (M, Q15); (10) metrics and alerting for the service (M); (11) cascade-delete job for very long sessions and orphan feedback chunk sweeper (S-M); (12) option to move third-party credentials to `securedConfiguration` (Q4 alternative, S); (13) admin audit trail stored in Custom Objects (N NQ1, M); (14) multi-project installation guidance (documentation only, S); (15) the reserved change letter `Y` for a follow-up spec.
+**D6. Post-v1 backlog (initial, with size)**: (1) optional retention job for messages/feedback (`RETENTION_DAYS`, Connect `job`, size M; NOT planned: messages and feedback are kept forever by decision Q13/Q25, built only if the owner reverses it); (2) identity token exchange via jwt-bearer if auth2 starts advertising it (S, watch); (3) public marketplace certification (M); (4) Lighthouse/accessibility pass for the three UIs (M); (5) load and soak testing of the SSE stream and Custom Object limits (M); (6) shared frontend package or Connect support for `shared/` in MC apps (L, only if platform allows); (8) additional locators for the Custom View (S); (9) internationalisation (M, Q15); (10) metrics and alerting for the service (M); (11) cascade-delete job for very long sessions and orphan feedback chunk sweeper (S-M); (12) option to move third-party credentials to `securedConfiguration` (Q4 alternative, S); (13) admin audit trail stored in Custom Objects (change N, size M); (14) multi-project installation guidance (documentation only, S); (15) the reserved change letter `Y` for a follow-up spec.
 
 **D7. Automation.** `acceptance.mjs` (read archive directory, parse each `tasks.md` Verification section for command and scenario ids, read `report.md`) generates `acceptance.md` but never marks PASS by itself: a human or agent supplies the evidence links; the script verifies the links exist. `check-tasks-shape.mjs` verifies headings only (shape), not quality.
 
@@ -145,8 +145,8 @@ Change Z (`z-release-verification`), wave 11, needs X (and T if unblocked). It i
 
 ## Open questions
 
-- RQ12 (owner, recorded in `plans/owner-questions.md`): version number and tag name (default `0.1.0` / `v0.1.0`) and whether the first release should be certified publicly (Q14 default: private connector).
-- RQ13 (owner): where should the internal evidence archive be stored after publication (default: a private archive of the development repository)?
+- **RQ12** (owner, recorded in `plans/owner-questions.md`): version number and tag name (default `0.1.0` / `v0.1.0`) and whether the first release should be certified publicly (Q14 default: private connector).
+- **RQ13** (owner): where should the internal evidence archive be stored after publication (default: a private archive of the development repository)?
 - Does X provide `--ack` records for gate WARNs that must be listed in the register? (read X's archive)
 
 ## Changelog

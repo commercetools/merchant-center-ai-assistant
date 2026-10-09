@@ -106,9 +106,9 @@ None (no stored state). Operators replace `GEMINI_API_KEY` by creating a service
 
 ## Open questions
 
-- Q-F1. (RESOLVED 2026-10-09, owner decision Q9) Every Google Cloud setting has a default and is configurable in `connect.yaml`; images default to `private` (backend-streamed). Mirrored as CQ6.
+- Q-F1. (RESOLVED 2026-10-09, owner decision Q9) Every Google Cloud setting has a default and is configurable in `connect.yaml`; images default to `private` (backend-streamed).
 - Q-F2. Is `gemini-2.5-flash-image` available on Vertex in the chosen location, or should a newer image model replace it? Resolved by the smoke test; default keep.
-- Q-F3. Should the `agent` tier default move to the 3.x family (one model for everything)? Default no (parity). CQ7.
+- Q-F3. Should the `agent` tier default move to the 3.x family (one model for everything)? Default no (parity).
 - Q-F4. Connect secured-configuration value size limit for a 3.2 KB secret - verify at first deploy (not owner-only).
 
 ## Changelog

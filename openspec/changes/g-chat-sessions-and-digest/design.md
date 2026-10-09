@@ -124,8 +124,8 @@ Greenfield (no data migration: legacy Firestore data is not carried over, plans/
 
 - **OQ-G1** Exact E method names (`patch` vs `update`, `listByUser`) - reconcile at apply time; tasks use the names above. (Not owner-only.)
 - **OQ-G2** Does F return `{ model, providerOptions }` from `getModel`? Tasks assume yes. (Not owner-only.)
-- **OQ-G3** Keep "messages of last matching session on flag mismatch"? Default keep. Owner-visible only if S/P prefer 404 (mirrored as GQ3).
-- **OQ-G4** Admin-only system-prompt write (GQ1, now defined as an administrator in `ADMIN_USER_IDS`) and 20 000-character cap (GQ2) - owner may veto; mirrored in `plans/questions-inbox/GHN-questions.md`.
+- **OQ-G3** Keep "messages of last matching session on flag mismatch"? Default keep. Owner-visible only if S/P prefer 404.
+- **OQ-G4** Admin-only system-prompt write (an administrator is a user id listed in `ADMIN_USER_IDS`) and a 20 000-character cap - a maintainer may veto.
 - **OQ-G5** Whether the Custom Object predicate `value(featureFlags(customView="..."))` is accepted by the API - verify during task 3.3 against the scratch project (M3).
 
 ## Changelog
