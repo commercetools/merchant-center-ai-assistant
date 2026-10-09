@@ -118,7 +118,7 @@ export function certify(root) {
   }
   if (exists('docs/troubleshooting.md')) {
     const t = read(root, 'docs/troubleshooting.md');
-    if (!/nobody is an? admin/i.test(t)) problems.push('TROUBLESHOOTING entry "nobody is admin because ADMIN_USER_IDS is empty" missing');
+    if (!/nobody is (an? )?admin/i.test(t)) problems.push('TROUBLESHOOTING entry "nobody is admin because ADMIN_USER_IDS is empty" missing');
     if (!/not shown as (an? )?administrator/i.test(t)) problems.push('TROUBLESHOOTING entry "I am not shown as administrator" missing');
   }
   return problems;

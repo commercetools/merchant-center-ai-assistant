@@ -142,7 +142,7 @@ Secret values are passed as `--configuration` arguments to the CLI, so they are 
 | a redeploy shows old behaviour | use `update-code` (stage, publish, redeploy with `--updateConnector`); a plain `configure` does not move to new code |
 | a provider shows "Not configured" in Settings | read the `post-deploy: providers` line for the missing key names, then run `configure` |
 | `deploy` says the deployment already exists | use `finalize` or `configure`, or `delete --yes` and start again |
-| `stage` cannot describe the connector | check the CLI login (M4); an unrelated error never triggers a create |
+| `stage` cannot describe the connector | check the CLI login; an unrelated error never triggers a create |
 
 ## 11. Verified behaviour
 

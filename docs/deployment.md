@@ -53,7 +53,7 @@ The helper derives the Merchant Center cloud identifier (`gcp-us`, `gcp-eu`, `gc
 | `preview` | Trying a staged connector | Short lived; delete it when done |
 | `production` | Live use | Needs a published connector and a non-trial project; the helper refuses it without an explicit confirmation flag |
 
-Connect ends a request after five minutes; the chat stream finishes its answer before that ([architecture.md](./architecture.md#request-time-budget)).
+A deployment can take up to about 15 minutes to reach `Deployed`. Connect ends a request after five minutes; the chat stream finishes its answer before that ([architecture.md](./architecture.md#request-time-budget)).
 See https://docs.commercetools.com/connect/deployment-behavior-and-environments.md for the platform rules.
 
 ## Updating and rolling back

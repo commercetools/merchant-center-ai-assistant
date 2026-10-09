@@ -8,7 +8,7 @@ Merchant Center gateway (`/proxy/forward-to`), not by browsers directly. The rou
 
 - **Base path**: `/service` (the `endpoint` of the service in `connect.yaml`).
 - **Authentication**: `Authorization: Bearer <token>` where the token is the signed token the Merchant Center gateway adds. Routes marked "none" below need no token. A missing,
-  malformed or unverifiable token answers 401; a token for another project answers 403. Responses of authenticated routes carry `Cache-Control: no-store`.
+  malformed or unverifiable token answers 401; a token for another project answers 403. Authenticated JSON responses carry `Cache-Control: no-store` and `Vary: Authorization`.
 - **Administrator routes** answer 403 with code `ADMIN_REQUIRED` for a user who is not listed in `ADMIN_USER_IDS`. The decision is made by the service from the verified user ID; no header, query or body field can grant it.
 - **Success envelope**: `{ "success": true, "data": ... }`. List answers of the review routes add a sibling `pagination` object (`limit`, `offset`, `total`). A delete answers `{ "success": true, "message": "..." }`.
   Exceptions that are not enveloped: `GET /service/status` and `GET /service/health` (a plain status object), `GET /service/status/nimbus`, the stream, the image route (binary) and the OAuth callback (an HTML page).
