@@ -38,7 +38,8 @@ const PLACEHOLDER_URL = 'https://not-configured.invalid/service';
 // key -> expectation. `default` = exact default value; `optional` = required must be false.
 const SERVICE_STANDARD = {
   CTP_REGION: { required: true },
-  CLOUD_IDENTIFIER: { default: 'gcp-us' },
+  MC_CLOUD_IDENTIFIER: { optional: true },
+  MC_APP_ENTRY_POINT_URI_PATH: { default: 'ai-assistant' },
   MC_AUDIENCE: { optional: true },
   GCP_PROJECT_ID: { optional: true },
   GCP_VERTEX_LOCATION: { default: 'us-central1' },

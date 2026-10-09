@@ -39,7 +39,8 @@ function canonical() {
         configuration: {
           standardConfiguration: [
             k('CTP_REGION', { required: true }),
-            k('CLOUD_IDENTIFIER', { default: 'gcp-us' }),
+            k('MC_CLOUD_IDENTIFIER', { required: false }),
+            k('MC_APP_ENTRY_POINT_URI_PATH', { default: 'ai-assistant' }),
             k('MC_AUDIENCE', { required: false }),
             k('GCP_PROJECT_ID', { required: false }),
             k('GCP_VERTEX_LOCATION', { default: 'us-central1' }),

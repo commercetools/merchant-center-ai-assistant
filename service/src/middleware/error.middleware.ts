@@ -47,6 +47,7 @@ export const errorMiddleware: ErrorRequestHandler = (
       `${req.method} ${requestUrlForLog(req)} -> ${error.statusCode}: ${error.message}`
     );
     res.status(Number(error.statusCode)).json({
+      code: error.code,
       message: error.message,
       errors: error.errors,
       stack: isDevelopment ? error.stack : undefined,

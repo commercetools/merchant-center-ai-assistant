@@ -14,17 +14,21 @@ class CustomError extends Error {
   statusCode: number | string;
   message: string;
   errors?: ErrorItem[];
+  /** Stable machine-readable code (for example ADMIN_REQUIRED). */
+  code?: string;
 
   constructor(
     statusCode: number | string,
     message: string,
-    errors?: ErrorItem[]
+    errorsOrOptions?: ErrorItem[] | { code: string }
   ) {
     super(message);
     this.statusCode = statusCode;
     this.message = message;
-    if (errors) {
-      this.errors = errors;
+    if (Array.isArray(errorsOrOptions)) {
+      this.errors = errorsOrOptions;
+    } else if (errorsOrOptions) {
+      this.code = errorsOrOptions.code;
     }
   }
 }

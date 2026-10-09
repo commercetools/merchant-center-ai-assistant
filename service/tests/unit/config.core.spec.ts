@@ -68,6 +68,6 @@ describe('readConfiguration', () => {
     expect(second).toBe(first);
     expect(Object.isFrozen(first)).toBe(true);
     expect(Object.isFrozen(first.server)).toBe(true);
-    expect(Object.isFrozen(first.auth.adminUserIds)).toBe(true);
+    expect(Object.isFrozen(first.auth)).toBe(true);
   });
 });

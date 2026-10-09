@@ -4,9 +4,23 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-/** Placeholder owned by change D (auth); D replaces or extends it. */
-export type RequestUser = {
+import type { Request } from 'express';
+
+/** Who is calling. Built only from the verified gateway token (or the dev bypass). */
+export interface RequestUser {
   userId: string;
   projectKey: string;
   isAdmin: boolean;
-};
+}
+
+/** `req.user` is set by verifyMcSession. */
+export interface AuthenticatedRequest extends Request {
+  user: RequestUser;
+}
+
+/** Identity-looking query keys that must never become feature flags or identity. */
+export const LEGACY_IDENTITY_QUERY_KEYS = [
+  'userEmail',
+  'userId',
+  'projectKey',
+] as const;

@@ -16,9 +16,19 @@ try {
   process.exit(1);
 }
 
-if (config.auth.adminUserIds.length === 0) {
+if (config.auth.adminUserIds.size === 0) {
   logger.warn('ADMIN_USER_IDS is empty: no administrator');
 }
+if (config.auth.authDisabled) {
+  logger.warn(
+    'MC_AUTH_DISABLED=true: Merchant Center session verification is OFF (local development only)'
+  );
+}
+logger.info('auth configuration', {
+  audience: config.auth.mcAudience ?? 'not configured',
+  issuerCloudIdentifier: config.auth.issuerCloudIdentifier,
+  adminCount: config.auth.adminUserIds.size,
+});
 for (const warning of config.providers.warnings) {
   logger.warn(warning);
 }

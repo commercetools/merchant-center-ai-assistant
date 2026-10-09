@@ -39,6 +39,6 @@ export const status: RequestHandler = (_req, res) => {
     persistence: config.persistence.driver,
     authConfigured:
       Boolean(config.auth.mcAudience) || config.auth.authDisabled,
-    adminConfigured: config.auth.adminUserIds.length > 0,
+    adminConfigured: config.auth.adminUserIds.size > 0,
   });
 };
