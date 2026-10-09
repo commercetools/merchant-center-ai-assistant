@@ -5,6 +5,7 @@
  */
 
 import { AsyncLocalStorage } from 'node:async_hooks';
+import type { Settings } from '../persistence';
 import { RequestUser } from '../types/request.types';
 
 export interface RequestContext {
@@ -13,6 +14,8 @@ export interface RequestContext {
   user?: RequestUser;
   /** Typed by the change that owns sessions (E/N). */
   session?: unknown;
+  /** Memo of the settings read of this request (see SettingsService). */
+  settings?: Promise<Settings>;
 }
 
 const storage = new AsyncLocalStorage<RequestContext>();

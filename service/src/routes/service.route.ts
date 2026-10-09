@@ -5,16 +5,24 @@
  */
 
 import { Router } from 'express';
+import { verifyMcSession } from '../middleware/mc-session.middleware';
 import { backofficeRouter } from './backoffice.route';
 import { feedbackRouter } from './feedback.route';
 import { mcAuthRouter } from './mc-auth.route';
+import { sessionRouter } from './session.route';
+import { systemPromptRouter, toolCallLogsRouter } from './settings.route';
 import { statusRouter } from './status.route';
+import { suggestionsRouter } from './suggestions.route';
 
 /** Mounted at /service in app.ts; MUST equal `endpoint` in connect.yaml. */
 export const serviceRouter = Router();
 
 serviceRouter.use('/', statusRouter);
 serviceRouter.use('/auth', mcAuthRouter);
+serviceRouter.use('/session', verifyMcSession, sessionRouter);
+serviceRouter.use('/suggestions', verifyMcSession, suggestionsRouter);
+serviceRouter.use('/system-prompt', verifyMcSession, systemPromptRouter);
+serviceRouter.use('/tool-call-logs', verifyMcSession, toolCallLogsRouter);
 serviceRouter.use('/feedback', feedbackRouter);
 serviceRouter.use('/backoffice', backofficeRouter);
-// Other changes mount their routers here.
+// H..M mount their routers here.
