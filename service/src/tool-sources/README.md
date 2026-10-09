@@ -7,9 +7,9 @@ Freely available, AS IS and UNSUPPORTED. See LICENSE.
 # Tool sources
 
 A **tool source** provides tools, a prompt fragment and a tools-menu group to the chat
-orchestrator. Changes I (identity MCP), J (Knowledge, Contentstack, Algolia, Stripe), K (Nimbus),
-L (BigQuery, image upload) and M (composed pages) each add one. The contract is in `types.ts`;
-the runtime is `registry.ts`.
+orchestrator. The identity MCP, Knowledge, Contentstack, Algolia, Stripe, Nimbus, BigQuery, image
+generation and composed pages features are each one source. The contract is in `types.ts`; the
+runtime is `registry.ts`. See also the [how it works](../../../docs/how-it-works.md#tool-sources-and-agents) page.
 
 ## What a source provides
 
@@ -70,7 +70,7 @@ Test it with `tests/helpers/stub-tool-source.ts` (`StubToolSource`, `makeToolCon
 
 ## Image generation
 
-`imageGeneration` is registered but enabled only while `setImageUploader(...)` (change L) has
+`imageGeneration` is registered but enabled only while `setImageUploader(...)` has
 been called. `ImageUploader.upload` returns the value stored in the file part (public URL, or a
 service-relative `/files/...` path in private mode); the optional `toModelMessages` converts
 stored relative image parts to base64 before the model sees them.

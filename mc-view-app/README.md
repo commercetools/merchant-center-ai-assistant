@@ -21,8 +21,8 @@ no poison-message or replay procedure.
 
 ## Prerequisites
 
-- The chat service is deployed and reachable (change H and the rest of the service).
-- The Custom View is registered in the Merchant Center with a placeholder URL first (manual step M7);
+- The chat service is deployed and reachable (see the [service README](../service/README.md)).
+- The Custom View is registered in the Merchant Center with a placeholder URL first ([deployment guide](../docs/deployment.md#order-of-operations));
   Connect then provides the deployed URL, which is written back to the registration.
 - The project has an identity-mode Managed MCP binding, set up by an administrator in the AI Assistant
   application (`mc-app`). The panel only reads it.
@@ -132,3 +132,7 @@ rail (one session per host page), composed pages, code preview and annotations (
 
 Maintenance: when a guarded file changes in `mc-app`, copy it here (`node scripts/check-duplicates.mjs`
 prints the `cp` command). Review the adapted files against `mc-app` roughly quarterly.
+
+## More
+
+Root documentation: [README](../README.md), [configuration](../docs/configuration.md), [permissions](../docs/permissions.md), [operations](../docs/operations.md), [troubleshooting](../docs/troubleshooting.md), [CONTRIBUTING](../CONTRIBUTING.md).
