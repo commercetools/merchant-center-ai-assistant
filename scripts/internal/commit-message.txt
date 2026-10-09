@@ -1,0 +1,14 @@
+Initial release of the AI Assistant for the Merchant Center (commercetools Labs)
+
+An AI chat assistant for the commercetools Merchant Center. It works on a
+single commercetools project, is deployed only with commercetools Connect,
+uses Gemini through Vertex AI and keeps its state in Custom Objects.
+
+This project is freely available, provided AS IS and UNSUPPORTED. It is
+licensed under the MIT License (see LICENSE).
+
+Start with README.md and docs/deployment-runbook.md. The folders plans/ and
+openspec/ hold the design documentation of the project.
+
+Parts: service/ (Connect service application), mc-app/ and composed-apps/
+(Merchant Center custom applications), mc-view-app/ (custom view).
