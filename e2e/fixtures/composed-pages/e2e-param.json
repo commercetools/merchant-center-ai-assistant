@@ -1,0 +1,22 @@
+{
+  "key": "e2e-param",
+  "title": "E2E route param",
+  "description": "E2E fixture, safe to delete",
+  "isPublished": true,
+  "components": [
+    {
+      "name": "Main",
+      "imports": [{ "source": "commercetools", "items": ["Stack", "Heading", "Text"] }],
+      "dataSources": [
+        {
+          "id": "order",
+          "name": "Order",
+          "query": "query($id:String){ order(id:$id){ id } }",
+          "variables": [{ "name": "id", "type": "string", "fromUrl": ":orderId" }],
+          "target": "COMMERCETOOLS_PLATFORM"
+        }
+      ],
+      "componentBody": "return (<Stack direction=\"column\" gap=\"400\"><Heading as=\"h1\">E2E route param</Heading><Text>Order id: {String(renderData.data.order?.order?.id ?? 'n/a')}</Text></Stack>);"
+    }
+  ]
+}
