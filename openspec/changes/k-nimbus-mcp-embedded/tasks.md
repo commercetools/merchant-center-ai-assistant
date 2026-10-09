@@ -1,12 +1,12 @@
 ## 0. Read first
 
-- [ ] 0.1 Read the context (30 min, no code)
+- [x] 0.1 Read the context (30 min, no code)
       **Why:** the gateway's comments hold every hard-won rule about the child process.
       **Where:** this change's `proposal.md`, `design.md` ("Explore findings" 1-14, "Decisions", "Appendix A"), `specs/*/spec.md`; legacy `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/nimbus-mcp-gateway/src/upstream.ts` (whole), `.../src/index.ts` lines 1-80, `.../README.md` sections "Why this exists" and "How it works"; `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/service/src/client/nimbus.mcp.ts` and `nimbus.batch.ts`; docs https://docs.commercetools.com/connect/best-practices.md (service limits).
       **Done when:** you can explain (1) why `require.resolve` cannot find the package, (2) what `onclose` does and does not detect, (3) why 3 timeouts recycle, (4) why `/status` must not touch the child, (5) why stderr must be piped.
       **Watch out:** ignore HTTP, auth header and Dockerfile parts.
 
-- [ ] 0.2 Confirm dependencies
+- [x] 0.2 Confirm dependencies
       **Why:** K plugs into H.
       **Where:** `service/src/`.
       **How:** find H's `ToolSource` type and `registerToolSource` (`service/src/tool-sources/`), the custom-view source selection, M's page-generation source order; C's logger and status router; C's shutdown hook (`SIGTERM` handling).
@@ -15,14 +15,14 @@
 
 ## 1. Setup
 
-- [ ] 1.1 Create the skeleton and add dependencies
+- [x] 1.1 Create the skeleton and add dependencies
       **Why:** fixed layout, exact pins.
       **Where:** create `service/src/nimbus/{constants.ts,resolve.ts,process-manager.ts,transport.ts,backend.ts,client.ts,batch.ts,tool-source.ts,readiness.ts}`, `service/tests/nimbus/{fixtures/,}`, `service/scripts/smoke-nimbus.mjs`; SPDX headers.
       **How:** decide the Nimbus version (OQ-K2): read the exact pin from `mc-app/package.json` (change O) or default to `3.5.1`; then `cd service && npm install --save-exact @commercetools/nimbus-mcp@<ver> @modelcontextprotocol/sdk@<latest 1.x>`.
       **Done when:** `node -e "console.log(require('fs').existsSync('node_modules/@commercetools/nimbus-mcp/dist/index.js'))"` prints `true`; `npm run build` exits 0.
       **Watch out:** both go under `dependencies` (not dev): Connect installs production dependencies for the runtime.
 
-- [ ] 1.2 Constants
+- [x] 1.2 Constants
       **Why:** one place for every number.
       **Where:** `nimbus/constants.ts`.
       **How:**
@@ -42,21 +42,21 @@
 
 ## 2. Process manager
 
-- [ ] 2.1 Resolve the package on disk
+- [x] 2.1 Resolve the package on disk
       **Why:** spec "One shared child" (package missing).
       **Where:** `nimbus/resolve.ts` from legacy `upstream.ts` lines 14-48.
       **How:** `resolveNimbusMcp(startDir = __dirname): { entry, version } | { error }` walking up for `node_modules/@commercetools/nimbus-mcp/package.json`; entry `dist/index.js` must exist; return an error object instead of throwing.
       **Done when:** `resolve.spec.ts`: finds the installed package and returns the version string equal to `service/package.json`'s pin; with a temp dir without the package returns `{ error }`. `npx jest tests/nimbus/resolve.spec.ts` green.
       **Watch out:** do not `require.resolve` - it throws `ERR_PACKAGE_PATH_NOT_EXPORTED`.
 
-- [ ] 2.2 Test fixture: a fake nimbus child
+- [x] 2.2 Test fixture: a fake nimbus child
       **Why:** every resilience test needs a controllable child.
       **Where:** `service/tests/nimbus/fixtures/fake-nimbus.mjs`.
       **How:** MCP SDK `Server` + `StdioServerTransport` exposing the 7 tool names; behaviours selected by tool name: `search_docs` with `{query:'hang'}` never answers, `{query:'die'}` calls `process.exit(1)`, `{query:'noise'}` writes a line to stderr and answers; `FAKE_NIMBUS_MISSING=get_tokens` env removes a tool.
       **Done when:** `node tests/nimbus/fixtures/fake-nimbus.mjs < /dev/null` exits 0 immediately (stdin EOF) without output.
       **Watch out:** the fixture must not import service code.
 
-- [ ] 2.3 Manager core: lazy start, shared start, generation guard
+- [x] 2.3 Manager core: lazy start, shared start, generation guard
       **Why:** the heart of the module.
       **Where:** `nimbus/process-manager.ts` (legacy `spawn`, `getUpstream`).
       **How:**
@@ -73,21 +73,21 @@
       **Done when:** `process-manager.spec.ts` (points `entry` at the fixture): 8 concurrent `getUpstream()` -> one `ps`-visible child (assert via `transport.pid` counter in the fake: the fixture appends `process.pid` to a temp file); after `process.kill(pid,'SIGKILL')` the next call works and the temp file has 2 pids.
       **Watch out:** `onclose` fires when stdio closes, not when the process exits - always call `client.close()`.
 
-- [ ] 2.4 Call timeout and recycle after 3 consecutive timeouts
+- [x] 2.4 Call timeout and recycle after 3 consecutive timeouts
       **Why:** wedged-child recovery.
       **Where:** same file, `callTool`, `recycle(why)`.
       **How:** `client.callTool({name, arguments}, undefined, { timeout: CALL_TIMEOUT_MS })`; on error whose message matches `/timed out|timeout/i` increment `timeouts`; at 3 call `recycle('3 consecutive timeouts')`; success resets to 0. Tests may override the timeout through the constructor (`callTimeoutMs`).
       **Done when:** tests: three `search_docs{query:'hang'}` calls with `callTimeoutMs: 200` -> `recycle` log and the next call succeeds on a new pid; timeout, timeout, success, timeout -> no recycle.
       **Watch out:** `recycle` must `await client.close()` so the hung child is killed.
 
-- [ ] 2.5 Stderr logging, environment, idle shutdown, shutdown hook
+- [x] 2.5 Stderr logging, environment, idle shutdown, shutdown hook
       **Why:** spec requirements for logs, secrets, lifecycle.
       **Where:** same file + `service/src/lifecycle.ts` (only if missing).
       **How:** `readline.createInterface({ input: transport.stderr })` -> `log.warn('nimbus-mcp stderr', { source: 'nimbus-mcp', line })`; idle timer `setTimeout(() => this.close('idle'), IDLE_SHUTDOWN_MS).unref()` reset on every `callTool/listTools`; `close()` public and registered with the service shutdown hook.
       **Done when:** tests: `search_docs{query:'noise'}` produces exactly one warn log with `source:'nimbus-mcp'`; a spy on `StdioClientTransport` constructor args shows `env` without `ENCRYPTION_KEY` when `process.env.ENCRYPTION_KEY='x'`; with fake timers (`jest.useFakeTimers`) 10 min idle -> `close` called.
       **Watch out:** `unref()` the timers or Jest hangs.
 
-- [ ] 2.6 Readiness
+- [x] 2.6 Readiness
       **Why:** spec "Readiness checks the expected tools".
       **Where:** `nimbus/readiness.ts`.
       **How:** `readiness(backend, version)` -> `listTools` names vs `NIMBUS_EXPECTED_TOOLS`; return `{status:'ok'|'degraded'|'error'|'disabled', nimbusMcp, tools?, toolNames?, missing?}`; cache 30 s (both ok and failures, 5 s for failures); warn on extra tools.
@@ -96,21 +96,21 @@
 
 ## 3. MCP client adapter
 
-- [ ] 3.1 Define `NimbusBackend`
+- [x] 3.1 Define `NimbusBackend`
       **Why:** DK-1 (fallback stays cheap).
       **Where:** `nimbus/backend.ts`.
       **How:** `interface NimbusBackend { tools(): Promise<Record<string, Tool>>; readiness(): Promise<Readiness>; close(): Promise<void> }` where `tools()` returns the AI SDK tools of the CURRENT generation.
       **Done when:** compiles; `NimbusProcessManager` implements it (stub methods fine until 3.3).
       **Watch out:** keep the interface free of stdio concepts.
 
-- [ ] 3.2 Transport adapter (time-box 2 h)
+- [x] 3.2 Transport adapter (time-box 2 h)
       **Why:** DK-2: hand the MCP SDK stdio transport to `createMCPClient` while keeping stderr.
       **Where:** `nimbus/transport.ts`.
       **How:** a class `NimbusTransport implements MCPTransport` (type from `@ai-sdk/mcp`) wrapping `StdioClientTransport`: forward `start/send/close`, property accessors for `onclose/onerror/onmessage`, expose `.stderr` and `.pid`; one `as unknown as MCPTransport` cast, commented with the reason (two `JSONRPCMessage` types). Verified manually in design finding 9 (plain object also works at runtime).
       **Done when:** `transport.spec.ts` with the fixture: `createMCPClient({ transport })` -> `client.tools()` returns 7 tools; each tool has `execute` and `toModelOutput`; a stderr line reaches the logger spy. **If you cannot make it type-check in 2 h**, switch to `Experimental_StdioMCPTransport` from `@ai-sdk/mcp/mcp-stdio` with `stderr: 'inherit'`, note it in the PR and set a TODO issue - the rest of the design is unchanged.
       **Watch out:** the manager's `onclose` hook must still fire (the MCPClient assigns `transport.onclose`; your adapter must call both its own hook and the client's).
 
-- [ ] 3.3 One `MCPClient` per generation and delegating tools
+- [x] 3.3 One `MCPClient` per generation and delegating tools
       **Why:** spec "Tools survive a respawn".
       **Where:** `nimbus/client.ts` + manager.
       **How:** after connect, `const client = await createMCPClient({ transport })`; `const served = await client.tools()` cached as `generation.tools`; `tools()` returns `Object.fromEntries(names.map(n => [n, { ...served[n], execute: (a, o) => manager.live().then(g => g.tools[n].execute(a, o)) }]))`; on respawn the new generation replaces `generation`; per-call timeout + recycle logic of 2.4 applies by wrapping `execute` with `AbortSignal.timeout(CALL_TIMEOUT_MS)` merged into `o.abortSignal`.
@@ -119,14 +119,14 @@
 
 ## 4. Tool source
 
-- [ ] 4.1 Port `get_components` batching
+- [x] 4.1 Port `get_components` batching
       **Why:** latency (~5.4 s per model step).
       **Where:** `nimbus/batch.ts` from legacy `client/nimbus.batch.ts` (205 lines) - copy, fix imports/logger.
       **How:** keep `MAX_LOOKUPS = 24`, `CONCURRENCY = 6`, `GET_COMPONENTS_TOOL`, `withBatchedComponentLookup`.
       **Done when:** port legacy `tests/wire/nimbus-batch.spec.ts` to `tests/nimbus/batch.spec.ts`; `npx jest tests/nimbus/batch.spec.ts` green (replace, unmutated cached set, over-cap error, one bad name keeps the others, absent `get_component` degrades).
       **Watch out:** do not mutate the tool record cached by the generation.
 
-- [ ] 4.2 The `nimbus` ToolSource (H contract)
+- [x] 4.2 The `nimbus` ToolSource (H contract)
       **Why:** spec `nimbus-tool-source`. The registry (change H) already applies the 15 s per-source timeout, isolation and prompt gating - this source only answers "how do I get my tools".
       **Where:** `nimbus/tool-source.ts`; registration in H's `service/src/tool-sources/index.ts`.
       **How:**
@@ -144,7 +144,7 @@
       **Done when:** `tool-source.spec.ts`: 7-name tool set minus `get_component` plus `get_components`; slow backend (4 s) -> `{}` first, tools on second call; disabled -> `isEnabled` false and backend never called; `listForMenu` null; `getPrompt` empty.
       **Watch out:** an exception from `backend.tools()` must become `{}` plus a log (do not rely only on the registry: a failing child would otherwise produce a warning per turn without context).
 
-- [ ] 4.3 Register the source and exclude it from the custom-view orchestrator
+- [x] 4.3 Register the source and exclude it from the custom-view orchestrator
       **Why:** spec "Custom-view turn".
       **Where:** H's `tool-sources/index.ts` (one line) and a test in `tests/nimbus/registry.spec.ts`.
       **How:** `registerToolSource(nimbusToolSource(manager, { enabled: cfg.nimbusMcpEnabled }))`; H's custom-view orchestrator already selects sources by name (`commercetools`, `commercetools-knowledge`) - do not edit it, only assert it.
@@ -153,14 +153,14 @@
 
 ## 5. Readiness route and smoke script
 
-- [ ] 5.1 `GET /service/status/nimbus`
+- [x] 5.1 `GET /service/status/nimbus`
       **Why:** DK-7; used by change U's post-deploy check and Chrome.
       **Where:** `service/src/routes/status.ts` (C) - add the handler; mount unauthenticated next to `/status`.
       **How:** call `readiness()`; map `ok -> 200`, `disabled -> 200`, `degraded/error -> 503`.
       **Done when:** supertest: 200 body `{status:'ok', nimbusMcp:'<version>', tools:7}`; 503 for degraded; `curl -s localhost:8080/service/status/nimbus | jq .status` prints `"ok"`.
       **Watch out:** `/service/status` itself must not call the child (add an assertion test).
 
-- [ ] 5.2 Smoke script
+- [x] 5.2 Smoke script
       **Why:** replaces legacy `scripts/smoke.mjs`.
       **Where:** `service/scripts/smoke-nimbus.mjs`, `package.json` script `"smoke:nimbus": "node scripts/smoke-nimbus.mjs"`.
       **How:** `SERVICE_URL=https://... node scripts/smoke-nimbus.mjs` GETs `/service/status/nimbus`, asserts 7 tools; local mode (no URL) starts the manager in-process and asserts the same; exit non-zero on mismatch (port the EXPECTED list handling from `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/nimbus-mcp-gateway/scripts/smoke.mjs`).
@@ -169,7 +169,7 @@
 
 ## 6. Integration against the real package
 
-- [ ] 6.1 Real-child test
+- [x] 6.1 Real-child test
       **Why:** the fixture cannot catch protocol changes.
       **Where:** `service/tests/nimbus/integration.spec.ts`.
       **How:** manager with the resolved real entry: `listTools` = 7; `get_components({names:['Button','Card'],sections:['props']})` returns two results; `kill -9` the child then call again; measure `process.memoryUsage()` of the child via `ps -o rss= -p <pid>` and assert < 150 MB (`describe.skip` on Windows).
@@ -178,7 +178,7 @@
 
 ## 7. Version pin
 
-- [ ] 7.1 Pin consistency test
+- [x] 7.1 Pin consistency test
       **Why:** DK-8.
       **Where:** `service/tests/nimbus/nimbus-pin.spec.ts`.
       **How:** read `service/package.json` `dependencies['@commercetools/nimbus-mcp']` (must be an exact semver, no `^`/`~`) and the `NIMBUS_VERSION` constant from the surface manifest (path decided by change M, default `service/src/agents/prompts/nimbus-surface.generated.ts`; import it); assert equal; if the manifest file does not exist yet, `test.todo` with a comment referencing change M.
@@ -187,7 +187,7 @@
 
 ## 8. Deployment verification
 
-- [ ] 8.1 Local "Connect-like" run
+- [x] 8.1 Local "Connect-like" run
       **Why:** catch obvious production-only problems early.
       **Where:** repo root.
       **How:** `cd service && npm ci --omit=dev && npm run build && NODE_ENV=production node build/index.js` (adapt to C's start script); then `curl -s localhost:8080/service/status/nimbus`; watch `ps aux | grep nimbus-mcp`.
@@ -218,8 +218,8 @@
 
 ## Last. Verification
 
-- [ ] V.1 Tests: `cd service && npm run build && npx jest tests/nimbus` green. Files: `resolve.spec.ts`, `process-manager.spec.ts`, `readiness.spec.ts`, `transport.spec.ts`, `client.spec.ts`, `batch.spec.ts`, `tool-source.spec.ts`, `status-route.spec.ts`, `integration.spec.ts`, `nimbus-pin.spec.ts`.
-- [ ] V.2 Gates: `node scripts/spdx-check.mjs`; `grep -rn "console\.\|NIMBUS_MCP_KEY\|x-nimbus-gateway-key" service/src` empty (except appendix code if section 9 ran); `commercetools connect validate` unchanged; `pgrep -f nimbus-mcp` empty after tests.
+- [x] V.1 Tests: `cd service && npm run build && npx jest tests/nimbus` green. Files: `resolve.spec.ts`, `process-manager.spec.ts`, `readiness.spec.ts`, `transport.spec.ts`, `client.spec.ts`, `batch.spec.ts`, `tool-source.spec.ts`, `status-route.spec.ts`, `integration.spec.ts`, `nimbus-pin.spec.ts`.
+- [x] V.2 Gates: `node scripts/spdx-check.mjs`; `grep -rn "console\.\|NIMBUS_MCP_KEY\|x-nimbus-gateway-key" service/src` empty (except appendix code if section 9 ran); `commercetools connect validate` unchanged; `pgrep -f nimbus-mcp` empty after tests.
 - [ ] V.3 Chrome scenarios (evidence in `plans/evidence/K/`):
       - **E2E-K-01** `GET /service/status/nimbus` (via browser tab on the deployed or local service) shows `status: "ok"` and 7 tools; repeat after 20 s idle.
       - **E2E-K-02** in the chat ask "build me a small page with a data table of orders" (commercetoolsUI agent): a `get_components` (or `list_components`) tool part appears before `create_composed_page`; the stream completes with no error frame; console has no errors.
