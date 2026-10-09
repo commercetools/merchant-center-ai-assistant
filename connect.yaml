@@ -151,10 +151,6 @@ deployAs:
         - key: CLOUD_IDENTIFIER
           description: Merchant Center API cloud identifier (for example gcp-us)
           default: 'gcp-us'
-        - key: CHAT_SERVICE_ENDPOINT_URL
-          description: Full URL of the service including /service; set on redeploy after the first deployment
-          required: false
-          default: 'https://not-configured.invalid/service'
   - name: mc-view-app
     applicationType: merchant-center-custom-view
     configuration:

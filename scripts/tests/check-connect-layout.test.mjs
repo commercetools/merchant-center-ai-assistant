@@ -18,12 +18,12 @@ const k = (key, extra = {}) => ({ key, description: `desc ${key}`, ...extra });
 const URL_DEFAULT = 'https://not-configured.invalid/service';
 
 function canonical() {
-  const mc = (idKey, entryKey) => ({
+  const mc = (idKey, entryKey, withUrl = true) => ({
     standardConfiguration: [
       k(idKey, { required: true }),
       ...(entryKey ? [k(entryKey, { required: true })] : []),
       k('CLOUD_IDENTIFIER', { default: 'gcp-us' }),
-      k('CHAT_SERVICE_ENDPOINT_URL', { required: false, default: URL_DEFAULT }),
+      ...(withUrl ? [k('CHAT_SERVICE_ENDPOINT_URL', { required: false, default: URL_DEFAULT })] : []),
     ],
   });
   return {
@@ -78,7 +78,7 @@ function canonical() {
         },
       },
       { name: 'mc-app', applicationType: 'merchant-center-custom-application', configuration: mc('CUSTOM_APPLICATION_ID', 'ENTRY_POINT_URI_PATH') },
-      { name: 'composed-apps', applicationType: 'merchant-center-custom-application', configuration: mc('CUSTOM_APPLICATION_ID', 'ENTRY_POINT_URI_PATH') },
+      { name: 'composed-apps', applicationType: 'merchant-center-custom-application', configuration: mc('CUSTOM_APPLICATION_ID', 'ENTRY_POINT_URI_PATH', false) },
       { name: 'mc-view-app', applicationType: 'merchant-center-custom-view', configuration: mc('CUSTOM_VIEW_ID') },
     ],
     inheritAs: { apiClient: { scopes: ['view_key_value_documents', 'manage_key_value_documents'] } },
@@ -180,6 +180,19 @@ test('mcscopes: requires view/manage mcp scopes and rejects additionalOAuthScope
   assert.ok(checkMcScopes([{ file: 'a.mjs', text: missing }]).some((e) => e.includes('view_mcp_servers')));
   const extra = `${good}\nconst x = { additionalOAuthScopes: [] };`;
   assert.ok(checkMcScopes([{ file: 'a.mjs', text: extra }]).some((e) => e.includes('a.mjs') && e.includes('additionalOAuthScopes')));
+});
+
+test('mcscopes: the Pages app needs no mcp scopes', () => {
+  const text = `const config = { oAuthScopes: { view: ['view_key_value_documents'], manage: ['manage_orders'] } };`;
+  assert.deepEqual(checkMcScopes([{ file: 'composed-apps/custom-application-config.mjs', text }]), []);
+  assert.ok(checkMcScopes([{ file: 'mc-app/custom-application-config.mjs', text }]).length > 0);
+});
+
+test('config: the Pages app must not declare CHAT_SERVICE_ENDPOINT_URL', () => {
+  const doc = canonical();
+  const composed = doc.deployAs.find((d) => d.name === 'composed-apps');
+  composed.configuration.standardConfiguration.push(k('CHAT_SERVICE_ENDPOINT_URL', { required: false, default: URL_DEFAULT }));
+  assert.ok(checkConfigKeys(doc).some((e) => e.includes('composed-apps') && e.includes('CHAT_SERVICE_ENDPOINT_URL')));
 });
 
 test('scopes: rejects manage_project', () => {

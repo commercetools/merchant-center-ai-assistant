@@ -203,7 +203,6 @@ test('finalize: sequence and values', async () => {
   assert.deepEqual(configuration, [
     `service.MC_AUDIENCE=${ORIGIN}`,
     `mc-app.CHAT_SERVICE_ENDPOINT_URL=${SERVICE_URL}`,
-    `composed-apps.CHAT_SERVICE_ENDPOINT_URL=${SERVICE_URL}`,
     `mc-view-app.CHAT_SERVICE_ENDPOINT_URL=${SERVICE_URL}`,
   ]);
   assert.ok(!redeploy.args.includes('--updateConnector'));
