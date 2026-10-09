@@ -13,7 +13,7 @@ export interface FeedbackTruncation {
   messageIndex: number;
   messageId?: string;
   path: string;
-  reason: 'inline-data-url' | 'comment' | 'system-prompt';
+  reason: 'inline-data-url' | 'comment' | 'system-prompt' | 'snapshot-tail';
   originalBytes: number;
 }
 
@@ -44,6 +44,8 @@ export interface FeedbackRecord {
   messageCount: number;
   chunkCount: number;
   snapshotBytes: number;
+  /** Hex SHA-256 over the UTF-8 bytes of the serialised transcript (change N). */
+  snapshotSha256?: string;
   clientMessageCount: number;
   storedMessageCount: number;
   truncated: boolean;

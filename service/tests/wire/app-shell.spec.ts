@@ -39,24 +39,6 @@ describe('app shell', () => {
     expect(res.body.error).toBe('entity.too.large');
   });
 
-  it('lets the feedback path accept the same body (parser ordering)', async () => {
-    const res = await request(createApp(freshConfig()))
-      .post('/service/feedback/submit')
-      .send(fiveMb);
-    // No feedback route exists yet (change N): the parser accepted the body and
-    // the request fell through to the 404, instead of failing with 413.
-    expect(res.status).toBe(404);
-  });
-
-  it('applies FEEDBACK_BODY_LIMIT to the feedback path', async () => {
-    const res = await request(
-      createApp(freshConfig({ FEEDBACK_BODY_LIMIT: '1mb' }))
-    )
-      .post('/service/feedback/submit')
-      .send(fiveMb);
-    expect(res.status).toBe(413);
-  });
-
   it('uses a generated correlation id when none is sent', async () => {
     const res = await request(createApp(freshConfig()))
       .get('/service/status')

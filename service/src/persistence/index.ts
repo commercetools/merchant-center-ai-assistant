@@ -21,7 +21,7 @@ export type { SessionStore } from './stores/session.store';
 export type { MessageStore, NewMessage } from './stores/message.store';
 export type { SettingsStore } from './stores/settings.store';
 export type { TokenStore } from './stores/token.store';
-export type { FeedbackStore } from './stores/feedback.store';
+export type { FeedbackParts, FeedbackStore } from './stores/feedback.store';
 export type { SuggestionStore } from './stores/suggestion.store';
 
 export type {

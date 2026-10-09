@@ -17,7 +17,6 @@ describe('server and cache sections', () => {
       port: 8080,
       logLevel: 'info',
       logHttp: false,
-      feedbackBodyLimit: '25mb',
     });
     expect(c.cache).toEqual({
       maxEntries: 5000,
@@ -32,13 +31,11 @@ describe('server and cache sections', () => {
       PORT: '8081',
       LOG_LEVEL: 'debug',
       LOG_HTTP: 'true',
-      FEEDBACK_BODY_LIMIT: '5mb',
       CACHE_MAX_ENTRIES: '2',
     });
     expect(c.server.port).toBe(8081);
     expect(c.server.logLevel).toBe('debug');
     expect(c.server.logHttp).toBe(true);
-    expect(c.server.feedbackBodyLimit).toBe('5mb');
     expect(c.cache.maxEntries).toBe(2);
   });
 
@@ -48,7 +45,6 @@ describe('server and cache sections', () => {
     ['PORT', '70000', /PORT: must be an integer <= 65535/],
     ['LOG_LEVEL', 'loud', /LOG_LEVEL: must be one of/],
     ['LOG_HTTP', 'yes', /LOG_HTTP: must be "true" or "false"/],
-    ['FEEDBACK_BODY_LIMIT', 'lots', /FEEDBACK_BODY_LIMIT/],
     ['CACHE_MAX_ENTRIES', '1.5', /CACHE_MAX_ENTRIES: must be an integer >= 1/],
     ['CACHE_SWEEP_MS', '-1', /CACHE_SWEEP_MS/],
     ['MCP_TOOLS_TTL_MS', 'x', /MCP_TOOLS_TTL_MS: must be an integer >= 0/],
