@@ -63,6 +63,7 @@ const SERVICE_STANDARD = {
   CACHE_MAX_ENTRIES: { default: '5000' },
   CACHE_SWEEP_MS: { default: '60000' },
   MCP_HANDSHAKE_TIMEOUT_MS: { default: '10000' },
+  CHAT_DIGEST_BEFORE_CLOSE: { default: 'false' },
   LOG_LEVEL: { default: 'info' },
   ADMIN_USER_IDS: { optional: true },
   CONTENTSTACK_BRANCH: { optional: true },

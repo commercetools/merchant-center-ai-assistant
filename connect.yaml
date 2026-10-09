@@ -96,6 +96,9 @@ deployAs:
         - key: MCP_HANDSHAKE_TIMEOUT_MS
           description: Time in milliseconds a third-party MCP server may take to complete its handshake before it is skipped for the turn (at least 1)
           default: '10000'
+        - key: CHAT_DIGEST_BEFORE_CLOSE
+          description: When true the chat stream waits up to 3 seconds for the session digest before closing (true or false)
+          default: 'false'
         - key: LOG_LEVEL
           description: Logger level (error, warn, info, debug)
           default: 'info'

@@ -64,6 +64,7 @@ function canonical() {
             k('CACHE_MAX_ENTRIES', { default: '5000' }),
             k('CACHE_SWEEP_MS', { default: '60000' }),
             k('MCP_HANDSHAKE_TIMEOUT_MS', { default: '10000' }),
+            k('CHAT_DIGEST_BEFORE_CLOSE', { default: 'false' }),
             k('LOG_LEVEL', { default: 'info' }),
             k('ADMIN_USER_IDS', { required: false }),
             k('CONTENTSTACK_BRANCH', { required: false }),
