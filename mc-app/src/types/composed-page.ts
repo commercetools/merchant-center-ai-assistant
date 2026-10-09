@@ -11,7 +11,8 @@
  * created through LLM chat conversations. The schema is stored in
  * Commercetools Custom Objects and rendered at runtime.
  *
- * Current version: 4.0 - Uses JSX code with Babel transpilation.
+ * Current version: 5.0 (`COMPOSED_PAGE_SCHEMA_VERSION` in the service contract). Components
+ * carry JSX source plus service-transpiled code, rendered with Babel at runtime.
  */
 
 // ============================================
