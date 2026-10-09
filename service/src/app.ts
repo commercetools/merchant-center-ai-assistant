@@ -12,11 +12,15 @@ import { initRequestContext } from './middleware/context.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
 import { verifyMcSession } from './middleware/mc-session.middleware';
 import { serviceRouter } from './routes/service.route';
+import { installRegistryProviders, registry } from './tool-sources';
 import { registerFeedbackBodyParser } from './utils/feedback-body-parser';
 import { requestUrlForLog } from './utils/log-url.utils';
 import { logger } from './utils/logger.utils';
 
 export function createApp(config: AppConfig): Express {
+  // The tool-source registry feeds the tools menu and the suggestions prompt (change G seams).
+  installRegistryProviders(registry);
+
   const app = express();
   app.disable('x-powered-by');
 

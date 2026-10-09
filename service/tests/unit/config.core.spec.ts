@@ -16,6 +16,7 @@ describe('readConfiguration', () => {
       [
         'auth',
         'cache',
+        'chat',
         'ctp',
         'gcp',
         'llm',

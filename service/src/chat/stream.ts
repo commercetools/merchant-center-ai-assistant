@@ -54,6 +54,12 @@ export interface ChatTurnResult {
 export interface CreateChatStreamParams {
   agent: ToolLoopAgent<never, ToolSet>;
   messages: ModelMessage[];
+  /**
+   * The conversation the model was given, in UI shape (history + the new message). Makes
+   * `onFinish` receive the WHOLE conversation: persistence skips ids that are already stored
+   * and the digest sees the question as well as the answer.
+   */
+  originalMessages?: ChatUIMessage[];
   budget: RequestBudget;
   /** Tools of the turn, only used to attribute a schema failure to a tool by name. */
   allTools: ToolSet;
@@ -95,6 +101,7 @@ export const createChatStream = (params: CreateChatStreamParams) => {
   };
 
   return createUIMessageStream<ChatUIMessage>({
+    originalMessages: params.originalMessages,
     execute: async ({ writer }) => {
       let lastWriteAt = Date.now();
       const write = (chunk: UIMessageChunk | ChatUIMessageChunk): void => {

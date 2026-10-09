@@ -6,6 +6,7 @@
 
 import { Router } from 'express';
 import { verifyMcSession } from '../middleware/mc-session.middleware';
+import { aiChatRouter } from './ai-chat.route';
 import { backofficeRouter } from './backoffice.route';
 import { feedbackRouter } from './feedback.route';
 import { mcAuthRouter } from './mc-auth.route';
@@ -20,9 +21,10 @@ export const serviceRouter = Router();
 serviceRouter.use('/', statusRouter);
 serviceRouter.use('/auth', mcAuthRouter);
 serviceRouter.use('/session', verifyMcSession, sessionRouter);
+serviceRouter.use('/ai-chat', aiChatRouter);
 serviceRouter.use('/suggestions', verifyMcSession, suggestionsRouter);
 serviceRouter.use('/system-prompt', verifyMcSession, systemPromptRouter);
 serviceRouter.use('/tool-call-logs', verifyMcSession, toolCallLogsRouter);
 serviceRouter.use('/feedback', feedbackRouter);
 serviceRouter.use('/backoffice', backofficeRouter);
-// H..M mount their routers here.
+// I..M mount their routers here.
