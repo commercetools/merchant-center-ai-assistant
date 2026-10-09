@@ -7,6 +7,8 @@
 # allowed to write by default) into plans/evidence/<run-id>/ and writes report.md.
 # Usage: bash scripts/e2e/collect-evidence.sh <run-id>
 # Overrides for tests: E2E_TMP (default $TMPDIR or /tmp), E2E_EVIDENCE_ROOT (default plans/evidence).
+# A scrub pass (scripts/e2e/scrub-evidence.mjs) redacts tokens, cookies, provider keys, e-mail addresses
+# and deployed or tunnel hosts in the moved files and refuses when a private key block is found.
 # Exit codes: 0 all scenarios passed or were skipped, 1 a scenario failed, 2 usage or safety refusal.
 set -euo pipefail
 
@@ -28,6 +30,8 @@ if [ -z "${E2E_EVIDENCE_ROOT:-}" ] && [ -n "$(git -C "$ROOT" ls-files plans/evid
   exit 2
 fi
 
+FRESH=0
+[ -d "$DEST" ] || FRESH=1
 mkdir -p "$DEST"
 if [ -d "$SRC" ]; then
   # rsync keeps the tree; fall back to cp when it is not installed
@@ -38,6 +42,12 @@ if [ -d "$SRC" ]; then
   fi
 else
   echo "note: nothing to move, $SRC does not exist (evidence was written directly)" >&2
+fi
+
+# Scrub before anything reads the evidence (report.mjs only prints names and statuses).
+if ! node "$ROOT/scripts/e2e/scrub-evidence.mjs" "$DEST"; then
+  if [ "$FRESH" = 1 ]; then rm -rf "$DEST"; fi
+  exit 2
 fi
 
 set +e

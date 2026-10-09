@@ -59,7 +59,7 @@ URLs change between environments; each card says which it supports.
 Ports: the three apps all default to port 3001. `dev-up.sh` runs the app named in `E2E_APPS`
 (`mc-app`, `composed-apps` or `mc-view-app`) one at a time because a Custom Application has a single
 registered development URL per project; whether `mc-scripts start` accepts a port option was not
-verified here (see `plans/implementation/v-notes.md`).
+verified here.
 
 ## Running a tier
 
@@ -69,13 +69,17 @@ verified here (see `plans/implementation/v-notes.md`).
 2. Run tier 0, then tier 1 (smoke, about 10 minutes), then the others in order. Two consecutive FAILs of
    the same card stop the tier; destructive tiers run only with `E2E_ALLOW_DESTRUCTIVE=1`.
 3. After each card write `result.json`; at the end run `bash scripts/e2e/collect-evidence.sh <run-id>` and
-   `node scripts/e2e/cleanup.mjs --run <run-id>`.
+   `node scripts/e2e/cleanup.mjs --run <run-id>`. `collect-evidence.sh` also runs a scrub pass over the
+   moved files (tokens, cookies, provider keys, e-mail addresses and deployed or tunnel hosts are
+   redacted; a private key block makes it refuse with exit code 2 and keep nothing).
+   Seeds with parameters (`sessions-many`, `large-snapshot`) are described in `fixtures/README.md`.
 
 ## Evidence layout
 
-`plans/evidence/<run-id>/<scenario-id>/` holds `snapshot-final.txt`, `screenshot-final.png`,
-`network.json`, `console.txt` and `result.json`; `plans/evidence/<run-id>/report.md` has one row per
-scenario. The folder is git-ignored and is never published (change X).
+`<evidence-root>/<run-id>/<scenario-id>/` holds `snapshot-final.txt`, `screenshot-final.png`,
+`network.json`, `console.txt` and `result.json`; `<evidence-root>/<run-id>/report.md` has one row per
+scenario. The evidence root is `plans/evidence` unless `E2E_EVIDENCE_ROOT` is set. The folder is
+ignored by version control and is never published (change X).
 
 ## Safety rules
 

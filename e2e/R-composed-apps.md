@@ -186,4 +186,4 @@ of the app (entry point `ai-assistant-pages` by default). The seeded pages are r
 ## Coverage
 
 - Identity, list, rendering, permissions, error handling, data sources, isolation from the service, not found and legacy: `E2E-R-01` to `E2E-R-09`.
-- Not covered: pagination beyond one GraphQL page (needs more than the page size of objects: `seed.mjs sessions-many` is for sessions only; add a `pages-many` fixture if the page size is small), polling data sources, the scope table of the README (a static comparison, see change R).
+- Not covered: pagination beyond one GraphQL page (needs more than the page size of objects: `seed.mjs sessions-many` seeds sessions only; add a `pages-many` fixture if the page size is small), polling data sources, the scope table of the README (a static comparison, see change R).
