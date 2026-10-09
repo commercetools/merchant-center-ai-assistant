@@ -90,6 +90,8 @@ export const errorMiddleware: ErrorRequestHandler = (
       `${req.method} ${requestUrlForLog(req)} -> ${error.statusCode}: ${error.message}`
     );
     res.status(Number(error.statusCode)).json({
+      success: false,
+      error: error.message,
       code: error.code,
       message: error.message,
       errors: error.errors,
@@ -116,11 +118,9 @@ export const errorMiddleware: ErrorRequestHandler = (
   }
 
   logger.error(`${req.method} ${requestUrlForLog(req)} -> 500`, error);
-  res
-    .status(500)
-    .send(
-      isDevelopment
-        ? { message: error.message }
-        : { message: 'Internal server error' }
-    );
+  res.status(500).send({
+    success: false,
+    error: 'Internal server error',
+    message: isDevelopment ? error.message : 'Internal server error',
+  });
 };

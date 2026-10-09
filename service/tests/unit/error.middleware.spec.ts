@@ -59,14 +59,22 @@ describe('errorMiddleware', () => {
     });
     const res = await request(makeApp()).get('/boom');
     expect(res.status).toBe(500);
-    expect(res.body).toEqual({ message: 'Internal server error' });
+    expect(res.body).toEqual({
+      success: false,
+      error: 'Internal server error',
+      message: 'Internal server error',
+    });
     expect(JSON.stringify(res.body)).not.toContain('hunter2');
   });
 
   it('shows the message (spelled correctly) in development', async () => {
     freshConfig({ NODE_ENV: 'development' });
     const res = await request(makeApp()).get('/boom');
-    expect(res.body).toEqual({ message: 'db password is hunter2' });
+    expect(res.body).toEqual({
+      success: false,
+      error: 'Internal server error',
+      message: 'db password is hunter2',
+    });
   });
 
   it('includes the stack of a CustomError only in development', async () => {
