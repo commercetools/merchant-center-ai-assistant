@@ -19,4 +19,9 @@ module.exports = [
     ],
   },
   ...mcAppConfig,
+  {
+    // The config files use ${env:NAME} placeholders on purpose.
+    files: ['custom-*-config.mjs'],
+    rules: { 'no-template-curly-in-string': 'off' },
+  },
 ];
