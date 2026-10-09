@@ -1,0 +1,23 @@
+> Historical inbox (merged into `plans/owner-questions.md`). Items about `ADMIN_EMAILS`, the Identity admin sign-in, verified e-mail, BQ-ID1/OQ-ID* and M25 are SUPERSEDED by the 2026-10-09 decision `ADMIN_USER_IDS` only (see `plans/06-amendments-applied.md` rows 17-18). This folder is not published (change X).
+
+> SUPERSEDED 2026-10-09 (historical inbox): the admin model is now `ADMIN_EMAILS` + a verified e-mail from the Identity admin sign-in; the `assistant-admin`-style permission group, its key override, claim parsing and permission-capture step no longer exist; test users are an admin user and a non-admin user instead of Teams. See `../owner-questions.md` and `../06-amendments-applied.md`. Entries below that mention the old mechanism are retained for history only.
+
+# Owner questions from changes R, S, T, V, W, Z
+
+Local ids RQ1.. ; "Refined Q-id" is the id to assign when merging into `plans/owner-questions.md`. Ids Q40-Q52 are reserved for this batch to avoid collisions with the other inbox files; renumber at merge if needed.
+
+| Local | Refined Q-id | Question | Default used | Affects |
+|---|---|---|---|---|
+| RQ1 | Q40 | `composed-apps` shows pages built from Merchant Center GraphQL only. The legacy app also called the AI service (`POST /auth/session`) but nothing used the result. Remove that call, the `forward-to` copy and the `CHAT_SERVICE_ENDPOINT_URL` key from `composed-apps` so it works even when the service is down? | Yes, remove | R, B, O, U |
+| RQ2 | Q41 | Composed pages live in a Custom Object container (legacy name `shared-composed-pages`). A fresh single-tenant project has no legacy pages, so the name could be `ai-assistant-composed-pages` for consistency with other containers. Keep the legacy name? | Keep `shared-composed-pages` (decided finally in M) | M, R, P |
+| RQ4 | Q42 | `composed-apps` requests broad `manage_*` scopes because generated pages may run GraphQL mutation actions. Also `view_discount_codes` is requested without `manage_discount_codes`, so a generated page cannot edit discount codes. Keep the legacy scope set (refines Q18), or ship read-only pages (`view_*` plus `manage_key_value_documents` only)? Add `manage_discount_codes`? | Keep legacy set, do not add `manage_discount_codes` | R, O, M |
+| RQ5 | Q43 | Should the "AI Assistant Pages" list also offer delete / publish toggles (mc-app has delete)? The list also caps at 500 pages with a notice - acceptable? | No toggles; cap 500 | R |
+| RQ6 | Q44 | The Custom View scopes each conversation to the base64 of the whole host page URL, so every product, order and so on has its own chat. Keep per-page conversations, or one conversation per user that follows them across pages (flag = entity type only)? | Keep per-page | S, G, H |
+| RQ7 | Q45 | Keep all 65 locators of the Custom View (products, categories, customers, orders, discounts, standalone prices, settings, operations)? | Keep all 65 | S |
+| RQ8 | Q46 | For permission-denial tests we need a second Merchant Center user with only the View permission (see OM2: Teams "assistant-admins" / "assistant-viewers"). Acceptable? If not, may the agent temporarily remove `assistant-admin` from your own team and restore it afterwards? | Second user (reuse OM2); fallback: temporary self-edit only with your explicit consent per run | V |
+| RQ9 | Q47 | Local E2E needs a public tunnel to reach the service from the Merchant Center gateway. Which tool may be used (`cloudflared` quick tunnel, `ngrok`)? | `cloudflared` | V, U |
+| RQ10 | Q48 | `SUPPORT.md` must say where people may talk to the maintainers. Contact / discussion location (for example GitHub Discussions of the public repo, no SLA)? | GitHub Discussions of `commercetools/ai-assistant`, no SLA | W, A, X |
+| RQ11 | Q49 | Keep a scrubbed, short known-issues note about Managed MCP tool schemas that Gemini rejects (legacy `docs/upstream/managed-mcp-gemini-schema-incompatibility.md`, wording "to be filed with the Managed MCP team")? | Keep, shortened, internal wording removed | W, H |
+| RQ12 | Q50 | Release version and tag: `0.1.0` / `v0.1.0`; first release stays a private connector (no public marketplace certification), matching Q14. Confirm? | Yes | Z, U, X |
+| RQ13 | Q51 | `plans/` and `openspec/` are removed from the public commit (Q16). Where should the internal evidence and planning archive be kept (tarball in a private location you name)? | Private tarball in `$HOME`, location reported in the handover | Z, X |
+| RQ14 | Q52 | May screenshots taken from your scratch Merchant Center project (user name, project key redacted) be used in the public documentation? | Yes, after redaction review by you (part of M12) | W |
