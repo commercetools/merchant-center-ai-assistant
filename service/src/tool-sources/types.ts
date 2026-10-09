@@ -41,6 +41,11 @@ export interface ToolContext {
 /** What a source shows in the per-session tools menu. */
 export interface MenuEntry {
   toolNames: string[];
+  /**
+   * Names in `toolNames` that no tool backs in the pinned toolkit version (the switch would
+   * change nothing). They stay in the menu and are marked `available: false` in the response.
+   */
+  unavailableToolNames?: string[];
 }
 
 /**

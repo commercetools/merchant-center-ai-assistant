@@ -15,6 +15,7 @@ import {
   STRIPE_SOURCE_NAME,
   STRIPE_TOOL_NAME_BY_KEY,
   STRIPE_TOOLS,
+  stripeUnavailableTools,
 } from './constants';
 
 type ActionMap = Record<string, Record<string, true>>;
@@ -46,6 +47,16 @@ export const setStripeToolkitFactoryForTests = (
   factory = f ?? defaultFactory;
   memo = null;
 };
+
+/*
+ * Install decision (TA-22): `@stripe/agent-toolkit@0.7.12` declares a peer dependency on
+ * `ai ^4`, while the service runs `ai` 7. There is NO `service/.npmrc` with
+ * `legacy-peer-deps=true`; the mismatch is resolved by the `overrides` block of
+ * `service/package.json` (`@stripe/agent-toolkit` -> `ai: $ai`, `openai` -> `zod: $zod`), which
+ * is part of the lockfile and therefore also applies to `npm ci` in the Connect build. Do not
+ * add a `.npmrc`: it would silence every other peer conflict. Version 0.9.x (hosted MCP) is
+ * not supported. Unverified on a real Connect build; see the TODO list of change J.
+ */
 
 /** `resource.action` list -> `{ resource: { action: true } }` as the toolkit expects. */
 export const toActions = (names: readonly string[]): ActionMap => {
@@ -145,6 +156,11 @@ export const stripeToolSource: ToolSource = {
     }
   },
   listForMenu: async (ctx) =>
-    isConfigured(ctx) ? { toolNames: [...STRIPE_TOOLS] } : null,
+    isConfigured(ctx)
+      ? {
+          toolNames: [...STRIPE_TOOLS],
+          unavailableToolNames: stripeUnavailableTools(),
+        }
+      : null,
   getPrompt: (ctx) => getStripePrompt(ctx),
 };

@@ -34,9 +34,14 @@ export const filterEnabled = (
  */
 export const toSessionTools = (
   available: Array<string | { toolName: string; description?: string }>,
-  disabled: Set<string>
+  disabled: Set<string>,
+  unavailable: ReadonlySet<string> = new Set()
 ): SessionTool[] =>
   available.map((entry) => {
     const toolName = typeof entry === 'string' ? entry : entry.toolName;
-    return { toolName, enabled: !disabled.has(toolName) };
+    return {
+      toolName,
+      enabled: !disabled.has(toolName),
+      ...(unavailable.has(toolName) ? { available: false as const } : {}),
+    };
   });

@@ -28,6 +28,8 @@ export type RequestFeatureFlags = Record<string, string | boolean>;
 export type SessionTool = {
   toolName: string;
   enabled: boolean;
+  /** Present (`false`) only for a menu name that no tool backs; omitted otherwise. */
+  available?: false;
 };
 
 export type GroupedSessionTools = {

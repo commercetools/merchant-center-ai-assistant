@@ -178,7 +178,13 @@ export const createToolSourceRegistry = (
             source.name
           );
           return entry
-            ? { mcp: source.name, toolNames: entry.toolNames }
+            ? {
+                mcp: source.name,
+                toolNames: entry.toolNames,
+                ...(entry.unavailableToolNames?.length
+                  ? { unavailableToolNames: entry.unavailableToolNames }
+                  : {}),
+              }
             : null;
         } catch (error) {
           ctx.logger.warn(`ToolSource ${source.name} menu skipped`, {
