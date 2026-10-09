@@ -1,15 +1,15 @@
 ## 0. Read first
 
-- [ ] 0.1 Read `proposal.md`, `design.md` (Explore findings F1-F5, V1-V6, G1-G2, D1-D2; Decisions D1-D9), and the three specs in `specs/`.
-- [ ] 0.2 Read the legacy files (read-only) under `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/service/src/`: `functional-agent/providers/{gemini-3,gemini,gemini-lite,gemini-2.5-flash-image}.ts` (the long header comments explain *why* each setting exists), `functional-agent/agents/definitions/image-generation.agent.ts` (lines 1-110), `services/bigquery.service.ts` (lines 55-135), `services/gcs.service.ts` (lines 1-60).
-- [ ] 0.3 Skim the installed provider typings after step 1.2: `service/node_modules/@ai-sdk/google-vertex/dist/index.d.ts` (settings, lines 186-245) and `service/node_modules/@google/genai/dist/genai.d.ts` (`GoogleGenAIOptions`, ~3761).
+- [x] 0.1 Read `proposal.md`, `design.md` (Explore findings F1-F5, V1-V6, G1-G2, D1-D2; Decisions D1-D9), and the three specs in `specs/`.
+- [x] 0.2 Read the legacy files (read-only) under `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/service/src/`: `functional-agent/providers/{gemini-3,gemini,gemini-lite,gemini-2.5-flash-image}.ts` (the long header comments explain *why* each setting exists), `functional-agent/agents/definitions/image-generation.agent.ts` (lines 1-110), `services/bigquery.service.ts` (lines 55-135), `services/gcs.service.ts` (lines 1-60).
+- [x] 0.3 Skim the installed provider typings after step 1.2: `service/node_modules/@ai-sdk/google-vertex/dist/index.d.ts` (settings, lines 186-245) and `service/node_modules/@google/genai/dist/genai.d.ts` (`GoogleGenAIOptions`, ~3761).
 
 You should now be able to explain: (a) why one Base64 JSON secret replaces API key + split SA variables; (b) what "express mode" is and why `GOOGLE_VERTEX_API_KEY` is refused; (c) the four tiers and which legacy agents use each; (d) why `countTokens` returns `0` on failure; (e) which provider-options namespace we use and why old conversations still work.
 
 ## 1. Setup
 
-- [ ] 1.1 Confirm spec C is merged (`ls service/src/config/index.ts`), `cd service && npm test` green. Branch: `git checkout -b spec/f-gcp-credentials-and-vertex-llm`.
-- [ ] 1.2 Install dependencies.
+- [x] 1.1 Confirm spec C is merged (`ls service/src/config/index.ts`), `cd service && npm test` green. Branch: `git checkout -b spec/f-gcp-credentials-and-vertex-llm`.
+- [x] 1.2 Install dependencies.
   ```bash
   cd service
   npm install @ai-sdk/google-vertex@^5.0.108 google-auth-library@^10.6.2 @google/genai@^1.30.0 @google-cloud/bigquery@^8.1.1 @google-cloud/storage@^7.14.0
@@ -22,7 +22,7 @@ You should now be able to explain: (a) why one Base64 JSON secret replaces API k
 
 ## 2. Credentials and configuration
 
-- [ ] 2.1 Service-account key parser.
+- [x] 2.1 Service-account key parser.
   **Why:** the only code allowed to touch the raw secret; errors must never leak it (spec `gcp-credentials`).
   **Where:** `service/src/gcp/service-account.ts` (new).
   **How:**
@@ -45,7 +45,7 @@ You should now be able to explain: (a) why one Base64 JSON secret replaces API k
   **Done when:** `tests/unit/gcp/service-account.spec.ts` passes: valid key; URL-safe + wrapped Base64; `\\n` normalisation; every reason in the closed list is reachable; a sentinel string embedded in the bad input (`SENTINEL-DO-NOT-LEAK`) is asserted absent from every error message and from `JSON.stringify(error)`.
   **Watch out:** `JSON.parse` errors quote the input in some Node versions - never forward them. Use a **fake** key generated in the test (`crypto.generateKeyPairSync('rsa', {modulusLength: 2048})` exported as PKCS8 PEM); never commit a real key.
 
-- [ ] 2.2 `gcp` and `llm` config sections.
+- [x] 2.2 `gcp` and `llm` config sections.
   **Where:** `service/src/config/sections/gcp.ts`, `service/src/config/sections/llm.ts` (replace C's placeholders; keep exported types `GcpConfig`, `LlmConfig`).
   **How:**
   ```ts
@@ -63,7 +63,7 @@ You should now be able to explain: (a) why one Base64 JSON secret replaces API k
   **Done when:** `tests/unit/gcp/config.gcp-llm.spec.ts` covers every scenario of `gcp-credentials` and `vertex-llm-models` that is configuration-only (defaults incl. dataset `aiassistant`, bigquery location `us-central1`, derived bucket name, `IMAGE_URL_MODE` default and rejection of `signed`, independent override, bad location, bad lite level, production-required, development-optional, express-mode guard, stale legacy variable warning, project override).
   **Watch out:** the parser must catch `ServiceAccountKeyError` and push `err.message` (already safe); any other error -> `GCP_SA_KEY_BASE64: could not be processed`.
 
-- [ ] 2.3 `getGoogleCredentials()`.
+- [x] 2.3 `getGoogleCredentials()`.
   **Where:** `service/src/gcp/credentials.ts` (new).
   **How:**
   ```ts
@@ -82,7 +82,7 @@ You should now be able to explain: (a) why one Base64 JSON secret replaces API k
 
 ## 3. Models
 
-- [ ] 3.1 Model factory and provider options.
+- [x] 3.1 Model factory and provider options.
   **Why:** replace four legacy provider modules with one tiered factory (spec `vertex-llm-models`).
   **Where:** `service/src/llm/models.ts`, `service/src/llm/provider-options.ts`, `service/src/llm/index.ts` (new). Legacy: the four `providers/*.ts` named in 0.2.
   **How:**
@@ -107,7 +107,7 @@ You should now be able to explain: (a) why one Base64 JSON secret replaces API k
   **Done when:** `tests/unit/llm/models.spec.ts` (mock `@ai-sdk/google-vertex` with `jest.unstable_mockModule`): `createVertex` called once with the project/location/auth options; tier names and defaults; independent override; each provider-options object equals the spec; `image` is `undefined`; unconfigured -> `GcpNotConfiguredError`.
   **Watch out:** the legacy `thinkingBudget` for `agent` is a 2.5-era control; Gemini 3.x ignores or rejects it - it is only valid while the `agent` model is a 2.5 model (comment this next to the default).
 
-- [ ] 3.2 `countTokens`.
+- [x] 3.2 `countTokens`.
   **Where:** `service/src/llm/count-tokens.ts`. Legacy: the `countTokens` functions in `providers/gemini*.ts`.
   **How:**
   ```ts
@@ -121,13 +121,13 @@ You should now be able to explain: (a) why one Base64 JSON secret replaces API k
   `describeError` returns `name` + message truncated to 200 chars and with any `private_key`-looking substrings removed (reuse the helper from spec C if one exists; else a 5-line regex on `-----BEGIN`).
   **Done when:** `tests/unit/llm/count-tokens.spec.ts`: mocked `GoogleGenAI` constructed once with `vertexai: true` and the shared options; returns `totalTokens`; rejects -> `0` and the log call arguments do not contain the input text.
 
-- [ ] 3.3 Model plumbing for later specs.
+- [x] 3.3 Model plumbing for later specs.
   **Where:** `service/src/llm/index.ts` re-exports `getModel`, `getModelName`, `getProviderOptions`, `countTokens`, `ModelTier`; put JSDoc on each export (documentation proper goes to spec W) naming the legacy consumers from design F2 (which legacy agents use which tier), so H can map them.
   **Done when:** `npm run typecheck` passes and a `tests/unit/llm/exports.spec.ts` asserts the export names (guards the contract used by G/H/L).
 
 ## 4. Clients and readiness
 
-- [ ] 4.1 BigQuery and Storage clients.
+- [x] 4.1 BigQuery and Storage clients.
   **Where:** `service/src/gcp/clients.ts` (new). Legacy: `services/bigquery.service.ts:85-125`, `services/gcs.service.ts:17-47`.
   **How:**
   ```ts
@@ -141,7 +141,7 @@ You should now be able to explain: (a) why one Base64 JSON secret replaces API k
   **Done when:** `tests/unit/gcp/clients.spec.ts` (module mocks): constructor arguments carry `credentials` and never `keyFilename`; singletons; `requireBucketName` returns the derived name `<project>-ai-assistant-images` (and the explicit one when set) and throws `GcpNotConfiguredError` without a key; a combined test asserts that Vertex, `GoogleGenAI`, BigQuery and Storage were all constructed from values equal to `getGoogleCredentials()` (spec "one source of truth").
   **Watch out:** the BigQuery `location` constructor option sets the default *job* location; spec L still passes `location` per query like the legacy code (line 245).
 
-- [ ] 4.2 `checkGcpReadiness`.
+- [x] 4.2 `checkGcpReadiness`.
   **Where:** `service/src/gcp/readiness.ts`.
   **How:** sequential checks, each wrapped in try/catch returning `{ name, ok, detail }` with fixed detail strings (`'ok'`, `'access token could not be minted'`, `'countTokens failed'`, ...). `decode` = config present; `token` = `new GoogleAuth(c.googleAuthOptions).getAccessToken()` truthy; `vertex` = `countTokens('ping','main') > 0` (note the `0` contract: treat 0 as failure here); when `deep`: BigQuery `createQueryJob({ query: 'SELECT 1', dryRun: true, location })` and `getStorageClient().bucket(name).exists()`.
   **Done when:** `tests/unit/gcp/readiness.spec.ts` with mocks for pass and fail paths; assert no detail contains the fake token or `private_key`.
@@ -149,19 +149,19 @@ You should now be able to explain: (a) why one Base64 JSON secret replaces API k
 
 ## 5. Removal and gates
 
-- [ ] 5.1 Gate script rules.
+- [x] 5.1 Gate script rules.
   **Where:** extend `service/scripts/check-foundation.mjs` (from C).
   **How:** fail when `src/` contains `GEMINI_API_KEY|createGoogleGenerativeAI|createAnthropic|CLAUDE_API_KEY|OPENAI_API_KEY|ANTHROPIC_|GCP_SERVICE_ACCOUNT_|secrets\.utils|GOOGLE_APPLICATION_CREDENTIALS` (allow-list the two config files that *name* the legacy variables for the boot warning and the `GOOGLE_VERTEX_API_KEY` guard), or `package.json` has `@ai-sdk/google`, `@ai-sdk/anthropic` or `openai` in `dependencies`.
   **Done when:** `npm run check:foundation` exits 0; adding `import OpenAI from 'openai'` to a scratch file makes it exit 1.
 
-- [ ] 5.2 Environment example.
+- [x] 5.2 Environment example.
   **Where:** `service/.env.example` (C created it).
   **How:** add the F keys with comments: `GCP_SA_KEY_BASE64=` (how to create: `base64 < key.json | tr -d '\n'`), `GCP_PROJECT_ID=`, `GCP_VERTEX_LOCATION=us-central1`, `GEMINI_MODEL_NAME=`, `GEMINI_AGENT_MODEL_NAME=`, `GEMINI_LITE_MODEL_NAME=`, `GEMINI_IMAGE_MODEL_NAME=`, `GEMINI_LITE_THINKING_LEVEL=minimal`, `GCP_BIGQUERY_DATASET_ID=aiassistant`, `GCP_BIGQUERY_LOCATION=us-central1`, `GCP_BUCKET_NAME=`, `GCP_BUCKET_LOCATION=us-central1`, `IMAGE_URL_MODE=private`. Secrets and project/bucket names stay empty. Do not copy legacy `.env.example` comments verbatim if they mention internal hosts or project ids.
   **Done when:** `grep -E "AIza|BEGIN PRIVATE|@.*gserviceaccount" service/.env.example` returns nothing.
 
 ## 6. Live verification (manual step M5 required)
 
-- [ ] 6.1 Live smoke suite.
+- [x] 6.1 Live smoke suite.
   **Where:** `service/tests/integration/gcp.smoke.spec.ts` (uses `jest.integration.config.cjs` created by spec E task 7.1; if E is not merged yet, create the same file here and E will reconcile).
   **How:** `const live = Boolean(process.env.GCP_SA_KEY_BASE64); const d = live ? describe : describe.skip;` then tests, each with a 60 s timeout:
   1. `token`: `checkGcpReadiness({deep:false})` -> `ok`.
@@ -181,12 +181,12 @@ You should now be able to explain: (a) why one Base64 JSON secret replaces API k
 
 ## Last: Verification
 
-- [ ] V.1 Unit tests (`cd service && npm test`): `tests/unit/gcp/{service-account,config.gcp-llm,credentials,clients,readiness}.spec.ts`, `tests/unit/llm/{models,count-tokens,exports}.spec.ts`.
+- [x] V.1 Unit tests (`cd service && npm test`): `tests/unit/gcp/{service-account,config.gcp-llm,credentials,clients,readiness}.spec.ts`, `tests/unit/llm/{models,count-tokens,exports}.spec.ts`.
 - [ ] V.2 Live (needs M5): `npm run test:integration -- gcp.smoke` (tests `token`, `main`, `agent`, `lite`, `image`, `count`, `tool-continuity`, `bigquery`, `storage`).
 - [ ] V.3 `npm run typecheck && npm run lint && npm run check:foundation && npm run build`; `commercetools connect application test` exit 0; `commercetools connect validate` exit 0 (confirm `connect.yaml` lists `GCP_SA_KEY_BASE64` under `securedConfiguration` and none of the removed variables).
-- [ ] V.4 Secret hygiene check: run the service with a fake valid-shaped key and `LOG_LEVEL=debug`, hit `/service/status`, and `grep -c "BEGIN PRIVATE KEY" <captured stdout>` -> `0`.
-- [ ] V.5 Chrome E2E: none for this spec; `E2E-H-*` (chat streams a reply) and `E2E-L-*` (image appears) are the user-visible proofs and must reference this smoke suite as precondition.
-- [ ] V.6 Definition of Done (`plans/04-workflow.md` section 4): SPDX headers, no `console.log`, no `any`, no tenant words.
+- [x] V.4 Secret hygiene check: run the service with a fake valid-shaped key and `LOG_LEVEL=debug`, hit `/service/status`, and `grep -c "BEGIN PRIVATE KEY" <captured stdout>` -> `0`.
+- [x] V.5 Chrome E2E: none for this spec; `E2E-H-*` (chat streams a reply) and `E2E-L-*` (image appears) are the user-visible proofs and must reference this smoke suite as precondition.
+- [x] V.6 Definition of Done (`plans/04-workflow.md` section 4): SPDX headers, no `console.log`, no `any`, no tenant words.
 
 ## Docs to update (for spec W)
 

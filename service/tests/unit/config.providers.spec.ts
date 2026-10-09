@@ -6,6 +6,7 @@
 
 import { resetConfigurationForTests } from '../../src/config';
 import { freshConfig } from '../helpers/env';
+import { fakeKeyBase64 } from '../helpers/gcp';
 
 beforeEach(() => resetConfigurationForTests());
 
@@ -67,17 +68,18 @@ describe('providers section', () => {
   });
 
   it('serialises every secret field as [secret]', () => {
+    const sa = fakeKeyBase64();
     const c = freshConfig({
       CONTENTSTACK_API_KEY: 'val-cs-api',
       CONTENTSTACK_MANAGEMENT_TOKEN: 'val-cs-token',
       ALGOLIA_MCP_URL: 'https://val-algolia.example.test/?key=abc',
       STRIPE_SECRET_KEY: 'val-stripe',
-      GCP_SA_KEY_BASE64: 'val-sa',
+      GCP_SA_KEY_BASE64: sa,
       ENCRYPTION_KEY: 'val-enc',
     });
     const json = JSON.stringify(c);
     expect((json.match(/\[secret\]/g) ?? []).length).toBeGreaterThanOrEqual(6);
-    for (const v of ['val-cs-api', 'val-cs-token', 'val-algolia', 'val-stripe', 'val-sa', 'val-enc']) {
+    for (const v of ['val-cs-api', 'val-cs-token', 'val-algolia', 'val-stripe', sa, 'val-enc']) {
       expect(json).not.toContain(v);
     }
   });

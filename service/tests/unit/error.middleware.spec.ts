@@ -12,6 +12,7 @@ import CustomError from '../../src/errors/custom.error';
 import { errorMiddleware } from '../../src/middleware/error.middleware';
 import { freshConfig, fullCtpEnv } from '../helpers/env';
 import { captureLogs } from '../helpers/log-capture';
+import { fakeKeyBase64 } from '../helpers/gcp';
 
 function makeApp() {
   const app = express();
@@ -53,6 +54,7 @@ describe('errorMiddleware', () => {
     freshConfig({
       NODE_ENV: 'production',
       PERSISTENCE_DRIVER: 'custom-objects',
+      GCP_SA_KEY_BASE64: fakeKeyBase64(),
       ...fullCtpEnv,
     });
     const res = await request(makeApp()).get('/boom');

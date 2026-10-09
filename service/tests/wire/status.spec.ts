@@ -8,6 +8,7 @@ import request from 'supertest';
 import { createApp } from '../../src/app';
 import { resetConfigurationForTests } from '../../src/config';
 import { freshConfig } from '../helpers/env';
+import { fakeKeyBase64 } from '../helpers/gcp';
 
 beforeEach(() => resetConfigurationForTests());
 
@@ -57,17 +58,18 @@ describe('GET /service/status', () => {
   });
 
   it('leaks no configured value', async () => {
+    const sa = fakeKeyBase64();
     const res = await request(
       createApp(
         freshConfig({
           ENCRYPTION_KEY: 'enc-secret-value',
-          GCP_SA_KEY_BASE64: 'sa-secret-value',
+          GCP_SA_KEY_BASE64: sa,
           CTP_CLIENT_SECRET: 'client-secret-value',
           STRIPE_SECRET_KEY: 'stripe-secret-value',
         })
       )
     ).get('/service/status');
-    for (const v of ['enc-secret-value', 'sa-secret-value', 'client-secret-value', 'stripe-secret-value']) {
+    for (const v of ['enc-secret-value', sa, 'client-secret-value', 'stripe-secret-value']) {
       expect(res.text).not.toContain(v);
     }
   });

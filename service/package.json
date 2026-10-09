@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.integration.config.cjs",
     "check:foundation": "node scripts/check-foundation.mjs",
     "connector:post-deploy": "node build/connector/post-deploy.js",
     "connector:pre-undeploy": "node build/connector/pre-undeploy.js"
@@ -27,7 +28,7 @@
     "@google-cloud/bigquery": "^8.3.1",
     "@google-cloud/storage": "^7.22.0",
     "@google/genai": "^1.52.0",
-    "ai": "^7.0.92",
+    "ai": "7.0.136",
     "body-parser": "^1.20.8",
     "express": "^4.22.3",
     "google-auth-library": "^10.9.1",
