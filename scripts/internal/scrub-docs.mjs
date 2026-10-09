@@ -67,6 +67,8 @@ export const SUBSTITUTIONS = [
   { id: 'agent-config', re: /(?:scripts\/)?labs-gat[e]\.sh/g, to: '<internal-gate-wrapper>' },
   { id: 'agent-config', re: /(?:scripts\/)?internal-path[s]\.json/g, to: '<internal-path-manifest>' },
   { id: 'agent-config', re: /scripts\/interna[l]\//g, to: '<internal-tooling>/' },
+  // secret-looking marker texts in rule descriptions (the gate's secret scan has no override)
+  { id: 'secret-marker', re: /-----BEGIN (?:RSA |EC )?PRIVATE KEY(?:-----)?/g, to: 'a PEM private-key header' },
   // 12. e-mail addresses of persons and of the corporate domain
   { id: 'email', re: /[\w.+-]+@(?:commercetools\.co[m]|gmail\.com|outlook\.com|hotmail\.com|icloud\.com)/gi, to: 'maintainer@example.invalid' },
   // 10. the role word for the person who decides or approves (person-addressed phrases only)

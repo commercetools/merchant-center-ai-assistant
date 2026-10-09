@@ -22,7 +22,7 @@ test('leak: block pattern hit', () => {
 
 test('leak: pattern does not match itself', () => {
   const j = JSON.parse(readFileSync(PATTERN_FILE, 'utf8'));
-  const all = [...j.block, ...j.blockPrivate, ...j.review];
+  const all = [...j.block, ...j.blockPrivate, ...j.blockDocs, ...j.review];
   const text = readFileSync(PATTERN_FILE, 'utf8');
   for (const pat of all) {
     assert.equal(new RegExp(pat, 'i').test(text), false, `pattern matches its own file: ${pat}`);
@@ -65,4 +65,14 @@ test('leak: line numbers', () => {
   const p = loadPatterns(PATTERN_FILE);
   const hits = scanText(`a\nb\nuse ${TUNNEL}\n`, p.block);
   assert.equal(hits[0].line, 3);
+});
+
+test('leak: allow list drops a known-legitimate hit, docs-only patterns skip code', () => {
+  const root = mkdtempSync(join(tmpdir(), 'leak-'));
+  mkdirSync(join(root, 'scripts', 'lib'), { recursive: true });
+  writeFileSync(join(root, 'scripts', 'lib', 'files.mjs'), "join(root, 'scripts', 'internal-" + "paths.json')\n");
+  writeFileSync(join(root, 'src.ts'), 'run(' + 'ow' + 'ner)\n');
+  writeFileSync(join(root, 'notes.md'), 'a (' + 'ow' + 'ner) note\n');
+  const r = scanTree(root, loadPatterns(PATTERN_FILE));
+  assert.deepEqual(r.block.map((h) => h.path), ['notes.md']);
 });

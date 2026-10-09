@@ -23,7 +23,7 @@ export const REPO_URL = 'https://github.com/commercetools/ai-assistant';
 
 /** Patterns that must not appear in the `git add --dry-run .` listing (spec: History is a single fresh commit). */
 export const FORBIDDEN_LISTING = [
-  /(^|\/)\.env($|\.(?!example$))/, /node_modules\//, /(^|\/)build\//, /(^|\/)public\//, /\.log$/, /\.DS_Store/, /\.pem$/, /\.key$/,
+  /(^|\/)\.env(?!.*\.example$)($|\.)/, /node_modules\//, /(^|\/)build\//, /(^|\/)public\//, /\.log$/, /\.DS_Store/, /\.pem$/, /\.key$/,
 ];
 
 // ------------------------------------------------------------------ pure helpers (unit tested)

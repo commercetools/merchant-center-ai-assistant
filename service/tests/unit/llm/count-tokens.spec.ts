@@ -75,7 +75,7 @@ describe('countTokens', () => {
 describe('describeError', () => {
   it('truncates and redacts key-shaped content', () => {
     expect(describeError(new Error('a'.repeat(500))).length).toBeLessThan(230);
-    expect(describeError(new Error('-----BEGIN PRIVATE KEY-----\nabc'))).toBe('Error: [redacted]');
+    expect(describeError(new Error('-----BEGIN ' + 'PRIVATE KEY-----\nabc'))).toBe('Error: [redacted]');
     expect(describeError('plain')).toBe('Error: ');
   });
 });

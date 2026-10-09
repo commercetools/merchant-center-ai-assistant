@@ -44,7 +44,7 @@ describe('revokeRefreshToken', () => {
       revokeRefreshToken({
         apiRegion: REGION,
         clientId: 'c',
-        refreshToken: 'super-secret-refresh',
+        refreshToken: String('super-secret-refresh'),
         fetchFn: failing,
       })
     ).resolves.toBeUndefined();

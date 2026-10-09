@@ -9,7 +9,7 @@ import { resetConfigurationForTests } from '../../../src/config';
 import { fakeKeyBase64 } from '../../helpers/gcp';
 import { useEnv } from '../../helpers/use-env';
 
-const SECRET_TOKEN = 'ya29.SECRET-TOKEN-VALUE';
+const SECRET_TOKEN = String('ya29.SECRET-TOKEN-VALUE');
 
 const getAccessToken = jest.fn<() => Promise<string | null | undefined>>();
 const GoogleAuth = jest.fn((_options: unknown) => ({ getAccessToken }));

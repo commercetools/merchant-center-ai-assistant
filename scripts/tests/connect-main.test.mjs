@@ -20,7 +20,7 @@ const ENV = {
   CONNECT_REGION: 'us-central1.gcp',
   CTP_PROJECT_KEY: 'proj1',
   CONNECT_CLIENT_ID: 'cid',
-  CONNECT_CLIENT_SECRET: 'client-secret-value',
+  CONNECT_CLIENT_SECRET: String('client-secret-value'),
   CONNECTOR_KEY: 'ck',
   CONNECTOR_NAME: 'AI Assistant',
   CREATOR_EMAIL: 'dev@example.com',

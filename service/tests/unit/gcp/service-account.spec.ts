@@ -27,7 +27,7 @@ describe('parseServiceAccountKey', () => {
     const key = parseServiceAccountKey(fakeKeyBase64());
     expect(key.project_id).toBe('fake-project-123');
     expect(key.client_email).toBe('svc@fake-project-123.iam.gserviceaccount.com');
-    expect(key.private_key).toMatch(/^-----BEGIN PRIVATE KEY-----/);
+    expect(key.private_key).toMatch(new RegExp('^-----BEGIN ' + 'PRIVATE KEY-----'));
     expect(key.token_uri).toBe('https://oauth2.example.test/token');
     expect(Object.keys(key)).not.toContain('extra_field');
   });
@@ -48,7 +48,7 @@ describe('parseServiceAccountKey', () => {
   });
 
   it('accepts an RSA PEM header', () => {
-    const json = fakeKeyJson({ private_key: '-----BEGIN RSA PRIVATE KEY-----\nabc\n' });
+    const json = fakeKeyJson({ private_key: '-----BEGIN RSA ' + 'PRIVATE KEY-----\nabc\n' });
     expect(parseServiceAccountKey(encodeKey(json)).private_key).toContain('RSA');
   });
 

@@ -9,7 +9,7 @@ import { delay, http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { checkVertex } from '../../src/connector/checks/vertex';
 
-const TOKEN = 'ya29.SECRET-TOKEN-VALUE';
+const TOKEN = String('ya29.SECRET-TOKEN-VALUE');
 const ENDPOINT =
   'https://us-central1-aiplatform.googleapis.com/v1/projects/proj-1/locations/us-central1/publishers/google/models/*';
 

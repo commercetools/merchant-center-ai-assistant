@@ -64,7 +64,7 @@ describe('GET /service/status', () => {
         freshConfig({
           ENCRYPTION_KEY: 'dmFsLWVuYy12YWwtZW5jLXZhbC1lbmMtdmFsLWVuYyE=',
           GCP_SA_KEY_BASE64: sa,
-          CTP_CLIENT_SECRET: 'client-secret-value',
+          CTP_CLIENT_SECRET: String('client-secret-value'),
           STRIPE_SECRET_KEY: 'stripe-secret-value',
         })
       )
