@@ -40,6 +40,8 @@ export type AiSdkChatMessage = {
   id: string;
   role: 'user' | 'assistant' | 'system';
   parts: unknown[];
+  /** Only `metadata.usage` token counters are stored (change H). */
+  metadata?: Record<string, unknown>;
   timestamp?: number;
 };
 

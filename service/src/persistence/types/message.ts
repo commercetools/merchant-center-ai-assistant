@@ -14,6 +14,11 @@ export interface StoredMessage {
   role: MessageRole;
   parts: unknown[];
   timestamp: number;
+  /**
+   * Message metadata. Change H stores only `{ usage: { inputTokens, outputTokens,
+   * totalTokens } }` (token counters of the turn); absent for messages without it.
+   */
+  metadata?: Record<string, unknown>;
 }
 
 export interface MessageValue {
@@ -23,6 +28,7 @@ export interface MessageValue {
   timestamp: number;
   /** `JSON.stringify(parts)`: a string because the platform drops `null` members. */
   partsJson: string;
+  metadata?: Record<string, unknown>;
 }
 
 export function messageToValue(m: StoredMessage): MessageValue {
@@ -32,6 +38,7 @@ export function messageToValue(m: StoredMessage): MessageValue {
     role: m.role,
     timestamp: m.timestamp,
     partsJson: JSON.stringify(m.parts),
+    ...(m.metadata ? { metadata: m.metadata } : {}),
   };
 }
 
@@ -52,5 +59,6 @@ export function messageFromValue(v: unknown): StoredMessage {
     role,
     parts,
     timestamp: typeof o.timestamp === 'number' ? o.timestamp : 0,
+    ...(isRecord(o.metadata) ? { metadata: o.metadata } : {}),
   };
 }
