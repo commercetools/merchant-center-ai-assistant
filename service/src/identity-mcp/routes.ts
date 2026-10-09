@@ -25,7 +25,7 @@ import { getIdentityRuntime } from './runtime';
  * Mounted at `/service/managed-mcp-identity`. `/callback` is registered first and WITHOUT
  * `verifyMcSession`: the browser comes from the authorization server and carries no forward-to
  * JWT; the route authenticates through the single-use state it claims. Binding writes need
- * `requireAdmin` (the verified user id is listed in `ADMIN_USER_IDS`).
+ * `requireAdmin` (administrator access, change D).
  */
 export const identityMcpRouter: Router = Router();
 

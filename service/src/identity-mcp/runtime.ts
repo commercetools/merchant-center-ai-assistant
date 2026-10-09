@@ -37,4 +37,5 @@ export function setIdentityRuntimeForTests(
 }
 
 /** The fetch override of the test runtime, if any (the tool source has no runtime of its own). */
-export const getFetchOverride = (): typeof fetch | undefined => override?.fetchFn;
+export const getFetchOverride = (): typeof fetch | undefined =>
+  override?.fetchFn;

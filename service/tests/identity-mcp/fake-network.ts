@@ -5,7 +5,7 @@
  */
 
 import { jest } from '@jest/globals';
-import { AS_ORIGIN, MCP_URL, REGION, fakeAuth2 } from './helpers';
+import { AS_ORIGIN, MCP_URL, REGION } from './helpers';
 import type { FakeAuth2 } from './helpers';
 
 export type Responder = (

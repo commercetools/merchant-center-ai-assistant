@@ -25,7 +25,7 @@ import type { IdentityToolSetDeps } from './toolset';
  * The `commercetools` ToolSource: the signed-in user's own Merchant Center permissions decide
  * which tools the Managed MCP Server (identity mode) exposes.
  *
- * `commercetools` (change I) and `commercetools-knowledge` (change J) are two independent
+ * `commercetools` (change I) and the documentation-lookup source (another change) are two independent
  * sources with separate menu groups; the orchestrators merge them (the custom-view
  * orchestrator selects exactly these two). Do not merge them here.
  *

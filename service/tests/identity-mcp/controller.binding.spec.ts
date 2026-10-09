@@ -166,13 +166,10 @@ describe('PUT /managed-mcp-identity', () => {
   it('a url different from the derived one -> 400 and nothing stored', async () => {
     const net = identityNetwork();
     const { app, rig } = makeIdentityApp(net.fetchFn);
-    const res = await request(app)
-      .put(BASE)
-      .set(ADMIN)
-      .send({
-        serverKey: SERVER_KEY,
-        url: 'https://mcp.example.com/projects/p/x',
-      });
+    const res = await request(app).put(BASE).set(ADMIN).send({
+      serverKey: SERVER_KEY,
+      url: 'https://mcp.example.com/projects/p/x',
+    });
     expect(res.status).toBe(400);
     expect(await rig.stores.binding.get()).toBeNull();
     expect(net.calls).toHaveLength(0);
