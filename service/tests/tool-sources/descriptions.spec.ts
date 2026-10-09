@@ -53,12 +53,12 @@ describe('registered tool sources: routing quality', () => {
   it('prints routing hints on their own line after the description', () => {
     const source: ToolSource = {
       ...(sources[0] as ToolSource),
-      displayName: 'Demo',
-      description: 'Does demo things.',
-      routingHints: 'Keywords: demo.',
+      displayName: 'Sample',
+      description: 'Does sample things.',
+      routingHints: 'Keywords: sample.',
     };
     expect(buildPreamble([source])).toContain(
-      '### Demo\nDoes demo things.\nKeywords: demo.'
+      '### Sample\nDoes sample things.\nKeywords: sample.'
     );
   });
 });
