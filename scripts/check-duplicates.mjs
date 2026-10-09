@@ -11,7 +11,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+// CHECK_ROOT lets the tests run the script against a fixture tree.
+const ROOT = process.env.CHECK_ROOT
+  ? path.resolve(process.env.CHECK_ROOT)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const GROUPS = [
   {
@@ -90,5 +93,68 @@ for (const group of GROUPS) {
   }
 }
 
+// The service cannot share source with the frontends (separate build contexts), so the
+// semantics of `isUsableTranspiledCode` are compared instead of the bytes: the same node
+// types, the same `name` comparisons and the same minimum body length in every copy.
+const SEMANTIC_COPIES = [
+  'service/src/composed-pages/contract.ts',
+  'mc-app/src/utils/babel-renderer.tsx',
+  'composed-apps/src/utils/babel-renderer.tsx',
+];
+
+export function extractFunction(source, name) {
+  const start = source.indexOf(`export function ${name}(`);
+  if (start === -1) return undefined;
+  const open = source.indexOf('{', source.indexOf(')', start));
+  let depth = 0;
+  for (let index = open; index < source.length; index += 1) {
+    if (source[index] === '{') depth += 1;
+    else if (source[index] === '}') {
+      depth -= 1;
+      if (depth === 0) return source.slice(start, index + 1);
+    }
+  }
+  return undefined;
+}
+
+export function semanticSignature(functionSource) {
+  const code = functionSource.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  const tokens = [];
+  for (const match of code.matchAll(
+    /'(?:[A-Za-z]+)'|\.length\s*<\s*\d+|\.id\?\.name\s*===\s*name|\.expression\.name\s*===\s*name|catch\s*\{\s*return false/g
+  )) {
+    tokens.push(match[0].replace(/\s+/g, ' '));
+  }
+  return tokens.join(' | ');
+}
+
+const signatures = new Map();
+for (const file of SEMANTIC_COPIES) {
+  const filePath = path.join(ROOT, file);
+  if (!fs.existsSync(filePath)) {
+    process.stdout.write(`MISSING isUsableTranspiledCode: ${file}\n`);
+    failed = true;
+    continue;
+  }
+  const body = extractFunction(fs.readFileSync(filePath, 'utf8'), 'isUsableTranspiledCode');
+  if (body === undefined) {
+    process.stdout.write(`MISSING isUsableTranspiledCode function in ${file}\n`);
+    failed = true;
+    continue;
+  }
+  signatures.set(file, semanticSignature(body));
+}
+const [referenceFile] = signatures.keys();
+for (const [file, signature] of signatures) {
+  if (signature !== signatures.get(referenceFile)) {
+    process.stdout.write(
+      `DRIFT isUsableTranspiledCode: ${file} differs in semantics from ${referenceFile}\n`
+    );
+    failed = true;
+  }
+}
+
 if (failed) process.exit(1);
-process.stdout.write(`OK duplicates (${GROUPS.length} groups)\n`);
+process.stdout.write(
+  `OK duplicates (${GROUPS.length} groups, isUsableTranspiledCode in ${SEMANTIC_COPIES.length} copies)\n`
+);

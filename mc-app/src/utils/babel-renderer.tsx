@@ -368,6 +368,47 @@ export function isUsableTranspiledCode(script: string, name: string): boolean {
 }
 
 /**
+ * Does the component body contain a `return` statement of its own (not one nested in an
+ * inner function)? Parsed, not searched for text, so a JSX body that merely says "return "
+ * in a string or text node is still treated as pure JSX. Unparseable code answers `false`
+ * and the transpile step reports the real syntax error.
+ */
+export function hasOwnReturnStatement(componentBody: string): boolean {
+  try {
+    const { program } = Babel.packages.parser.parse(componentBody, {
+      sourceType: 'script',
+      allowReturnOutsideFunction: true,
+      plugins: ['jsx'],
+    });
+    const visit = (node: unknown): boolean => {
+      if (Array.isArray(node)) return node.some(visit);
+      if (typeof node !== 'object' || node === null) return false;
+      const { type } = node as { type?: string };
+      if (type === 'ReturnStatement') return true;
+      if (
+        type === 'FunctionDeclaration' ||
+        type === 'FunctionExpression' ||
+        type === 'ArrowFunctionExpression' ||
+        type === 'ObjectMethod' ||
+        type === 'ClassMethod'
+      ) {
+        return false;
+      }
+      return Object.entries(node).some(
+        ([key, value]) =>
+          key !== 'loc' &&
+          key !== 'leadingComments' &&
+          key !== 'trailingComments' &&
+          visit(value)
+      );
+    };
+    return visit(program.body);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Wrap component body code in a named functional component.
  * The component body can include hooks, state, logic, and the JSX return statement.
  * The component is returned at the end so it can be captured when executed.
@@ -375,11 +416,8 @@ export function isUsableTranspiledCode(script: string, name: string): boolean {
 function wrapInNamedComponent(name: string, componentBody: string): string {
   const trimmed = componentBody.trim();
 
-  // Check if the code already has a return statement
-  const hasReturnStatement =
-    trimmed.includes('return ') || trimmed.includes('return(');
-
-  if (hasReturnStatement) {
+  // Check if the code already has a return statement of its own
+  if (hasOwnReturnStatement(trimmed)) {
     // Code already has return statement - use as-is for function body
     // This handles components with hooks, state, effects, etc.
     return `
