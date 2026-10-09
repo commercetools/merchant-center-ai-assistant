@@ -20,6 +20,7 @@ describe('readConfiguration', () => {
         'ctp',
         'gcp',
         'llm',
+        'nimbus',
         'persistence',
         'providers',
         'server',

@@ -10,6 +10,7 @@ import { parseChat } from './chat';
 import { parseCtp } from './ctp';
 import { parseGcp } from './gcp';
 import { parseLlm } from './llm';
+import { parseNimbus } from './nimbus';
 import { parsePersistence } from './persistence';
 import { parseProviders } from './providers';
 import { parseServer } from './server';
@@ -27,6 +28,7 @@ export const SECTIONS = {
   llm: parseLlm,
   cache: parseCache,
   chat: parseChat,
+  nimbus: parseNimbus,
   providers: parseProviders,
 } as const;
 

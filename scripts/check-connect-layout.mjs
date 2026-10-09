@@ -58,6 +58,7 @@ const SERVICE_STANDARD = {
   SETTINGS_CACHE_TTL_MS: { default: '5000' },
   CHAT_REQUEST_BUDGET_MS: { default: '270000' },
   CHAT_FINALIZE_RESERVE_MS: { default: '30000' },
+  NIMBUS_MCP_ENABLED: { default: 'true' },
   LOG_LEVEL: { default: 'info' },
   ADMIN_USER_IDS: { optional: true },
   CONTENTSTACK_BRANCH: { optional: true },

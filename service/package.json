@@ -18,7 +18,8 @@
     "connector:post-deploy": "node build/connector/post-deploy.js",
     "connector:pre-undeploy": "node build/connector/pre-undeploy.js",
     "persistence:purge": "node --env-file=.env.local scripts/purge-containers.mjs",
-    "persistence:reencrypt": "node --env-file=.env.local scripts/reencrypt.mjs"
+    "persistence:reencrypt": "node --env-file=.env.local scripts/reencrypt.mjs",
+    "smoke:nimbus": "node scripts/smoke-nimbus.mjs"
   },
   "dependencies": {
     "@ai-sdk/google-vertex": "^5.0.109",
@@ -26,11 +27,13 @@
     "@ai-sdk/provider-utils": "^5.0.58",
     "@commercetools-backend/express": "^27.13.0",
     "@commercetools-backend/loggers": "^27.13.0",
+    "@commercetools/nimbus-mcp": "3.6.0",
     "@commercetools/platform-sdk": "^8.27.0",
     "@commercetools/ts-client": "^4.10.0",
     "@google-cloud/bigquery": "^8.3.1",
     "@google-cloud/storage": "^7.22.0",
     "@google/genai": "^1.52.0",
+    "@modelcontextprotocol/sdk": "1.32.1",
     "ai": "7.0.136",
     "body-parser": "^1.20.8",
     "express": "^4.22.3",

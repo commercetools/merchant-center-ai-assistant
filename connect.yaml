@@ -81,6 +81,9 @@ deployAs:
         - key: CHAT_FINALIZE_RESERVE_MS
           description: Part of the chat time budget reserved for the final summary step, in milliseconds (5000 up to half the budget)
           default: '30000'
+        - key: NIMBUS_MCP_ENABLED
+          description: Kill switch of the embedded Nimbus design-system documentation tools (true or false). When false the Nimbus child process is never started
+          default: 'true'
         - key: LOG_LEVEL
           description: Logger level (error, warn, info, debug)
           default: 'info'

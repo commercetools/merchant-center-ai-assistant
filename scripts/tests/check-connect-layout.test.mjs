@@ -59,6 +59,7 @@ function canonical() {
             k('SETTINGS_CACHE_TTL_MS', { default: '5000' }),
             k('CHAT_REQUEST_BUDGET_MS', { default: '270000' }),
             k('CHAT_FINALIZE_RESERVE_MS', { default: '30000' }),
+            k('NIMBUS_MCP_ENABLED', { default: 'true' }),
             k('LOG_LEVEL', { default: 'info' }),
             k('ADMIN_USER_IDS', { required: false }),
             k('CONTENTSTACK_BRANCH', { required: false }),
