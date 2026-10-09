@@ -60,6 +60,10 @@ function canonical() {
             k('CHAT_REQUEST_BUDGET_MS', { default: '270000' }),
             k('CHAT_FINALIZE_RESERVE_MS', { default: '30000' }),
             k('NIMBUS_MCP_ENABLED', { default: 'true' }),
+            k('LOG_HTTP', { default: 'false' }),
+            k('CACHE_MAX_ENTRIES', { default: '5000' }),
+            k('CACHE_SWEEP_MS', { default: '60000' }),
+            k('MCP_HANDSHAKE_TIMEOUT_MS', { default: '10000' }),
             k('LOG_LEVEL', { default: 'info' }),
             k('ADMIN_USER_IDS', { required: false }),
             k('CONTENTSTACK_BRANCH', { required: false }),
@@ -206,6 +210,17 @@ test('pins: rejects drift 25.1.0 vs 27.9.6', () => {
   const errors = checkVersionPins({ 'mc-app': pkg('27.9.6'), 'composed-apps': pkg('25.1.0'), 'mc-view-app': pkg('27.9.6') });
   assert.ok(errors.some((e) => e.includes('drift') && e.includes('25.1.0') && e.includes('27.9.6')));
   assert.deepEqual(checkVersionPins({ 'mc-app': pkg('27.9.6'), 'composed-apps': pkg('27.9.6') }), []);
+});
+
+test('keys: LOG_HTTP, CACHE_* and MCP_HANDSHAKE_TIMEOUT_MS are declared standard keys with their defaults', () => {
+  for (const key of ['LOG_HTTP', 'CACHE_MAX_ENTRIES', 'CACHE_SWEEP_MS', 'MCP_HANDSHAKE_TIMEOUT_MS']) {
+    const missing = canonical();
+    service(missing).standardConfiguration = service(missing).standardConfiguration.filter((x) => x.key !== key);
+    assert.ok(checkConfigKeys(missing).some((e) => e.includes(key)), `${key} missing is rejected`);
+  }
+  const drift = canonical();
+  service(drift).standardConfiguration.find((x) => x.key === 'CACHE_MAX_ENTRIES').default = '1';
+  assert.ok(checkConfigKeys(drift).some((e) => e.includes('CACHE_MAX_ENTRIES')));
 });
 
 test('pins: rejects caret', () => {
