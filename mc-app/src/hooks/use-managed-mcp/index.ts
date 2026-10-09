@@ -37,8 +37,7 @@ export const MCP_SERVER_TYPE = 'CommerceMCP';
 export const MCP_MAJOR_VERSION = 'v4';
 
 /** Query predicate: only CommercetoolsIdentity servers (this app's sole mode). */
-const IDENTITY_AUTH_WHERE =
-  'authenticationMode%3D%22CommercetoolsIdentity%22';
+const IDENTITY_AUTH_WHERE = 'authenticationMode%3D%22CommercetoolsIdentity%22';
 
 export const useManagedMcpServers = () => {
   const dispatch = useAsyncDispatch<TSdkAction, unknown>();
@@ -60,16 +59,17 @@ export const useManagedMcpServers = () => {
    * The catalog of tools available for this MCP Server type and major version, with
    * descriptions and read/write classification - what the create form offers.
    */
-  const fetchToolCatalog = useCallback(async (): Promise<McpServerType | null> => {
-    const response = (await dispatch(
-      actions.get({
-        mcApiProxyTarget: MC_API_PROXY_TARGETS.COMMERCETOOLS_PLATFORM,
-        uri: `/${projectKey}/mcp-servers/types/${MCP_SERVER_TYPE}?majorVersion=${MCP_MAJOR_VERSION}`,
-      })
-    )) as McpServerType;
+  const fetchToolCatalog =
+    useCallback(async (): Promise<McpServerType | null> => {
+      const response = (await dispatch(
+        actions.get({
+          mcApiProxyTarget: MC_API_PROXY_TARGETS.COMMERCETOOLS_PLATFORM,
+          uri: `/${projectKey}/mcp-servers/types/${MCP_SERVER_TYPE}?majorVersion=${MCP_MAJOR_VERSION}`,
+        })
+      )) as McpServerType;
 
-    return response ?? null;
-  }, [dispatch, projectKey]);
+      return response ?? null;
+    }, [dispatch, projectKey]);
 
   const createServer = useCallback(
     async (draft: McpServerDraft): Promise<McpServer> => {

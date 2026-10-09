@@ -102,8 +102,8 @@ export const SystemPromptConfigProvider: React.FC<
         error: isAdminRequiredError(err)
           ? ADMIN_REQUIRED_TEXT
           : err instanceof Error
-            ? err.message
-            : 'Failed to load config',
+          ? err.message
+          : 'Failed to load config',
       }));
     }
   }, [getSystemPromptConfig]);
@@ -152,8 +152,8 @@ export const SystemPromptConfigProvider: React.FC<
         error: isAdminRequiredError(err)
           ? ADMIN_REQUIRED_TEXT
           : err instanceof Error
-            ? err.message
-            : 'Failed to save',
+          ? err.message
+          : 'Failed to save',
       }));
       return false;
     }

@@ -52,8 +52,7 @@ export const useIdentityMcpConfig = () => {
 
       if (!response.ok) {
         throw new ServiceRequestError(
-          envelope?.error ||
-            `Identity MCP request failed (${response.status})`,
+          envelope?.error || `Identity MCP request failed (${response.status})`,
           response.status,
           envelope?.code
         );
@@ -126,11 +125,18 @@ export const useIdentityMcpConfig = () => {
 
     return new Promise<IdentityMcpStatus>((resolve, reject) => {
       let settled = false;
+      // Filled in below; `cleanup` runs later than both assignments.
+      const handles: {
+        onMessage?: (event: MessageEvent) => void;
+        poll?: number;
+      } = {};
 
       const cleanup = () => {
         settled = true;
-        window.removeEventListener('message', onMessage);
-        window.clearInterval(poll);
+        if (handles.onMessage) {
+          window.removeEventListener('message', handles.onMessage);
+        }
+        window.clearInterval(handles.poll);
       };
 
       const finishFromStatus = async () => {
@@ -162,8 +168,9 @@ export const useIdentityMcpConfig = () => {
         }
       };
 
+      handles.onMessage = onMessage;
       window.addEventListener('message', onMessage);
-      const poll = window.setInterval(() => {
+      handles.poll = window.setInterval(() => {
         if (settled) return;
         if (Date.now() - startedAt >= POPUP_TIMEOUT_MS) {
           cleanup();

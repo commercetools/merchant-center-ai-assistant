@@ -14,8 +14,10 @@ import { useChatServiceEndpoint } from '../../hooks/use-chat-service-endpoint';
 import { useNextPrompts } from '../../hooks/use-next-prompts';
 import { useSuggestions } from '../../hooks/use-suggestions';
 import InteractiveTabContent from '../interactive-tab-content';
+import ManageMcpPanel from '../managed-mcp/manage-mcp-panel';
 import { ChatsDrawer } from '../panels/chats-drawer';
 import ComposedPagesPanel from '../panels/composed-page-panel';
+import { SettingsDrawer } from '../panels/settings-drawer';
 import { AppRail, type DrawerId } from '../shell/app-rail';
 import type { TabId } from '../shell/view-tabs';
 
@@ -160,7 +162,8 @@ const NewChat: React.FC = () => {
         onDeleteSession={deleteSessionById}
       />
 
-      {/* Q: the Settings drawer ('config') and the Connections panel ('mcp') mount here. */}
+      <SettingsDrawer isOpen={openDrawer === 'config'} onClose={closeDrawer} />
+      <ManageMcpPanel isOpen={openDrawer === 'mcp'} onClose={closeDrawer} />
 
       <ComposedPagesPanel
         isOpen={openDrawer === 'pages'}
