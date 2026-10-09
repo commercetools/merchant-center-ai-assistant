@@ -25,3 +25,4 @@ service-account*.json
 # agent working files
 .claude/settings.local.json
 plans/evidence/
+.claude/worktrees/
