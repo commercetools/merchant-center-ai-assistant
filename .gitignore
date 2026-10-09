@@ -1,4 +1,27 @@
-.claude/settings.local.json
+# dependencies and build output
 node_modules/
-.env.local
+coverage/
+build/
+dist/
+public/
+*.log
+.connect/*.log
+
+# editors and OS
+.DS_Store
+.vscode/
+.idea/
+
+# secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+service-account*.json
+.npmrc
+
+# agent working files
+.claude/settings.local.json
 plans/evidence/
