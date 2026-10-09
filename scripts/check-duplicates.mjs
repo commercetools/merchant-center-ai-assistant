@@ -22,6 +22,32 @@ const GROUPS = [
       'mc-view-app/src/utils/forward-to.ts',
     ],
   },
+  // Change S: chat parts the Custom View panel copies from mc-app and must keep identical.
+  // Files that the panel prunes or adapts (chat-area, message, composer, connector, ...) are
+  // deliberately not listed; they carry a "Derived from" header instead.
+  ...[
+    'utils/forward-to.ts',
+    'utils/material-icons.ts',
+    'types/chart.ts',
+    'hooks/use-service-image.ts',
+    'components/your-user-id/index.tsx',
+    'components/new-chat/types.ts',
+    'components/new-chat/layout.ts',
+    'components/new-chat/agent-avatar.tsx',
+    'components/new-chat/parts/json-block.tsx',
+    'components/new-chat/parts/text-part.tsx',
+    'components/new-chat/parts/file-part.tsx',
+    'components/new-chat/parts/export-part.tsx',
+    'components/new-chat/parts/reasoning-part.tsx',
+    'components/new-chat/parts/source-part.tsx',
+    'components/new-chat/typing-indicator/index.tsx',
+    'components/new-chat/typing-indicator/use-typewriter.ts',
+    'components/new-chat/typing-indicator/cute-text-phrases.ts',
+    'components/new-chat/typing-indicator/cute-text-animator.tsx',
+  ].map((file) => ({
+    name: 'view-chat-parts',
+    files: [`mc-app/src/${file}`, `mc-view-app/src/${file}`],
+  })),
 ];
 
 let failed = false;
