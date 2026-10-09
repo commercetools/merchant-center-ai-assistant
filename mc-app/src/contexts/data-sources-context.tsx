@@ -184,7 +184,7 @@ export function DataSourcesProvider({
     ): Promise<{ data?: unknown; error?: Error }> => {
       try {
         // A page cannot run SQL any more. The BigQuery data source and the
-        // POST /data-warehouse/query endpoint behind it are both gone - SQL over history
+        // query endpoint behind it are both gone - SQL over history
         // is a chat-only capability now.
         //
         // Reported explicitly rather than by falling through to the GraphQL branch: a

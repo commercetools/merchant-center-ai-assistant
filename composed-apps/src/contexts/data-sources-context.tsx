@@ -58,7 +58,7 @@ type TDataSourcesProviderProps = {
 const SUPPORTED_TARGET = 'COMMERCETOOLS_PLATFORM';
 
 /**
- * Pages stored by older versions may carry another target (a data-warehouse one). Such a
+ * Pages stored by older versions may carry another target (a BigQuery SQL one). Such a
  * data source fails on its own with an explicit error instead of reaching the GraphQL
  * endpoint, where it would only produce a parse error that hides the real cause.
  */
