@@ -8,12 +8,12 @@ import type { NextFunction, Request, Response } from 'express';
 import type { FeedbackService } from '../services/feedback.service';
 import type { FeedbackSubmitBody } from '../types/feedback.types';
 import type { AuthenticatedRequest } from '../types/request.types';
+import { ok } from '../utils/api-response';
 import {
   parseIntParam,
-  sendOk,
   sendResult,
   stringParam,
-} from '../utils/feedback-response';
+} from '../utils/request-params';
 
 type Handler = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 
@@ -46,7 +46,7 @@ export function feedbackController(getService: () => FeedbackService) {
           ...(createdAtAfter !== undefined ? { createdAtAfter } : {}),
         },
       });
-      sendOk(res, 200, page.items, { pagination: page.pagination });
+      ok(res, page.items, 200, { pagination: page.pagination });
     } catch (error) {
       next(error);
     }
