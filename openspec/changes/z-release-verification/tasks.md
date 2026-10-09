@@ -1,9 +1,9 @@
 ## 0. Read first
 
-- [ ] 0.1 Read `proposal.md`, `design.md` (A to Z table, readiness table, R1-R10 trace, D1-D7) and `specs/release-verification/spec.md`.
+- [x] 0.1 Read `proposal.md`, `design.md` (A to Z table, readiness table, R1-R10 trace, D1-D7) and `specs/release-verification/spec.md`.
 - [ ] 0.2 Read the checklists in `/Users/behnam/.claude/plugins/marketplaces/commercetools/skills/commercetools-connect/SKILL.md` (section "Production-readiness checklist (the gate)", lines about 168-200), `references/deployment-installation.md` (Checklist), `references/merchant-center-customizations.md` (Checklist), `references/project-structure.md` (Checklist).
 - [ ] 0.3 Read change X's archived artefacts (publication procedure, gate output, anonymous-clone proof) and change U's runbook `docs/deployment-runbook.md`.
-- [ ] 0.4 Read `plans/manual-steps.md` and the manual-step amendments in `plans/manual-steps.md` (M1, M2, M4, M12, M13, M14, M15, M16).
+- [x] 0.4 Read `plans/manual-steps.md` and the manual-step amendments in `plans/manual-steps.md` (M1, M2, M4, M12, M13, M14, M15, M16).
 - [ ] 0.5 Read `plans/evidence/` reports of every change and the latest change-V `report.md`.
 
 You should now be able to explain: (a) what "not applicable" means for the event-related boxes and how it is proven, (b) the order of the release steps and why the tag is created last, (c) what blocks the release, (d) where evidence is stored and why it is internal.
@@ -17,7 +17,7 @@ You should now be able to explain: (a) what "not applicable" means for the event
   **Done when:** folder exists; archive lists the changes expected by the table (T may be absent when No-go).
   **Watch out:** X's publication directory is separate (`$HOME/labs-publish/ai-assistant` by default) - never write evidence there.
 
-- [ ] 1.2 Tooling check.
+- [x] 1.2 Tooling check.
   **Why:** commands in later tasks need these.
   **How:** `node -v` (v22); `commercetools --version`; `docker info >/dev/null && echo docker-ok` (M14); `commercetools auth whoami` or equivalent after M4; `gh auth status` for the manual repository steps if the owner delegates them.
   **Done when:** each prints a version/OK or the missing manual step id is recorded in `plans/evidence/z/blocked.md`.
@@ -25,14 +25,14 @@ You should now be able to explain: (a) what "not applicable" means for the event
 
 ## 2. Helper scripts (public, headered)
 
-- [ ] 2.1 `scripts/release/acceptance.mjs`.
+- [x] 2.1 `scripts/release/acceptance.mjs`.
   **Why:** aggregate facts instead of hand-copying.
   **Where:** `scripts/release/acceptance.mjs`, test `scripts/release/acceptance.test.mjs`.
   **How:** modes: `--table` (for each of A..X, Z plus T: check `openspec/changes/archive/*-<name>` exists, read its `tasks.md` Verification bullets to collect commands and `E2E-` ids; find statuses of those ids in the newest `plans/evidence/*/report.md`; write `plans/evidence/z/acceptance.md` with columns id, change, archived, commands, scenario statuses, evidence links, verifier), `--check` (exit non-zero if any change not archived, any scenario FAIL, or any evidence link missing), `--versions` (read the four `package.json` and `CHANGELOG.md`; all must equal the version argument default `0.1.0`).
   **Done when:** `node --test scripts/release/` passes; `node scripts/release/acceptance.mjs --versions 0.1.0` prints OK on a fixture tree.
   **Watch out:** archive directory names may carry a date prefix - match by suffix.
 
-- [ ] 2.2 `scripts/release/check-tasks-shape.mjs`.
+- [x] 2.2 `scripts/release/check-tasks-shape.mjs`.
   **Why:** R10.
   **Where:** `scripts/release/check-tasks-shape.mjs`, test file.
   **How:** for each `openspec/changes/archive/*/tasks.md` and active changes: require a heading matching `/^## (0\.|Read first)/`, a setup section (`/^## 1\. Setup/i` or contains "Setup"), a verification section (`/Verification/i`), a docs section (`/Docs to update/i`); count task bullets `- [ ] N.N`; for each task require the five labels `Why:`, `Where:`, `How:`, `Done when:`, `Watch out:` (allow tasks explicitly marked "Shared Where/How/Done/Watch" or compressed bullet lists under a shared paragraph, and report them as warnings); print totals.
@@ -41,7 +41,7 @@ You should now be able to explain: (a) what "not applicable" means for the event
 
 ## 3. Resolve what blocks before the final run
 
-- [ ] 3.1 Build the open-items register.
+- [x] 3.1 Build the open-items register.
   **Why:** decisions needed before the tag.
   **Where:** `plans/evidence/z/open-items.md`.
   **How:** 1. For every archived change extract "Open questions" (`awk '/^## Open questions/{f=1;next} /^## /{f=0} f' design.md`). 2. Add every SKIPPED/BLOCKED row of the E2E reports. 3. Add owner questions Q1-Q16 and their final answers. 4. Add W ledger deferred rows and unverified claims. 5. Table columns: id, source, description, impact, decision needed, owner, status, target (blocks release / v0.1.x / backlog / won't fix). Seed with design finding 5.
@@ -63,7 +63,7 @@ You should now be able to explain: (a) what "not applicable" means for the event
 
 ## 4. Readiness checklist proof
 
-- [ ] 4.1 Create `plans/evidence/z/readiness.md` from the design table.
+- [x] 4.1 Create `plans/evidence/z/readiness.md` from the design table.
   **Why:** certification-grade evidence.
   **How:** copy the table; add columns Status (PASS / NOT APPLICABLE / PASS-WITH-EXCEPTION / FAIL) and Evidence (command + output path, scenario id, file path, doc URL).
   **Done when:** every row has a status.
@@ -95,7 +95,7 @@ You should now be able to explain: (a) what "not applicable" means for the event
 
 ## 5. Version, changelog and release rehearsal
 
-- [ ] 5.1 Set version 0.1.0.
+- [x] 5.1 Set version 0.1.0.
   **Why:** spec "Version and tag".
   **Where:** `service/package.json`, `mc-app/package.json`, `composed-apps/package.json`, `mc-view-app/package.json`, `CHANGELOG.md`.
   **How:** set `"version": "0.1.0"` in all four; `CHANGELOG.md` heading `## 0.1.0` with the date and 5-8 bullet summary (no tenant vocabulary, no internal references); `node scripts/release/acceptance.mjs --versions 0.1.0`.
@@ -140,7 +140,7 @@ You should now be able to explain: (a) what "not applicable" means for the event
 
 ## 7. Requirements trace and acceptance table
 
-- [ ] 7.1 Fill `plans/evidence/z/requirements-trace.md` (R1-R10) with evidence links from design table; add one sentence per requirement stating how it was verified.
+- [x] 7.1 Fill `plans/evidence/z/requirements-trace.md` (R1-R10) with evidence links from design table; add one sentence per requirement stating how it was verified.
   **Done when:** every R has at least one existing evidence path.
   **Watch out:** R3 is no longer used; skip it in the trace table.
 
@@ -151,13 +151,13 @@ You should now be able to explain: (a) what "not applicable" means for the event
 
 ## 8. Handover and backlog
 
-- [ ] 8.1 Write `plans/evidence/z/handover.md`.
+- [x] 8.1 Write `plans/evidence/z/handover.md`.
   **Why:** the owner can operate without us.
   **How:** headings: What was built; Repository map; How to deploy/update/rollback (links to `docs/deployment-runbook.md`); Secrets inventory (names, where stored, how to rotate: `GCP_SA_KEY_BASE64` via redeploy with new value; `ENCRYPTION_KEY` limits - rotating invalidates stored identity tokens, users must reconnect; third-party provider keys (`CONTENTSTACK_API_KEY`, `CONTENTSTACK_MANAGEMENT_TOKEN`, `ALGOLIA_MCP_URL`, `STRIPE_SECRET_KEY` secured; `CONTENTSTACK_BRANCH`, `CONTENTSTACK_REGION`, `STRIPE_CONNECTED_ACCOUNT_ID` standard) are Connect configuration, rotated with `connect.mjs configure KEY=VALUE` (configuration redeploy); Connect API client secret); `ADMIN_USER_IDS` (standard configuration, not a secret: how to find a user's id ("Your user ID" line) and add or remove an administrator with `connect.mjs configure ADMIN_USER_IDS=...` and a configuration redeploy; takes effect when instances restart; empty means nobody is an administrator); Data retention (messages and feedback are kept until an operator deletes the Custom Objects; no automatic deletion; point to `docs/operations.md`); Logs and troubleshooting entry points; How to run the E2E suite; How to add a tool source / locator / agent; Known limitations (from the register); Contacts; Reserved letter Y; Where internal evidence is archived (RQ13).
   **Done when:** every heading has concrete commands/paths.
   **Watch out:** no secrets in the document.
 
-- [ ] 8.2 Write `plans/evidence/z/backlog.md` from design D6 (the retention job is listed as not planned), add items found in 3.1, each with rationale and size.
+- [x] 8.2 Write `plans/evidence/z/backlog.md` from design D6 (the retention job is listed as not planned), add items found in 3.1, each with rationale and size.
   **Done when:** all D6 items present.
   **Watch out:** items already on the open-items register with target "backlog" must appear here.
 

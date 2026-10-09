@@ -7,7 +7,7 @@
 An AI chat assistant for the commercetools Merchant Center, packaged as a commercetools Connect
 connector. It is installed once per commercetools project.
 
-- Status: unsupported (see [SUPPORT.md](./SUPPORT.md)).
+- Status: version 0.1.0, unsupported (see [SUPPORT.md](./SUPPORT.md)).
 - The folders `plans/` and `openspec/` hold the design documentation of the project. They imply no support.
 - Documentation: this README is the connector README; the details are in [docs/](./docs) and in the
   README of each application folder.
