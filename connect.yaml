@@ -1,0 +1,143 @@
+# Platform environment contract (verified facts, see openspec change b-connect-skeleton, design "Platform facts")
+#
+# 1. inheritAs: the top-level `inheritAs.apiClient` block at the end of this file makes Connect generate ONE
+#    API client for the whole connector and inject exactly CTP_API_URL, CTP_AUTH_URL, CTP_CLIENT_ID,
+#    CTP_CLIENT_SECRET, CTP_PROJECT_KEY and CTP_SCOPE. Never declare these keys (or CTP_REGION, which is NOT
+#    injected) under `configuration`.
+# 2. CONNECT_SERVICE_URL (the public URL of a service) exists only inside the postDeploy / preUndeploy scripts,
+#    not in the running service. The service URL is therefore unknown until the first deployment, so
+#    MC_AUDIENCE and CHAT_SERVICE_ENDPOINT_URL are set by a configuration redeploy (change U, two-phase deploy).
+# 3. APPLICATION_URL is injected by Connect for the Merchant Center applications and the view; it must not be
+#    declared here. The config files use '${env:APPLICATION_URL}'.
+deployAs:
+  - name: service
+    applicationType: service
+    endpoint: /service
+    scripts:
+      postDeploy: npm ci && npm run build && npm run connector:post-deploy
+      preUndeploy: npm ci && npm run build && npm run connector:pre-undeploy
+    configuration:
+      standardConfiguration:
+        - key: CLOUD_IDENTIFIER
+          description: Merchant Center API cloud identifier of the target project (for example gcp-us); used to pick the JWKS issuer when the gateway header is absent
+          default: 'gcp-us'
+        - key: MC_AUDIENCE
+          description: Public origin of this service (https://host, no path). Unknown until the first deployment; set it with a redeploy (see the deployment runbook). While empty the service rejects all Merchant Center traffic
+          required: false
+        - key: GCP_PROJECT_ID
+          description: Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional; when empty the project_id inside the service-account key is used
+          required: false
+        - key: GCP_VERTEX_LOCATION
+          description: Vertex AI location (Gemini text and image models)
+          default: 'us-central1'
+        - key: GEMINI_MODEL_NAME
+          description: Main Gemini model id
+          default: 'gemini-3.8-flash'
+        - key: GEMINI_LITE_MODEL_NAME
+          description: Cheap Gemini model id used for session digests and prompt suggestions
+          default: 'gemini-3.5-flash-lite'
+        - key: GCP_BIGQUERY_DATASET_ID
+          description: BigQuery dataset for offloaded tool results (created on first use when the service account may create datasets)
+          default: 'aiassistant'
+        - key: GCP_BIGQUERY_LOCATION
+          description: BigQuery location of the dataset (immutable once the dataset exists)
+          default: 'us-central1'
+        - key: GCP_BUCKET_NAME
+          description: Cloud Storage bucket for generated images. Optional; when empty the name is <gcp project id>-ai-assistant-images
+          required: false
+        - key: GCP_BUCKET_LOCATION
+          description: Location used when the bucket has to be created (us-central1, or a multi-region such as US)
+          default: 'us-central1'
+        - key: IMAGE_URL_MODE
+          description: private (default) = bucket stays private and images are streamed through the service; public = objects are publicly readable and stored with the public bucket URL
+          default: 'private'
+        - key: MCP_TOOLS_TTL_MS
+          description: In-process cache lifetime of fetched MCP tool sets in milliseconds
+          default: '1800000'
+        - key: LOG_LEVEL
+          description: Logger level (error, warn, info, debug)
+          default: 'info'
+        - key: ADMIN_USER_IDS
+          description: Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator
+          required: false
+        - key: CONTENTSTACK_BRANCH
+          description: Optional Contentstack branch name sent with every Content Management API call
+          required: false
+        - key: CONTENTSTACK_REGION
+          description: Contentstack region of the stack (na, eu, au, azure-na, azure-eu, gcp-na, gcp-eu)
+          default: 'na'
+        - key: STRIPE_CONNECTED_ACCOUNT_ID
+          description: Optional Stripe connected account id (acct_...) the Stripe tools act on behalf of
+          required: false
+      securedConfiguration:
+        - key: GCP_SA_KEY_BASE64
+          description: Base64 of the complete Google service-account JSON key (single line, no wrapping)
+          required: true
+        - key: ENCRYPTION_KEY
+          description: Base64 of a 32-byte AES-256-GCM key that protects stored identity tokens; changing it makes stored tokens unreadable (see change E for rotation)
+          required: true
+        - key: CONTENTSTACK_API_KEY
+          description: Optional Contentstack stack API key. Contentstack is enabled only when this and CONTENTSTACK_MANAGEMENT_TOKEN are both set
+          required: false
+        - key: CONTENTSTACK_MANAGEMENT_TOKEN
+          description: Optional Contentstack Management Token (scope it to what the assistant may change)
+          required: false
+        - key: ALGOLIA_MCP_URL
+          description: Optional https URL of the Algolia MCP server. Secured because it may embed a key; Algolia is enabled when it is set
+          required: false
+        - key: STRIPE_SECRET_KEY
+          description: Optional Stripe secret or restricted key (sk_/rk_). Prefer a restricted key limited to the tools you want the assistant to use
+          required: false
+  - name: mc-app
+    applicationType: merchant-center-custom-application
+    configuration:
+      standardConfiguration:
+        - key: CUSTOM_APPLICATION_ID
+          description: The Custom Application ID returned when registering the application in the Merchant Center
+          required: true
+        - key: ENTRY_POINT_URI_PATH
+          description: Entry point URI path of the Custom Application (unique per cloud region)
+          required: true
+        - key: CLOUD_IDENTIFIER
+          description: Merchant Center API cloud identifier (for example gcp-us)
+          default: 'gcp-us'
+        - key: CHAT_SERVICE_ENDPOINT_URL
+          description: Full URL of the service including /service; set on redeploy after the first deployment
+          required: false
+          default: 'https://not-configured.invalid/service'
+  - name: composed-apps
+    applicationType: merchant-center-custom-application
+    configuration:
+      standardConfiguration:
+        - key: CUSTOM_APPLICATION_ID
+          description: The Custom Application ID returned when registering the Pages application in the Merchant Center
+          required: true
+        - key: ENTRY_POINT_URI_PATH
+          description: Entry point URI path of the Pages Custom Application (unique per cloud region, different from the chat application)
+          required: true
+        - key: CLOUD_IDENTIFIER
+          description: Merchant Center API cloud identifier (for example gcp-us)
+          default: 'gcp-us'
+        - key: CHAT_SERVICE_ENDPOINT_URL
+          description: Full URL of the service including /service; set on redeploy after the first deployment
+          required: false
+          default: 'https://not-configured.invalid/service'
+  - name: mc-view-app
+    applicationType: merchant-center-custom-view
+    configuration:
+      standardConfiguration:
+        - key: CUSTOM_VIEW_ID
+          description: The Custom View ID returned when registering the view in the Merchant Center
+          required: true
+        - key: CLOUD_IDENTIFIER
+          description: Merchant Center API cloud identifier (for example gcp-us)
+          default: 'gcp-us'
+        - key: CHAT_SERVICE_ENDPOINT_URL
+          description: Full URL of the service including /service; set on redeploy after the first deployment
+          required: false
+          default: 'https://not-configured.invalid/service'
+inheritAs:
+  apiClient:
+    scopes:
+      - view_key_value_documents
+      - manage_key_value_documents
