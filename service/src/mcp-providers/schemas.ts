@@ -53,8 +53,7 @@ const SCHEMAS: Record<ProviderName, z.ZodType> = {
 };
 
 export type ProviderValidation =
-  | { ok: true }
-  | { ok: false; invalidKeys: string[] };
+  { ok: true } | { ok: false; invalidKeys: string[] };
 
 const knownKeys = (provider: ProviderName): string[] => [
   ...REQUIRED_KEYS[provider],

@@ -46,7 +46,10 @@ describe('built-in sources', () => {
   it('they have no menu group', async () => {
     const ctx = makeToolContext();
     contexts.push(ctx);
-    expect(await registry.listMenuGroups(ctx)).toEqual([]);
+    const groups = await registry.listMenuGroups(ctx);
+    // Other changes register menu sources too (J: commercetools-knowledge); the built-ins none.
+    const builtIn = ['entity-link', 'visualize', 'export', 'imageGeneration'];
+    expect(groups.filter((g) => builtIn.includes(g.mcp))).toEqual([]);
   });
 
   it('are core sources, not connected integrations', async () => {

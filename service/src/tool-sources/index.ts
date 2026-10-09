@@ -8,6 +8,7 @@ import { entityLinkSource } from './entity-link.source';
 import { exportSource } from './export.source';
 import { imageGenerationSource } from './image-generation.source';
 import { createToolSourceRegistry } from './registry';
+import { thirdPartyToolSources } from './third-party';
 import type { ToolSource } from './types';
 import { visualizeSource } from './visualize.source';
 
@@ -44,11 +45,12 @@ registerToolSource(
   imageGenerationSource
 );
 
+registerToolSource(...thirdPartyToolSources); // J: Knowledge, Contentstack, Algolia, Stripe
+
 /*
  * Composition. A new tool source is one file plus one line here.
  *
  *   // registerToolSource(createCommercetoolsIdentitySource(...));         // I
- *   // registerToolSource(knowledgeSource, contentstackSource, algoliaSource, stripeSource); // J
  *   // registerToolSource(nimbusSource);                                   // K
  *   // registerToolSource(bigquerySource);                                 // L (+ setImageUploader)
  *   // registerToolSource(composedPageSource);                             // M
