@@ -20,6 +20,7 @@ module.exports = {
   testMatch: ['**/tests/**/*.spec.ts'],
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   extensionsToTreatAsEsm: ['.ts'],
   transform: {
     // The service tsconfig emits CommonJS (correct for the build); tests need ESM output.
