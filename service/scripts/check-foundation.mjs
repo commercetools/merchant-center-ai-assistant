@@ -22,6 +22,22 @@ export const FORBIDDEN_DEPENDENCIES = [
 ];
 export const FORBIDDEN_SOURCE = /tenant|firestore|validateProject|dotenv/i;
 
+// Auth gate (change D): where identity and admin knowledge may live.
+export const FORBIDDEN_AUTH_EVERYWHERE =
+  /validateAdmin|validateUserEmail|req\.query\.userEmail|user_permissions|userPermissions|x-dev-permissions|ADMIN_EMAILS|verified-?email/;
+const ADMIN_LIST_FILES = [
+  'src/config/sections/auth.ts',
+  'src/auth/admin.ts',
+  'src/middleware/mc-session.middleware.ts',
+  'src/index.ts',
+  'src/controllers/status.controller.ts',
+];
+const BYPASS_FILES = [
+  'src/config/sections/auth.ts',
+  'src/middleware/mc-session.middleware.ts',
+  'src/index.ts', // boot warning
+];
+
 function sourceFiles(dir) {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
@@ -49,8 +65,18 @@ export function check() {
     readFileSync(file, 'utf8')
       .split('\n')
       .forEach((line, i) => {
+        const rel = relative(root, file).split('\\').join('/');
         if (FORBIDDEN_SOURCE.test(line)) {
-          problems.push(`${relative(root, file)}:${i + 1}: forbidden word in source`);
+          problems.push(`${rel}:${i + 1}: forbidden word in source`);
+        }
+        if (FORBIDDEN_AUTH_EVERYWHERE.test(line)) {
+          problems.push(`${rel}:${i + 1}: forbidden identity/admin pattern (admin is the verified user id in ADMIN_USER_IDS)`);
+        }
+        if (/ADMIN_USER_IDS|adminUserIds/.test(line) && !ADMIN_LIST_FILES.includes(rel)) {
+          problems.push(`${rel}:${i + 1}: the admin allowlist may only be read in ${ADMIN_LIST_FILES.join(', ')}`);
+        }
+        if (/MC_AUTH_DISABLED|x-dev-admin/.test(line) && !BYPASS_FILES.includes(rel)) {
+          problems.push(`${rel}:${i + 1}: the development bypass belongs in ${BYPASS_FILES.join(', ')} only`);
         }
       });
   }

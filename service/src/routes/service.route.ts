@@ -5,10 +5,12 @@
  */
 
 import { Router } from 'express';
+import { mcAuthRouter } from './mc-auth.route';
 import { statusRouter } from './status.route';
 
 /** Mounted at /service in app.ts; MUST equal `endpoint` in connect.yaml. */
 export const serviceRouter = Router();
 
 serviceRouter.use('/', statusRouter);
+serviceRouter.use('/auth', mcAuthRouter);
 // D..N mount their routers here.
