@@ -5,12 +5,18 @@
  */
 
 import { describe, expect, jest, test } from '@jest/globals';
-import { runTurnDigest } from '../../src/agents/turn-digest';
+import {
+  runTurnDigest,
+  runTurnDigestBeforeClose,
+} from '../../src/agents/turn-digest';
 import { captureLogs } from '../helpers/log-capture';
 
 const turn = [
   { role: 'user', parts: [{ type: 'text', text: 'hello' }] },
-  { role: 'assistant', parts: [{ type: 'text', text: 'Three are below target.' }] },
+  {
+    role: 'assistant',
+    parts: [{ type: 'text', text: 'Three are below target.' }],
+  },
 ];
 const digest = {
   title: 'T',
@@ -75,7 +81,9 @@ describe('runTurnDigest is detached from the stream', () => {
       );
       await new Promise((r) => setTimeout(r, 20));
       expect(unhandled).not.toHaveBeenCalled();
-      expect(capture.lines.some((l) => l.includes('Turn digest failed'))).toBe(true);
+      expect(capture.lines.some((l) => l.includes('Turn digest failed'))).toBe(
+        true
+      );
     } finally {
       capture.stop();
       process.off('unhandledRejection', unhandled);
@@ -90,5 +98,69 @@ describe('runTurnDigest is detached from the stream', () => {
     );
     await tick();
     expect(apply).not.toHaveBeenCalled();
+  });
+});
+
+describe('runTurnDigestBeforeClose (R-G1 fallback, 3 s cap)', () => {
+  test('resolves as soon as a fast digest is applied', async () => {
+    const applied: string[] = [];
+    await runTurnDigestBeforeClose(
+      { sessionId: 's1', userId: 'u1', messages: turn },
+      3000,
+      {
+        generate: async () => digest,
+        apply: async (sessionId) => {
+          applied.push(sessionId);
+        },
+      }
+    );
+    expect(applied).toEqual(['s1']);
+  });
+
+  test('stops waiting at the cap, keeps the digest running and applies it later', async () => {
+    let release: (d: typeof digest) => void = () => undefined;
+    const pending = new Promise<typeof digest>((resolve) => {
+      release = resolve;
+    });
+    const applied: string[] = [];
+    const started = Date.now();
+    await runTurnDigestBeforeClose(
+      { sessionId: 's1', userId: 'u1', messages: turn },
+      40,
+      {
+        generate: () => pending,
+        apply: async (sessionId) => {
+          applied.push(sessionId);
+        },
+      }
+    );
+    expect(Date.now() - started).toBeLessThan(1000);
+    expect(applied).toEqual([]);
+    release(digest);
+    await tick();
+    await tick();
+    expect(applied).toEqual(['s1']);
+  });
+
+  test('never rejects when the digest fails, and returns at once without an answer', async () => {
+    await expect(
+      runTurnDigestBeforeClose(
+        { sessionId: 's1', userId: 'u1', messages: turn },
+        3000,
+        {
+          generate: async () => {
+            throw new Error('model down');
+          },
+          apply: async () => undefined,
+        }
+      )
+    ).resolves.toBeUndefined();
+    const generate = jest.fn(async () => digest);
+    await runTurnDigestBeforeClose(
+      { sessionId: 's1', userId: 'u1', messages: [turn[0]] },
+      3000,
+      { generate, apply: async () => undefined }
+    );
+    expect(generate).not.toHaveBeenCalled();
   });
 });

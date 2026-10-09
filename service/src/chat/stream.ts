@@ -63,8 +63,11 @@ export interface CreateChatStreamParams {
   budget: RequestBudget;
   /** Tools of the turn, only used to attribute a schema failure to a tool by name. */
   allTools: ToolSet;
-  /** Called once when the stream has ended. Never throws into the stream. */
-  onFinish: (turn: ChatTurnResult) => void;
+  /**
+   * Called once when the stream has ended. Never throws into the stream. When it returns a
+   * promise the stream close waits for it (keep it short: digest-before-close, TA-15).
+   */
+  onFinish: (turn: ChatTurnResult) => void | Promise<void>;
   sessionId?: string;
   keepAliveMs?: number;
   log?: Pick<Log, 'info' | 'warn'>;
@@ -209,7 +212,7 @@ export const createChatStream = (params: CreateChatStreamParams) => {
       return error instanceof Error ? error.message : 'Unknown error';
     },
 
-    onFinish: ({ messages: turnMessages, isAborted }) => {
+    onFinish: async ({ messages: turnMessages, isAborted }) => {
       const timeLimit = budget.timedOut();
       try {
         log.info('chat turn finished', {
@@ -222,7 +225,7 @@ export const createChatStream = (params: CreateChatStreamParams) => {
         if (timeLimit) {
           log.warn('chat.time_limit_reached', { sessionId: params.sessionId });
         }
-        params.onFinish({ messages: turnMessages, isAborted, timeLimit });
+        await params.onFinish({ messages: turnMessages, isAborted, timeLimit });
       } catch (error) {
         logger.error('chat turn completion failed', {
           reason: error instanceof Error ? error.message : String(error),

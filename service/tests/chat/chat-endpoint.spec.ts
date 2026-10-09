@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it } from '@jest/globals';
 import request from 'supertest';
 import { tool } from 'ai';
 import { z } from 'zod';
+import { resetConfigurationForTests } from '../../src/config';
 import { setChatModelForTests } from '../../src/chat/orchestrator';
 import { resetServicesForTests } from '../../src/services/registry';
 import { createToolSourceRegistry } from '../../src/tool-sources/registry';
@@ -21,6 +22,7 @@ import {
   toolCallTurn,
   type Chunk,
 } from '../helpers/mock-model';
+import { freshConfig } from '../helpers/env';
 import { StubToolSource } from '../helpers/stub-tool-source';
 
 afterEach(() => {
@@ -144,6 +146,29 @@ describe('POST /service/ai-chat/:sessionId/message/stream', () => {
     expect(Date.now() - startedAt).toBeLessThan(2000);
   });
 
+  it('CHAT_DIGEST_BEFORE_CLOSE: the response waits for the digest (capped), the detached path is not used', async () => {
+    const order: string[] = [];
+    const chat = makeChatApp({
+      registry: stubRegistry(),
+      turns: [textTurn('hi')],
+      runTurnDigest: () => {
+        order.push('detached');
+      },
+      runTurnDigestBeforeClose: async (params, capMs) => {
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        order.push(`before-close:${params.sessionId.length > 0}:${capMs}`);
+      },
+    });
+    // After makeChatApp: building the app resets the cached configuration.
+    freshConfig({ CHAT_DIGEST_BEFORE_CLOSE: 'true' });
+    const id = await newSession(chat);
+    const res = await send(chat, id, { message: userMessage('u-1', 'hi') });
+    expect(res.status).toBe(200);
+    // The digest finished BEFORE the response ended (no settle() needed).
+    expect(order).toEqual(['before-close:true:3000']);
+    resetConfigurationForTests();
+  });
+
   it('reports a provider error mid-stream as one error chunk plus [DONE]', async () => {
     const failing: Chunk[] = [
       { type: 'stream-start', warnings: [] },
@@ -203,7 +228,10 @@ describe('POST /service/ai-chat/:sessionId/message/stream', () => {
   });
 
   it('answers a generic 500 without internals when the turn cannot be set up', async () => {
-    const chat = makeChatApp({ registry: stubRegistry(), turns: [textTurn('x')] });
+    const chat = makeChatApp({
+      registry: stubRegistry(),
+      turns: [textTurn('x')],
+    });
     setChatModelForTests(() => {
       throw new Error('secret detail: projects/x/locations/y');
     });

@@ -6,7 +6,8 @@
 
 import type { NextFunction, RequestHandler, Response } from 'express';
 import { pipeUIMessageStreamToResponse } from 'ai';
-import { runTurnDigest } from '../agents/turn-digest';
+import { runTurnDigest, runTurnDigestBeforeClose } from '../agents/turn-digest';
+import { DIGEST_BEFORE_CLOSE_CAP_MS } from '../config/sections/chat';
 import { getLoadedSession } from '../middleware/load-session.middleware';
 import { getServices } from '../services/registry';
 import { registry } from '../tool-sources';
@@ -47,12 +48,14 @@ const messageOf = (error: unknown, fallback: string): string =>
 export interface ChatControllerDeps {
   /** Seam for tests; the default starts the real (detached) digest. */
   runTurnDigest: typeof runTurnDigest;
+  /** Seam for tests; used instead of `runTurnDigest` when `CHAT_DIGEST_BEFORE_CLOSE` is on. */
+  runTurnDigestBeforeClose?: typeof runTurnDigestBeforeClose;
 }
 
 export const createSendAiChatMessage =
   (
     toolRegistry: ToolSourceRegistry,
-    deps: ChatControllerDeps = { runTurnDigest }
+    deps: ChatControllerDeps = { runTurnDigest, runTurnDigestBeforeClose }
   ): RequestHandler =>
   async (req, res, next) => {
     const { sessionId } = req.params;
@@ -100,7 +103,7 @@ export const createSendAiChatMessage =
         budget,
         allTools: built.allTools,
         sessionId,
-        onFinish: ({ messages }) => {
+        onFinish: ({ messages, timeLimit }) => {
           // Persist what the turn produced; ids that are already stored are skipped.
           // Known and intended (TA-20): when the incoming message is an ASSISTANT message
           // (the browser auto-sent after a client-side tool result) the SDK continues that
@@ -114,12 +117,22 @@ export const createSendAiChatMessage =
           // Name, describe and iconify the session and work out what the user may ask next:
           // a second model call that is started here and never awaited, so it delays neither
           // the answer nor the composer.
-          deps.runTurnDigest({
+          const digestParams = {
             sessionId,
             userId: user.userId,
             locale: ctx.locale,
             messages,
-          });
+          };
+          // Fallback (R-G1): a runtime that freezes CPU once the response closed never
+          // finishes a detached digest, so wait for it here, at most 3 s. Not when the time
+          // budget ran out: there is no time left to wait.
+          const before =
+            deps.runTurnDigestBeforeClose ?? runTurnDigestBeforeClose;
+          if (ctx.config.chat.digestBeforeClose && !timeLimit) {
+            return before(digestParams, DIGEST_BEFORE_CLOSE_CAP_MS);
+          }
+          deps.runTurnDigest(digestParams);
+          return undefined;
         },
       });
 

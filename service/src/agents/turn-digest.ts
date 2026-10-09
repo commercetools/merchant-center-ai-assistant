@@ -20,8 +20,15 @@ export type RunTurnDigestParams = {
 
 /** Seams for tests. */
 export type TurnDigestDeps = {
-  generate: (p: { messages: unknown[]; locale?: string }) => Promise<SessionDigest | null>;
-  apply: (sessionId: string, userId: string, digest: SessionDigest) => Promise<unknown>;
+  generate: (p: {
+    messages: unknown[];
+    locale?: string;
+  }) => Promise<SessionDigest | null>;
+  apply: (
+    sessionId: string,
+    userId: string,
+    digest: SessionDigest
+  ) => Promise<unknown>;
 };
 
 const defaultDeps: TurnDigestDeps = {
@@ -60,15 +67,28 @@ export const producedAnswer = (messages: unknown[]): boolean =>
  * leaves the session as it was and the next turn tries again.
  */
 export const runTurnDigest = (
-  { sessionId, userId, locale, messages }: RunTurnDigestParams,
+  params: RunTurnDigestParams,
   deps: TurnDigestDeps = defaultDeps
 ): void => {
+  void startTurnDigest(params, deps);
+};
+
+/**
+ * Starts the digest and returns its promise (`undefined` when the turn produced no answer).
+ * The promise never rejects: every failure is logged inside.
+ */
+const startTurnDigest = (
+  { sessionId, userId, locale, messages }: RunTurnDigestParams,
+  deps: TurnDigestDeps
+): Promise<void> | undefined => {
   if (!producedAnswer(messages)) {
-    logger.info(`Skipping digest for session ${sessionId}: the turn produced no answer`);
-    return;
+    logger.info(
+      `Skipping digest for session ${sessionId}: the turn produced no answer`
+    );
+    return undefined;
   }
 
-  void (async () => {
+  return (async () => {
     try {
       const digest = await deps.generate({ messages, locale });
       if (!digest) {
@@ -83,4 +103,34 @@ export const runTurnDigest = (
       logger.error(`Turn digest failed for session ${sessionId}`, error);
     }
   })();
+};
+
+/**
+ * Fallback for a runtime that freezes CPU after the response closed (R-G1, TA-15): the same
+ * digest, but the returned promise resolves when it is done OR after `capMs`, whichever
+ * comes first, so the stream close waits at most `capMs`. The digest is NOT cancelled at the
+ * cap: it keeps running and applies its result if the process is still alive. Never rejects.
+ */
+export const runTurnDigestBeforeClose = async (
+  params: RunTurnDigestParams,
+  capMs: number,
+  deps: TurnDigestDeps = defaultDeps
+): Promise<void> => {
+  const work = startTurnDigest(params, deps);
+  if (!work) return;
+  let timer: NodeJS.Timeout | undefined;
+  const cap = new Promise<void>((resolve) => {
+    timer = setTimeout(() => {
+      logger.warn(
+        `Digest of session ${params.sessionId} still running after ${capMs} ms; closing the stream without it`
+      );
+      resolve();
+    }, capMs);
+    timer.unref();
+  });
+  try {
+    await Promise.race([work, cap]);
+  } finally {
+    clearTimeout(timer);
+  }
 };
