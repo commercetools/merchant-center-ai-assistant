@@ -24,6 +24,7 @@ export function loadPatterns(patternFile = join(HERE, 'leak-patterns.json'), pol
   return {
     block: [...(j.block || []), ...(j.blockPrivate || []), ...names],
     review: j.review || [],
+    allow: (j.allow || []).map((a) => ({ path: new RegExp(a.path), pattern: new RegExp(a.pattern, 'i') })),
   };
 }
 
@@ -57,7 +58,7 @@ export function walk(root) {
   return files.sort();
 }
 
-export function scanTree(root, { block, review }) {
+export function scanTree(root, { block, review, allow = [] }) {
   const result = { block: [], review: [], files: 0, skippedBinary: 0 };
   for (const file of walk(root)) {
     const buf = readFileSync(file);
@@ -68,7 +69,9 @@ export function scanTree(root, { block, review }) {
     result.files++;
     const path = relative(root, file);
     const text = buf.toString('utf8');
-    for (const h of scanText(text, block)) result.block.push({ path, ...h });
+    const posix = path.split('\\').join('/');
+    const allowed = (h) => allow.some((a) => a.path.test(posix) && a.pattern.test(h.match));
+    for (const h of scanText(text, block)) if (!allowed(h)) result.block.push({ path, ...h });
     for (const h of scanText(text, review)) result.review.push({ path, ...h });
   }
   return result;

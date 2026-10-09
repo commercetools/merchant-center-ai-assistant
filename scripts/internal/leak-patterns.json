@@ -6,9 +6,19 @@
     "CSR_IMPERSONATE_KE[Y]", "x-mc-team-i[d]",
     "\\.claud[e]/", "CLAUDE\\.m[d]", "labs-gat[e]\\.sh", "internal-path[s]\\.json", "scripts/interna[l]/",
     "questions-inbo[x]", "evidenc[e]/",
-    "\\bowne[r]\\b",
+    "\\bowne[r](?:'s|\u2019s)?\\s+(?:decisions?|approvals?|questions?|answers?|steps?|choices?|reviews?|sign-?off|override|input)\\b",
+    "\\b(?:ask|asks|asked|tell|ping|notify|inform|confirm with|approved by|decided by|per)\\s+(?:the\\s+)?owne[r]\\b",
+    "\\bthe\\s+owne[r]\\s+(?:does|do|should|must|will|can|provides?|decides?|lists?|may|needs?|approves?|wants?|answers?|reviews?|tests?)\\b",
+    "\\(owne[r]\\)",
     "@commercetools\\.co[m]", "behna[m]"
   ],
   "blockPrivate": [],
-  "review": [ "\\btenant", "multitenan[t]", "firestor[e]", "cloud ru[n]", "\\bgec[x]\\b", "\\bPO[C]\\b", "pre-?sale[s]", "\\bdem[o]\\b" ]
+  "review": [ "\\btenant", "multitenan[t]", "firestor[e]", "cloud ru[n]", "\\bgec[x]\\b", "\\bPO[C]\\b", "pre-?sale[s]", "\\bdem[o]\\b" ],
+  "allow": [
+    { "path": "^\\.gitignore$", "pattern": "\\.claud[e]/|evidenc[e]/" },
+    { "path": "^scripts/(lib/files\\.mjs|check-repo-rules\\.mjs|docs/[\\w.-]+|tests/check-repo-rules\\.test\\.mjs)$", "pattern": "internal-path[s]\\.json|scripts/interna[l]/|labs-gat[e]\\.sh|\\.claud[e]/|CLAUDE\\.m[d]|/User[s]/" },
+    { "path": "^scripts/check-frontend-leftovers\\.mjs$", "pattern": "ngro[k]|x-mc-team-i[d]" },
+    { "path": "^scripts/e2e/", "pattern": "evidenc[e]/|EVIDENC[E]/" },
+    { "path": "^(service/tests|scripts/tests)/", "pattern": "localhost:808[0]" }
+  ]
 }
