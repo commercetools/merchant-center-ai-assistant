@@ -24,4 +24,4 @@ Redeploy the previous tag: `node scripts/connect/connect.mjs update-code --tag <
 
 ## Gate state observed from X's notes
 
-Not CLEAR. First run: 10 failures, then 0 failures and 17 warnings ("BLOCKED on warnings", CLEAR only with `--ack`); the NEEDS-HUMAN scrub lines (61) and the leak scan (4 BLOCK on rule-text lines) remain. Re-run after the owner decisions.
+Not CLEAR for a real publication. First run (earlier): 10 failures, then 0 failures and 17 warnings, with 61 NEEDS-HUMAN scrub lines and 4 leak BLOCK lines. After the hygiene fixes (`plans/implementation/scrubfix-notes.md`) a dry run on a copy reports 0 NEEDS-HUMAN lines, 0 leak BLOCK (373 REVIEW lines remain), 0 FAIL, 0 WARN and `CLEAR`. That is a dry run only: the private-token list is empty, the REVIEW lines are unread and M12 is missing, so rerun on the real publication tree after the owner decisions.
