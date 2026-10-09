@@ -6,6 +6,7 @@
 
 import { resetConfigurationForTests } from '../../src/config';
 import { freshConfig, fullCtpEnv } from '../helpers/env';
+import { fakeKeyBase64 } from '../helpers/gcp';
 
 beforeEach(() => resetConfigurationForTests());
 
@@ -49,6 +50,7 @@ describe('production guards', () => {
     const c = freshConfig({
       NODE_ENV: 'production',
       PERSISTENCE_DRIVER: '',
+      GCP_SA_KEY_BASE64: fakeKeyBase64(),
       ...fullCtpEnv,
     });
     expect(c.persistence.driver).toBe('custom-objects');

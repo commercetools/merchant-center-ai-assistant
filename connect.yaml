@@ -39,9 +39,18 @@ deployAs:
         - key: GEMINI_MODEL_NAME
           description: Main Gemini model id
           default: 'gemini-3.8-flash'
+        - key: GEMINI_AGENT_MODEL_NAME
+          description: Gemini model id for the Algolia, Stripe, export and Contentstack agents. Uses a 2.5-era thinking budget, so keep a 2.5 model unless you also change the thinking configuration
+          default: 'gemini-2.5-flash'
         - key: GEMINI_LITE_MODEL_NAME
           description: Cheap Gemini model id used for session digests and prompt suggestions
           default: 'gemini-3.5-flash-lite'
+        - key: GEMINI_LITE_THINKING_LEVEL
+          description: Thinking level of the cheap model (minimal, low, medium or high)
+          default: 'minimal'
+        - key: GEMINI_IMAGE_MODEL_NAME
+          description: Gemini model id used for image generation (must be available in GCP_VERTEX_LOCATION)
+          default: 'gemini-2.5-flash-image'
         - key: GCP_BIGQUERY_DATASET_ID
           description: BigQuery dataset for offloaded tool results (created on first use when the service account may create datasets)
           default: 'aiassistant'

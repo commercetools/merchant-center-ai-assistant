@@ -21,6 +21,11 @@ export const FORBIDDEN_DEPENDENCIES = [
   '@commercetools/sdk-client-v2',
 ];
 export const FORBIDDEN_SOURCE = /tenant|firestore|validateProject|dotenv/i;
+// Removed Google/LLM provider surface (change F). Only the config file that names the
+// legacy variables for the boot warning and the express-mode guard may contain them.
+export const FORBIDDEN_PROVIDER_SOURCE =
+  /GEMINI_API_KEY|createGoogleGenerativeAI|createAnthropic|CLAUDE_API_KEY|OPENAI_API_KEY|ANTHROPIC_|GCP_SERVICE_ACCOUNT_|secrets\.utils|GOOGLE_APPLICATION_CREDENTIALS|from 'openai'/;
+export const PROVIDER_SOURCE_ALLOWLIST = ['src/config/sections/gcp.ts'];
 
 // Auth gate (change D): where identity and admin knowledge may live.
 export const FORBIDDEN_AUTH_EVERYWHERE =
@@ -77,6 +82,12 @@ export function check() {
         }
         if (/MC_AUTH_DISABLED|x-dev-admin/.test(line) && !BYPASS_FILES.includes(rel)) {
           problems.push(`${rel}:${i + 1}: the development bypass belongs in ${BYPASS_FILES.join(', ')} only`);
+        }
+        if (
+          FORBIDDEN_PROVIDER_SOURCE.test(line) &&
+          !PROVIDER_SOURCE_ALLOWLIST.includes(relative(root, file))
+        ) {
+          problems.push(`${relative(root, file)}:${i + 1}: removed provider identifier in source`);
         }
       });
   }

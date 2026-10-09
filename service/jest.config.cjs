@@ -18,6 +18,8 @@ module.exports = {
   displayName: 'Service',
   moduleDirectories: ['node_modules', 'src'],
   testMatch: ['**/tests/**/*.spec.ts'],
+  // Live tests run through jest.integration.config.cjs (npm run test:integration).
+  testPathIgnorePatterns: ['/node_modules/', '/tests/integration/'],
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
