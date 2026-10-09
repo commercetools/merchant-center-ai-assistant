@@ -5,6 +5,7 @@
  */
 
 import { z } from 'zod';
+import { EXPORT_MAX_BYTES, EXPORT_MAX_ROWS } from '../analytics/constants';
 
 export const EXPORT_DATA_TOOL = 'export_data';
 
@@ -61,10 +62,38 @@ interface ExportError {
 
 type ExportResult = ExportSuccess | ExportError;
 
+/** A string cell a spreadsheet would execute as a formula (OWASP CSV injection). */
+const FORMULA_START = /^[=+\-@\t\r]/;
+
+/**
+ * Neutralises formula injection: a string starting with `=`, `+`, `-`, `@`, tab or carriage
+ * return gets a leading `'`. Real numbers (typeof number, including negatives) are untouched.
+ * Data from commercetools (customer names, product titles) is attacker-influenceable.
+ */
+export function neutraliseFormula(value: string): string {
+  return FORMULA_START.test(value) ? `'${value}` : value;
+}
+
+/**
+ * Sanitises a model-supplied filename to `[A-Za-z0-9._-]` (at most 80 characters, default
+ * `export`): `../../etc/passwd` becomes `etc_passwd`.
+ */
+export function safeFilename(name: string | undefined): string {
+  return (
+    (name ?? '')
+      .normalize('NFKD')
+      .replace(/\p{M}/gu, '')
+      .replace(/[^A-Za-z0-9._-]+/g, '_')
+      .replace(/^[._]+|[._]+$/g, '')
+      .slice(0, 80) || 'export'
+  );
+}
+
 /**
  * Escapes a CSV value according to RFC 4180
  * - Values containing commas, quotes, or newlines are wrapped in quotes
  * - Double quotes within values are escaped by doubling them
+ * - String values that start like a formula are prefixed with `'` first
  */
 function escapeCSVValue(value: unknown): string {
   if (value === null || value === undefined) {
@@ -75,6 +104,8 @@ function escapeCSVValue(value: unknown): string {
 
   if (typeof value === 'object') {
     stringValue = JSON.stringify(value);
+  } else if (typeof value === 'string') {
+    stringValue = neutraliseFormula(value);
   } else {
     stringValue = String(value);
   }
@@ -206,6 +237,14 @@ EXAMPLE:
         };
       }
 
+      if (data.length > EXPORT_MAX_ROWS) {
+        return {
+          success: false,
+          error: `Too many rows to export: ${data.length} (maximum ${EXPORT_MAX_ROWS})`,
+          hint: 'Filter or aggregate the data first (for example with query_aggregated_data), then export fewer rows.',
+        };
+      }
+
       // Generate the file content based on format
       let content: string;
       switch (format) {
@@ -222,9 +261,16 @@ EXAMPLE:
 
       // Encode content as base64
       const base64Content = Buffer.from(content, 'utf-8').toString('base64');
+      if (base64Content.length > EXPORT_MAX_BYTES) {
+        return {
+          success: false,
+          error: `The export is too large: ${base64Content.length} bytes encoded (maximum ${EXPORT_MAX_BYTES})`,
+          hint: 'Export fewer rows or columns: filter or aggregate the data first.',
+        };
+      }
 
       // Generate filename with extension
-      const baseFilename = filename || 'export';
+      const baseFilename = safeFilename(filename);
       const extension = getFileExtension(format);
       const fullFilename = `${baseFilename}.${extension}`;
 

@@ -66,7 +66,7 @@ export const loadHistory = async (params: {
   const uploader = getImageUploader();
   const asUi = withoutSystem as unknown as UIMessage[];
   const uiMessages = uploader?.toModelMessages
-    ? await uploader.toModelMessages(asUi)
+    ? await uploader.toModelMessages(asUi, { sessionId })
     : asUi;
 
   const modelMessages = await convertToModelMessages(uiMessages, {

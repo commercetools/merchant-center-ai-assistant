@@ -5,6 +5,7 @@
  */
 
 import { Router } from 'express';
+import { createFilesRouter } from '../storage/files-route';
 import { verifyMcSession } from '../middleware/mc-session.middleware';
 import { aiChatRouter } from './ai-chat.route';
 import { backofficeRouter } from './backoffice.route';
@@ -27,4 +28,6 @@ serviceRouter.use('/system-prompt', verifyMcSession, systemPromptRouter);
 serviceRouter.use('/tool-call-logs', verifyMcSession, toolCallLogsRouter);
 serviceRouter.use('/feedback', feedbackRouter);
 serviceRouter.use('/backoffice', backofficeRouter);
+// L: private generated images, streamed to the session owner or an administrator.
+serviceRouter.use('/files', verifyMcSession, createFilesRouter());
 // I..M mount their routers here.

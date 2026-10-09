@@ -5,6 +5,8 @@
  */
 
 import { nimbusSource } from '../nimbus';
+
+import { bigquerySource } from '../analytics/tools/bigquery.source';
 import { entityLinkSource } from './entity-link.source';
 import { exportSource } from './export.source';
 import { imageGenerationSource } from './image-generation.source';
@@ -47,6 +49,9 @@ registerToolSource(
 
 // K: the embedded Nimbus design-system documentation tools.
 registerToolSource(nimbusSource);
+
+// L: SQL analytics over offloaded tool results (tools are created per request).
+registerToolSource(bigquerySource);
 
 /*
  * Composition. A new tool source is one file plus one line here.

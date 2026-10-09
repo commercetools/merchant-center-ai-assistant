@@ -4,6 +4,7 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
+import type { GcpAnalyticsReport } from '../analytics/self-check';
 import type { ReadinessReport } from '../gcp/readiness';
 import { checkAudience } from './checks/audience';
 import {
@@ -29,14 +30,13 @@ export interface PostDeployDeps {
   runProbe: (env: LifecycleEnv) => Promise<ProbeResult>;
   /** Change F's deep readiness (token, Vertex, BigQuery dry run, bucket). Undefined = not available. */
   gcpReadiness: () => Promise<ReadinessReport | undefined>;
+  /**
+   * Change L's `checkGcpAnalytics()`: creates the BigQuery dataset and the image bucket when
+   * they are missing and the service account may, proves probe writes, checks image
+   * visibility. Undefined = not available (configuration not readable here).
+   */
+  gcpAnalytics: () => Promise<GcpAnalyticsReport | undefined>;
 }
-
-const ANALYTICS_HINTS: Record<string, string> = {
-  bigquery:
-    'bigquery dry run failed - grant roles/bigquery.jobUser and roles/bigquery.dataEditor to the service account',
-  storage:
-    'bucket check failed - grant roles/storage.admin (so the service can create the image bucket) or pre-create the bucket and grant roles/storage.objectAdmin on it',
-};
 
 /**
  * The checks run in a fixed order; a failed check never stops the later independent ones, so one
@@ -101,31 +101,39 @@ export async function run(deps: PostDeployDeps): Promise<number> {
     else log('post-deploy: custom objects ok');
   }
 
-  // 4. Google readiness and analytics self-check (warnings only)
-  // TODO(L): replace the bigquery/storage mapping with change L's checkGcpAnalytics(), which also
-  // creates the dataset and bucket when the service account may.
+  // 4. Google readiness (token, Vertex) and the analytics self-check (warnings only)
   if (sa.ok) {
     try {
       const report = await deps.gcpReadiness();
       if (!report) {
         log('post-deploy: warning: gcp readiness skipped (the full service configuration is not readable here)');
       } else {
+        // bigquery and storage are covered, with creation, by the analytics self-check below.
         for (const check of report.checks) {
-          if (check.name === 'bigquery' || check.name === 'storage') {
-            if (!check.ok || check.detail === 'missing') {
-              const hint =
-                check.detail === 'missing'
-                  ? 'bucket missing - create it or grant roles/storage.admin so the service can create it'
-                  : ANALYTICS_HINTS[check.name];
-              log(`post-deploy: gcp analytics: ${hint}`);
-            }
-          } else if (!check.ok) {
+          if (check.name === 'bigquery' || check.name === 'storage') continue;
+          if (!check.ok) {
             log(`post-deploy: warning: gcp readiness ${check.name}: ${check.detail}`);
           }
         }
       }
     } catch {
       log('post-deploy: warning: gcp readiness could not run');
+    }
+
+    try {
+      const analytics = await deps.gcpAnalytics();
+      if (!analytics) {
+        log('post-deploy: warning: gcp analytics skipped (the full service configuration is not readable here)');
+      } else {
+        // Reasons come from a closed list (names the IAM role or the manual command).
+        for (const field of ['bigquery', 'storage', 'visibility'] as const) {
+          if (analytics[field] !== 'ok') {
+            log(`post-deploy: gcp analytics: ${field}: ${analytics[field]}`);
+          }
+        }
+      }
+    } catch {
+      log('post-deploy: warning: gcp analytics could not run');
     }
   }
 
@@ -158,6 +166,17 @@ async function defaultGcpReadiness(): Promise<ReadinessReport | undefined> {
   }
 }
 
+async function defaultGcpAnalytics(): Promise<GcpAnalyticsReport | undefined> {
+  try {
+    const { readConfiguration } = await import('../config');
+    readConfiguration();
+    const { checkGcpAnalytics } = await import('../analytics/self-check');
+    return await checkGcpAnalytics();
+  } catch {
+    return undefined;
+  }
+}
+
 export function defaultDeps(): PostDeployDeps {
   return {
     readEnv: () => readLifecycleEnv(),
@@ -173,6 +192,7 @@ export function defaultDeps(): PostDeployDeps {
       }),
     runProbe: (env) => runCustomObjectProbe(createLifecycleApiRoot(env)),
     gcpReadiness: defaultGcpReadiness,
+    gcpAnalytics: defaultGcpAnalytics,
   };
 }
 

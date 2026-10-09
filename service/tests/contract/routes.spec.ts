@@ -42,7 +42,7 @@ const TABLE: Row[] = [
   { n: 23, method: 'GET', path: '/service/backoffice/is-admin', pendingUntil: 'N' },
   { n: 24, method: 'POST', path: '/service/backoffice/threads', pendingUntil: 'N' },
   { n: 25, method: 'GET', path: '/service/backoffice/threads/:sessionId', pendingUntil: 'N' },
-  { n: 28, method: 'GET', path: '/service/files/:sessionId/:fileName', pendingUntil: 'L' },
+  { n: 28, method: 'GET', path: '/service/files/:sessionId/:fileName' },
 ];
 
 /** Rows 26 and 27 (changes I and J) are matched by prefix. */
@@ -144,6 +144,7 @@ describe('authentication on every G route', () => {
     ['GET', '/service/tool-call-logs'],
     ['PUT', '/service/tool-call-logs'],
     ['GET', '/service/session/x/tools'],
+    ['GET', '/service/files/x/y.png'],
   ])('%s %s without a session answers 401', async (method, path) => {
     const app = createApp(freshConfig({ MC_AUDIENCE: 'https://mc.example.test' }));
     const res = await request(app)[method.toLowerCase() as 'get'](path);

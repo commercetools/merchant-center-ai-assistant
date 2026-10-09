@@ -101,5 +101,8 @@ export interface ImageUploader {
    * Converts stored file parts that carry service-relative `/files/...` URLs into base64 data
    * so a relative URL never reaches the model. Optional: without it messages pass unchanged.
    */
-  toModelMessages?(messages: UIMessage[]): Promise<UIMessage[]>;
+  toModelMessages?(
+    messages: UIMessage[],
+    context?: { sessionId: string }
+  ): Promise<UIMessage[]>;
 }
