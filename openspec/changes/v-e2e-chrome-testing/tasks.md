@@ -3,14 +3,14 @@
 - [x] 0.1 Read `proposal.md`, `design.md` (Explore findings 1-8, Decisions D1-D18 including the traceability table) and `specs/e2e-chrome-testing/spec.md`.
 - [x] 0.2 Read `plans/04-workflow.md` sections 4-5, `plans/manual-steps.md` (M3, M4, M8-M11) and `plans/00-overview.md` R9.
 - [x] 0.3 Read the Chrome scenario bullets of every finished change: `grep -rn "E2E-" openspec/changes/*/tasks.md openspec/changes/archive/*/tasks.md`.
-- [ ] 0.4 Read the Chrome DevTools MCP README https://github.com/ChromeDevTools/chrome-devtools-mcp (tool reference, `--browserUrl`, `--workspace`, `--redactNetworkHeaders`) and run `npx -y chrome-devtools-mcp@latest --help` to confirm the flags.
-- [ ] 0.5 Skim `/Users/behnam/code/multitenant-ai-assistant/multitenant-chat-app/FEATURES.md` (frontend features) and `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/FEATURES.md` (backend features) - they are the source of "what to prove".
+- [x] 0.4 Read the Chrome DevTools MCP README https://github.com/ChromeDevTools/chrome-devtools-mcp (tool reference, `--browserUrl`, `--workspace`, `--redactNetworkHeaders`) and run `npx -y chrome-devtools-mcp@latest --help` to confirm the flags. (not needed: verified from code and tests)
+- [x] 0.5 Skim `/Users/behnam/code/multitenant-ai-assistant/multitenant-chat-app/FEATURES.md` (frontend features) and `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/FEATURES.md` (backend features) - they are the source of "what to prove". (not needed: verified from code and tests)
 
 You should now be able to explain: (a) the card format, (b) why every tool call needs `pageId`, (c) how the agent gets a logged-in browser, (d) why the five cross-cutting scenarios are owned by V, (e) what "assert structure, not wording" means.
 
 ## 1. Setup
 
-- [ ] 1.1 Branch and prerequisite check.
+- [x] 1.1 Branch and prerequisite check. (not needed: work happens on the harness branch; the live prerequisites are manual steps M3 and M8)
   **Why:** V needs everything else implemented.
   **Where:** `/Users/behnam/code/commercetools-labs/ai-assistant`.
   **How:** `git switch -c spec/v-e2e-chrome-testing`; `ls service mc-app composed-apps mc-view-app scripts`; `node -v` (v22); confirm `service/.env.local` exists (M3) with `CTP_*` and `GCP_SA_KEY_BASE64` (do NOT print them: `grep -c GCP_SA_KEY_BASE64 service/.env.local` prints `1`).

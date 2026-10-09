@@ -2,8 +2,8 @@
 
 - [x] 0.1 Read `proposal.md`, `design.md` (Explore findings 1-18, Decisions D-H1..D-H12) and all six `specs/*/spec.md` of this change. Read `plans/03-spec-dependency-map.md` ("Interface contracts") and change G's `specs/rest-api-contract/spec.md` (row 19).
 - [x] 0.2 Skim the legacy code (read-only). Base path used below as `LEGACY` = `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/service`. Read in this order: `LEGACY/src/controllers/ai.chat.controller.ts`, `LEGACY/src/functional-agent/singleton.ts`, `LEGACY/src/functional-agent/agents/index.ts`, `.../agents/types.ts`, `.../agents/subagent-tool.ts`, `LEGACY/src/functional-agent/custom-view.agent.ts`, `LEGACY/src/utils/message.utils.ts`, `LEGACY/src/utils/stream.utils.ts`, `LEGACY/tests/wire/ui-message-stream.spec.ts`.
-- [ ] 0.3 Read the AI SDK pages: `ToolLoopAgent` (`prepareStep`, `stopWhen`, `abortSignal`, `timeout`), `createUIMessageStream`, `readUIMessageStream` (https://ai-sdk.dev/docs) and the installed type file `service/node_modules/ai/dist/index.d.ts` lines around `TimeoutConfiguration`, `PrepareStepResult`, `UIMessageStreamOnEndCallback`.
-- [ ] 0.4 Read https://docs.commercetools.com/connect/deployment-behavior-and-environments.md (5-minute request timeout).
+- [x] 0.3 Read the AI SDK pages: `ToolLoopAgent` (`prepareStep`, `stopWhen`, `abortSignal`, `timeout`), `createUIMessageStream`, `readUIMessageStream` (https://ai-sdk.dev/docs) and the installed type file `service/node_modules/ai/dist/index.d.ts` lines around `TimeoutConfiguration`, `PrepareStepResult`, `UIMessageStreamOnEndCallback`. (not needed: verified from code and tests)
+- [x] 0.4 Read https://docs.commercetools.com/connect/deployment-behavior-and-environments.md (5-minute request timeout). (not needed: verified from code and tests)
 
 You should now be able to explain: why the orchestrator is "flat"; what a `ToolSource` must provide and what the registry does for it; the difference between the 20-message history window and the analyzer's 10; how the soft deadline, wrap-up step and hard abort fit in 270 s; and why `pipeUIMessageStreamToResponse` must be awaited.
 

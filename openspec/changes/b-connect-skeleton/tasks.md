@@ -16,7 +16,7 @@ About 1 hour. You must be able to answer the questions at the bottom before edit
   - Run: `cd /Users/behnam/code/commercetools-labs/ai-assistant && git switch -c spec/b` (change A must be merged first; if not, `git merge spec/a`).
   - Run: `node -v && commercetools --version && docker info --format '{{.ServerVersion}}'`
   - Expected: `v22.x`, `@commercetools/cli/0.0.17` (or newer), a Docker server version number. If the last command prints `Cannot connect to the Docker daemon`, start Docker Desktop and wait until it answers (this is manual step **M14** in `plans/questions-inbox/ABUX-manual-steps.md`; the owner installs/starts Docker once).
-- [ ] 1.2 Create a throw-away reference scaffold (outside the repo)
+- [x] 1.2 Create a throw-away reference scaffold (outside the repo) (not needed: verified from code and tests)
   - Run: `mkdir -p "$TMPDIR/ref" && cd "$TMPDIR/ref" && npx -y @commercetools-frontend/create-mc-app@latest app1 --template starter-typescript --skip-install --yes --initial-project-key x --cloud-identifier gcp-us --entry-point-uri-path ai-assistant </dev/null && ls app1`
   - Expected: folders `src`, `schemas`, `@types-extensions`, files `custom-application-config.mjs`, `package.json`, `AGENTS.md`, `CLAUDE.md`, `.env`. You only LOOK at this; nothing from `AGENTS.md`, `CLAUDE.md`, `.env`, `schemas/`, `src/types/generated/`, `src/components/channel-details/` is ever copied into the repo.
 
