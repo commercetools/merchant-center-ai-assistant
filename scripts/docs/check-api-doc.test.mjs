@@ -68,6 +68,15 @@ test('routes come from the mounts, factories included', () => {
   assert.equal(routesFromDoc(DOC).size, 5);
 });
 
+test('the base path may come from the shared SERVICE_BASE_PATH constant', () => {
+  const root = tree({
+    ...FILES,
+    'service/src/app.ts': 'app.use(SERVICE_BASE_PATH, serviceRouter);\n',
+    'service/src/constants/service-path.ts': "export const SERVICE_BASE_PATH = '/service';\n",
+  });
+  assert.ok(routesFromCode(root).has('GET /service/status'));
+});
+
 test('a documented tree passes', () => {
   assert.equal(run(['--root', tree()], () => {}), 0);
 });

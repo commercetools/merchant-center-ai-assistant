@@ -6,7 +6,7 @@
 // Compares the REST routes of the service with the route table of docs/api.md.
 //
 // Routes are read from the source with regular expressions:
-//   service/src/app.ts                  app.use('/service', serviceRouter)
+//   service/src/app.ts                  app.use('/service' | SERVICE_BASE_PATH, serviceRouter)
 //   service/src/routes/service.route.ts serviceRouter.use('/prefix', ...middleware, someRouter)
 //   the file that defines someRouter    someRouter.get('/path', ...) and router.get('/path', ...)
 // The docs table is every Markdown table whose header has the columns Method and Path.
@@ -54,7 +54,14 @@ export function routesFromCode(root) {
   const mount = readFileSync(join(root, mountFile), 'utf8');
   const out = new Set();
 
-  const base = /app\.use\(\s*'([^']+)'\s*,\s*serviceRouter\s*\)/.exec(app)?.[1];
+  // The base is a literal or the shared SERVICE_BASE_PATH constant.
+  let base = /app\.use\(\s*'([^']+)'\s*,\s*serviceRouter\s*\)/.exec(app)?.[1];
+  if (base === undefined && /app\.use\(\s*SERVICE_BASE_PATH\s*,\s*serviceRouter\s*\)/.test(app)) {
+    const constFile = join(root, 'service/src/constants/service-path.ts');
+    base = existsSync(constFile)
+      ? /SERVICE_BASE_PATH\s*=\s*'([^']+)'/.exec(readFileSync(constFile, 'utf8'))?.[1]
+      : undefined;
+  }
   if (base === undefined) throw new Error(`${appFile}: no app.use('<base>', serviceRouter) found`);
   for (const r of routeCalls(app).filter((c) => c.receiver === 'app')) out.add(`${r.method} ${join2(r.path)}`);
 
