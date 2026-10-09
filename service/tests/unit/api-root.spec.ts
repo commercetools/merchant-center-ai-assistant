@@ -56,18 +56,15 @@ describe('getApiRoot', () => {
     expect(tokenRequests).toBe(1);
   });
 
-  it('retries a 503', async () => {
+  it('does not retry on its own (the gateway owns retries)', async () => {
     server.use(
       http.get('https://api.example.test/p', () => {
         apiRequests += 1;
-        return apiRequests === 1
-          ? new HttpResponse(null, { status: 503 })
-          : HttpResponse.json({ key: 'p' });
+        return HttpResponse.json({ statusCode: 503, message: 'x' }, { status: 503 });
       })
     );
-    const res = await getApiRoot().get().execute();
-    expect(res.statusCode).toBe(200);
-    expect(apiRequests).toBe(2);
+    await expect(getApiRoot().get().execute()).rejects.toBeDefined();
+    expect(apiRequests).toBe(1);
   });
 
   it('refuses to build without credentials', () => {

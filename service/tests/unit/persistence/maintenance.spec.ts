@@ -6,8 +6,11 @@
 
 import { randomBytes } from 'node:crypto';
 import { decryptJson, encryptJson } from '../../../src/crypto/envelope';
+import {
+  identityTokensAad,
+  identityVerifierAad,
+} from '../../../src/crypto/aad';
 import { KeyRing } from '../../../src/crypto/keys';
-import { stateKey } from '../../../src/persistence';
 import {
   IDENTITY_CLIENT_AAD,
   purgeContainers,
@@ -54,7 +57,7 @@ describe('reencryptAll', () => {
     await p.tokens.putTokens({
       userId: 'u1',
       serverKey: 'sk',
-      encryptedTokens: encryptJson('identity-tokens', { access_token: 'AT' }, 'u1', old),
+      encryptedTokens: encryptJson('identity-tokens', { access_token: 'AT' }, identityTokensAad('u1'), old),
       hasRefreshToken: true,
       issuedAt: 1,
       updatedAt: 1,
@@ -62,7 +65,7 @@ describe('reencryptAll', () => {
     await p.tokens.createAuthState({
       state: 'st',
       userId: 'u1',
-      encryptedVerifier: encryptJson('identity-verifier', 'ver', stateKey('st'), old),
+      encryptedVerifier: encryptJson('identity-verifier', 'ver', identityVerifierAad('st'), old),
       redirectUri: 'https://x.example.test',
       createdAt: Date.now(),
       expiresAt: Date.now() + 100000,
@@ -99,13 +102,13 @@ describe('reencryptAll', () => {
     expect(done).toEqual({ tokens: 1, authStates: 1, settings: 1, failed: 0 });
     const onlyNew: KeyRing = { primary: k2, previous: [] };
     const rec = await p.tokens.getTokens('u1');
-    expect(decryptJson('identity-tokens', rec?.encryptedTokens, 'u1', onlyNew)).toEqual({
+    expect(decryptJson('identity-tokens', rec?.encryptedTokens, identityTokensAad('u1'), onlyNew)).toEqual({
       access_token: 'AT',
     });
     const claimed = await p.tokens.claimAuthState('st');
     expect(claimed.outcome).toBe('claimed');
     if (claimed.outcome === 'claimed') {
-      expect(decryptJson('identity-verifier', claimed.record.encryptedVerifier, stateKey('st'), onlyNew)).toBe('ver');
+      expect(decryptJson('identity-verifier', claimed.record.encryptedVerifier, identityVerifierAad('st'), onlyNew)).toBe('ver');
     }
     const settings = await createPersistence(freshConfig({ SETTINGS_CACHE_TTL_MS: '0' }), { gateway: gw }).settings.get();
     expect(

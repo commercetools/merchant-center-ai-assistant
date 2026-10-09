@@ -13,7 +13,7 @@ export function splitScopes(scope: string): string[] {
 }
 
 /**
- * Client-credentials client with retry on 5xx and network errors. Deliberately
+ * Client-credentials client WITHOUT its own retry (see below). Deliberately
  * no concurrent-modification middleware (callers re-read and re-merge on 409)
  * and no logger middleware (its default writes response bodies to stdout).
  */
@@ -34,14 +34,9 @@ export function buildClient(cfg: CtpConfig): Client {
     })
     .withHttpMiddleware({
       host: apiUrl,
-      enableRetry: true,
-      retryConfig: {
-        maxRetries: 3,
-        retryDelay: 200,
-        backoff: true,
-        maxDelay: 5000,
-        retryCodes: [500, 502, 503, 504],
-      },
+      // Retries belong to the persistence gateway (429/502/503/504 with Retry-After and a
+      // timeout). A second layer here would multiply attempts and would retry a 500 on a write.
+      enableRetry: false,
     })
     .build();
 }

@@ -4,6 +4,7 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
+import { IDENTITY_CLIENT_AAD, identityTokensAad } from '../crypto/aad';
 import { decryptJson, encryptJson, Envelope } from '../crypto/envelope';
 import { kidOf, KeyRing } from '../crypto/keys';
 import { updateWithRetry, SKIP } from './gateway/cas';
@@ -16,7 +17,7 @@ import { isRecord } from './types/session';
 import { settingsFromValue } from './types/settings';
 
 /** aad of the project's OAuth client envelope in the settings object (see change I). */
-export const IDENTITY_CLIENT_AAD = 'default';
+export { IDENTITY_CLIENT_AAD };
 
 export const TEST_PREFIX = 'ai-assistant-it-';
 
@@ -145,10 +146,10 @@ export async function reencryptAll(
       (v) => (v as unknown as IdentityTokenRecord).encryptedTokens,
       (v) => {
         const rec = v as unknown as IdentityTokenRecord;
-        const plain = decryptJson('identity-tokens', rec.encryptedTokens, rec.userId, keys);
+        const plain = decryptJson('identity-tokens', rec.encryptedTokens, identityTokensAad(rec.userId), keys);
         return {
           ...v,
-          encryptedTokens: encryptJson('identity-tokens', plain, rec.userId, keys),
+          encryptedTokens: encryptJson('identity-tokens', plain, identityTokensAad(rec.userId), keys),
         };
       },
       'tokens'

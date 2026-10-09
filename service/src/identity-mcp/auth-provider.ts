@@ -15,8 +15,11 @@ import type {
 import type { AppConfig } from '../config';
 import { getContext } from '../context/request-context';
 import { CryptoError, decryptJson, encryptJson } from '../crypto/envelope';
-import { stateKey } from '../persistence';
-import { IDENTITY_CLIENT_AAD } from '../persistence/maintenance';
+import {
+  IDENTITY_CLIENT_AAD,
+  identityTokensAad,
+  identityVerifierAad,
+} from '../crypto/aad';
 import { logger } from '../utils/logger.utils';
 import { AUTH_STATE_TTL_MS } from './constants';
 import { callbackUrl, identityScope } from './keys';
@@ -304,7 +307,7 @@ export class IdentityMcpAuthProvider implements OAuthClientProvider {
       secrets = decryptJson<IdentityMcpTokenSecrets>(
         'identity-tokens',
         record.encryptedTokens,
-        this.userId
+        identityTokensAad(this.userId)
       );
     } catch (error) {
       if (!(error instanceof CryptoError)) throw error;
@@ -344,7 +347,7 @@ export class IdentityMcpAuthProvider implements OAuthClientProvider {
     const outcome = await this.stores.tokens.put({
       userId: this.userId,
       serverKey: this.binding.serverKey,
-      encryptedTokens: encryptJson('identity-tokens', secrets, this.userId),
+      encryptedTokens: encryptJson('identity-tokens', secrets, identityTokensAad(this.userId)),
       accessTokenExpiresAt: secrets.expires_in
         ? now + secrets.expires_in * 1000
         : undefined,
@@ -461,7 +464,7 @@ export class IdentityMcpAuthProvider implements OAuthClientProvider {
       const { codeVerifier } = decryptJson<{ codeVerifier: string }>(
         'identity-verifier',
         this.loadedState.encryptedVerifier,
-        stateKey(this.loadedState.state)
+        identityVerifierAad(this.loadedState.state)
       );
       return codeVerifier;
     }
@@ -595,7 +598,7 @@ export class IdentityMcpAuthProvider implements OAuthClientProvider {
       encryptedVerifier: encryptJson(
         'identity-verifier',
         { codeVerifier },
-        stateKey(state)
+        identityVerifierAad(state)
       ),
       redirectUri: this.redirectUrl,
       authorizationServerUrl: auth2Url(this.region),

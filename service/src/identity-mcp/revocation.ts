@@ -6,7 +6,7 @@
 
 import type { AppConfig } from '../config';
 import { decryptJson } from '../crypto/envelope';
-import { IDENTITY_CLIENT_AAD } from '../persistence/maintenance';
+import { IDENTITY_CLIENT_AAD, identityTokensAad } from '../crypto/aad';
 import { logger } from '../utils/logger.utils';
 import { SHORT_FETCH_TIMEOUT_MS } from './constants';
 import { auth2Url } from './region';
@@ -93,7 +93,7 @@ export async function revokeStoredTokens(
     const tokens = decryptJson<IdentityMcpTokenSecrets>(
       'identity-tokens',
       record.encryptedTokens,
-      record.userId
+      identityTokensAad(record.userId)
     );
     const client = decryptJson<IdentityMcpClientSecrets>(
       'identity-client',
