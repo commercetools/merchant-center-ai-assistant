@@ -12,7 +12,12 @@ import React, {
   useContext,
   useMemo,
 } from 'react';
+import AdminRequiredNotice from '../components/admin-required-notice';
+import IdentityConnectGate from '../components/managed-mcp/identity-connect-gate';
+import ManagedMcpPage from '../components/managed-mcp';
 import ReauthenticateDialog from '../components/reauthenticate-dialog';
+import { useIsAssistantAdmin } from '../hooks/use-assistant-admin';
+import { useIdentityStatus } from '../hooks/use-managed-mcp/use-identity-status';
 import { useAuth } from './auth';
 
 /**
@@ -21,10 +26,10 @@ import { useAuth } from './auth';
  * 0. Bootstrap failed (most often a lapsed Merchant Center session, seen as a gateway
  *    401 once a tab has been open long enough) -> re-authentication dialog over an
  *    otherwise empty page.
- * 1. Bootstrap succeeded -> children.
- *
- * Change q-mc-app-admin-surfaces extends this file with the identity gates (no managed MCP
- * binding -> binding page; user not connected -> connect gate).
+ * 1. No identity-mode Managed MCP binding for the project -> the binding page for an
+ *    administrator, the "Administrator access required" notice for everyone else.
+ * 2. Bound, but this user has not connected their own account -> the connect gate.
+ * 3. Otherwise -> children.
  */
 
 interface ConnectContextValue {
@@ -39,11 +44,23 @@ const ConnectContext = createContext<ConnectContextValue | undefined>(
 export const ConnectProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { loading, error, errorStatus, isAuthenticated, refresh } = useAuth();
+  const {
+    loading,
+    error,
+    errorStatus,
+    isAuthenticated,
+    identityMcpConfigured,
+    refresh,
+  } = useAuth();
+  const isAdmin = useIsAssistantAdmin();
+  // Called unconditionally (React rules); it only does work once a server is bound.
+  const identity = useIdentityStatus(isAuthenticated && identityMcpConfigured);
+  const recheckIdentity = identity.recheck;
 
   const recheck = useCallback(async () => {
     await refresh();
-  }, [refresh]);
+    await recheckIdentity();
+  }, [refresh, recheckIdentity]);
 
   const value: ConnectContextValue = useMemo(() => ({ recheck }), [recheck]);
 
@@ -73,6 +90,26 @@ export const ConnectProvider: React.FC<{ children: ReactNode }> = ({
         />
       </>
     );
+  }
+
+  if (!identityMcpConfigured) {
+    return isAdmin ? (
+      <ManagedMcpPage onConnected={recheck} />
+    ) : (
+      <AdminRequiredNotice context="managed-mcp" />
+    );
+  }
+
+  if (identity.connected === null) {
+    return (
+      <Stack direction="column" gap="800" alignItems="center">
+        <LoadingSpinner size="lg" />
+      </Stack>
+    );
+  }
+
+  if (!identity.connected) {
+    return <IdentityConnectGate onConnected={recheck} />;
   }
 
   return (

@@ -10,6 +10,8 @@ import {
   DashboardCustomize,
   Forum,
   HelpOutline,
+  Hub,
+  Tune,
 } from '@commercetools/nimbus-icons';
 import { Box, Popover, Toolbar } from '@commercetools/nimbus';
 import {
@@ -17,6 +19,7 @@ import {
   useTabbedHeaderContext,
 } from '../../../contexts';
 import { useSession } from '../../../contexts/session';
+import { useIsAssistantAdmin } from '../../../hooks/use-assistant-admin';
 import { useMotion } from '../../../motion';
 import { UserAvatar } from '../../new-chat/user-avatar';
 import { YourUserId } from '../../your-user-id';
@@ -47,6 +50,7 @@ export const AppRail: React.FC<Props> = ({
   onNewChat,
 }) => {
   const motion = useMotion();
+  const isAssistantAdmin = useIsAssistantAdmin();
   const { allSessions } = useSession();
   const { pages } = useComposedPagesContext();
   const { highlightedTab, clearHighlight } = useTabbedHeaderContext();
@@ -117,7 +121,22 @@ export const AppRail: React.FC<Props> = ({
         )}
       </RailItem>
 
-      {/* Q: Connections (admin) and Settings items go here */}
+      {/* Connections is for administrators; Settings is for everyone (its admin sections hide). */}
+      {isAssistantAdmin && (
+        <RailItem
+          icon={Hub}
+          label="Connections"
+          isActive={openDrawer === 'mcp'}
+          onPress={() => onToggleDrawer('mcp')}
+        />
+      )}
+
+      <RailItem
+        icon={Tune}
+        label="Settings"
+        isActive={openDrawer === 'config'}
+        onPress={() => onToggleDrawer('config')}
+      />
 
       <Box flex="1" />
 

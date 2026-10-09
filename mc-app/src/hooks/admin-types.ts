@@ -4,11 +4,13 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-// Types moved out of the chat connector for change Q (admin and backoffice surfaces).
-// Change Q reshapes them to the service contract of changes G and N (verified user ids,
-// display-only user labels); they are kept here as ported so nothing is lost.
+// Wire types of the admin surfaces (change Q): system prompt, MCP provider status,
+// backoffice and feedback review. They follow the service contracts of changes G, J and N.
+//
+// Identity: every row carries the gateway-verified `userId`. `userLabel` is a display-only
+// text the browser supplied; it is shown tagged "(unverified)" and never used to filter,
+// join or decide anything.
 import type { UIMessage } from 'ai';
-import type { GroupedSessionTools } from './use-chat-service-connector/types';
 
 // System Prompt Configuration Types
 export interface GetSystemPromptConfigResponse {
@@ -19,6 +21,21 @@ export interface GetSystemPromptConfigResponse {
 export interface SetSystemPromptConfigResponse {
   success: boolean;
   data: { systemPrompt: string; message: string };
+}
+
+// MCP provider status (`GET mcp/providers`). Names and booleans only, never a value.
+export type McpProviderName = 'contentstack' | 'algolia' | 'stripe';
+
+export interface McpProviderStatus {
+  provider: McpProviderName;
+  configured: boolean;
+  enabled: boolean;
+  missingKeys: string[];
+}
+
+export interface GetMcpProvidersResponse {
+  success: boolean;
+  data: McpProviderStatus[];
 }
 
 // Backoffice Types
@@ -39,38 +56,39 @@ export interface BackofficeThreadMessage {
 
 export interface BackofficeThread {
   sessionId: string;
-  projectKey: string;
-  userEmail: string;
+  /** Gateway-verified user id of the session owner. */
+  userId: string;
+  /** Display-only, unverified. */
+  userLabel?: string;
+  title?: string;
+  createdAt?: number;
+  updatedAt?: number;
   messages: BackofficeThreadMessage[];
+  /** True when the service cut the transcript at its message cap. */
+  truncated?: boolean;
 }
 
 export interface BackofficeThreadsFilters {
-  projectKey?: string;
-  userEmail?: string;
+  userId?: string;
   createdAtBefore?: number;
   createdAtAfter?: number;
+}
+
+export interface Pagination {
+  limit: number;
+  offset: number;
+  total: number;
 }
 
 export interface GetBackofficeThreadsResponse {
   success: boolean;
   data: BackofficeThread[];
-  pagination: {
-    limit: number;
-    offset: number;
-    total: number;
-  };
+  pagination: Pagination;
 }
 
 export interface GetBackofficeThreadMessagesResponse {
   success: boolean;
   data: BackofficeThread;
-}
-
-export interface IsAdminResponse {
-  success: boolean;
-  data: {
-    isAdmin: boolean;
-  };
 }
 
 /**
@@ -79,12 +97,13 @@ export interface IsAdminResponse {
  * transcript into the backoffice list table.
  */
 export interface FeedbackSummary {
-  /** Feedback uuid. Required: uikit `DataTable` keys its rows on this. */
+  /** Feedback uuid. Required: the table keys its rows on this. */
   id: string;
   sessionId: string;
-  projectKey: string;
-  /** Submitter's email, stored verbatim (case-sensitive) as claimed at submit. */
-  userEmail: string;
+  /** Gateway-verified user id of the submitter. */
+  userId: string;
+  /** Display-only, unverified. */
+  userLabel?: string;
   /** Possibly `''` - an empty comment is a valid submission. */
   comment: string;
   createdAt: number;
@@ -105,14 +124,16 @@ export interface FeedbackSummary {
  */
 export interface FeedbackRecord extends FeedbackSummary {
   messages: UIMessage[];
-  /** Number of `snapshot_messages` chunk docs the snapshot was stored across. */
+  /** False when the snapshot could not be reassembled completely. */
+  snapshotIntact?: boolean;
+  /** Number of chunks the snapshot was stored across. */
   chunkCount?: number;
   /** Message count in the array the client posted. */
   clientMessageCount?: number;
   /** Message count the server had stored - a mismatch means a partial snapshot. */
   storedMessageCount?: number;
-  /** Session owner as recorded server-side; differs from `userEmail` on an admin submit. */
-  sessionUserEmail?: string;
+  /** Verified user id of the session owner; differs from `userId` on an admin submit. */
+  sessionUserId?: string;
   /**
    * Content the server replaced (e.g. inline data URLs). Shape is owned by the
    * service and opaque to the client - render it, don't reach into it.
@@ -121,7 +142,8 @@ export interface FeedbackRecord extends FeedbackSummary {
   sessionCreatedAt?: number;
   sessionUpdatedAt?: number;
   systemPrompt?: string;
-  sessionTools?: GroupedSessionTools[];
+  /** Tools the user turned off, keyed by tool group. */
+  disabledTools?: Record<string, string[]>;
   temporaryTables?: Array<{
     tableRef: string;
     toolName: string;
@@ -133,11 +155,7 @@ export interface FeedbackRecord extends FeedbackSummary {
 export interface GetFeedbackEntriesResponse {
   success: boolean;
   data: FeedbackSummary[];
-  pagination: {
-    limit: number;
-    offset: number;
-    total: number;
-  };
+  pagination: Pagination;
   error?: string;
   message?: string;
 }
