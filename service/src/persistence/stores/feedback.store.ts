@@ -33,8 +33,18 @@ export interface FeedbackStore {
     offset: number
   ): Promise<{ items: FeedbackListItem[]; total: number }>;
   get(id: string): Promise<FeedbackWithSnapshot | null>;
+  /**
+   * The parent and the raw chunk payloads in key order, without reassembling (change N
+   * reassembles the whole-transcript snapshot itself and checks its digest).
+   */
+  getParts(id: string): Promise<FeedbackParts | null>;
   /** Parent first, then the chunks; re-runnable. `false` when the parent did not exist. */
   delete(id: string): Promise<boolean>;
+}
+
+export interface FeedbackParts {
+  record: FeedbackRecord;
+  chunks: Array<Pick<FeedbackSnapshotChunk, 'index' | 'chunk' | 'payload'>>;
 }
 
 export class GatewayFeedbackStore implements FeedbackStore {
@@ -90,6 +100,12 @@ export class GatewayFeedbackStore implements FeedbackStore {
   }
 
   async get(id: string): Promise<FeedbackWithSnapshot | null> {
+    const parts = await this.getParts(id);
+    if (!parts) return null;
+    return { ...parts.record, messages: reassembleSnapshot(parts.chunks) };
+  }
+
+  async getParts(id: string): Promise<FeedbackParts | null> {
     const safe = assertSafeId(id);
     const parent = await this.deps.gw.get(this.deps.c.feedback(), safe);
     const record = parent ? feedbackFromValue(parent.value) : null;
@@ -113,7 +129,7 @@ export class GatewayFeedbackStore implements FeedbackStore {
       }
       if (page.results.length < PAGE) break;
     }
-    return { ...record, messages: reassembleSnapshot(chunks) };
+    return { record, chunks };
   }
 
   async delete(id: string): Promise<boolean> {
