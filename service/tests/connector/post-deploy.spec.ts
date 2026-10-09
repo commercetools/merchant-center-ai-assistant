@@ -7,6 +7,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
+import type { GcpAnalyticsReport } from '../../src/analytics/self-check';
 import type { ReadinessReport } from '../../src/gcp/readiness';
 import { PostDeployDeps, run } from '../../src/connector/post-deploy';
 import { createLifecycleApiRoot, runProbe } from '../../src/connector/checks/custom-object-probe';
@@ -28,6 +29,8 @@ const GREEN: ReadinessReport = {
   ],
 };
 
+const ALL_OK: GcpAnalyticsReport = { bigquery: 'ok', storage: 'ok', visibility: 'ok' };
+
 function deps(
   extraEnv: NodeJS.ProcessEnv = {},
   overrides: Partial<PostDeployDeps> = {}
@@ -41,6 +44,7 @@ function deps(
       checkVertex: async () => ({ ok: true }),
       runProbe: async () => ({ ok: true }),
       gcpReadiness: async () => GREEN,
+      gcpAnalytics: async () => ALL_OK,
       ...overrides,
     },
   };
@@ -114,27 +118,41 @@ describe('post-deploy run()', () => {
     expect(lines[0]).toContain('CTP_PROJECT_KEY');
   });
 
-  it('post-deploy: analytics self-check missing resource warns only', async () => {
-    const report: ReadinessReport = {
-      ok: false,
-      checks: [
-        ...GREEN.checks.slice(0, 3),
-        { name: 'bigquery', ok: false, detail: 'dry-run query failed' },
-        { name: 'storage', ok: true, detail: 'missing' },
-      ],
+  it('post-deploy: analytics self-check missing resource warns only, naming the fix', async () => {
+    const report: GcpAnalyticsReport = {
+      bigquery: 'bigquery access denied: grant roles/bigquery.jobUser and roles/bigquery.dataEditor on the project to the service account',
+      storage: 'bucket b is missing and the service account cannot create it (storage.buckets.create): gcloud storage buckets create gs://b',
+      visibility: 'ok',
     };
-    const { deps: d, lines } = deps({}, { gcpReadiness: async () => report });
+    const { deps: d, lines } = deps({}, { gcpAnalytics: async () => report });
     expect(await run(d)).toBe(0);
     const analytics = lines.filter((l) => l.startsWith('post-deploy: gcp analytics:'));
     expect(analytics).toHaveLength(2);
+    expect(analytics[0]).toContain('bigquery: ');
     expect(analytics[0]).toContain('roles/bigquery.jobUser');
-    expect(analytics[1]).toContain('bucket missing');
+    expect(analytics[1]).toContain('storage: ');
+    expect(analytics[1]).toContain('storage.buckets.create');
+  });
+
+  it('post-deploy: a publicly readable private bucket is reported as a visibility warning', async () => {
+    const { deps: d, lines } = deps({}, { gcpAnalytics: async () => ({ ...ALL_OK, visibility: 'bucket is publicly readable although IMAGE_URL_MODE=private' }) });
+    expect(await run(d)).toBe(0);
+    expect(lines.some((l) => l.startsWith('post-deploy: gcp analytics: visibility:'))).toBe(true);
   });
 
   it('post-deploy: analytics self-check passes silently when permitted and present', async () => {
     const { deps: d, lines } = deps();
     expect(await run(d)).toBe(0);
     expect(lines.some((l) => l.startsWith('post-deploy: gcp analytics:'))).toBe(false);
+  });
+
+  it('post-deploy: analytics self-check that cannot run warns only', async () => {
+    const { deps: d, lines } = deps({}, { gcpAnalytics: async () => undefined });
+    expect(await run(d)).toBe(0);
+    expect(lines.some((l) => l.includes('gcp analytics skipped'))).toBe(true);
+    const { deps: thrown, lines: l2 } = deps({}, { gcpAnalytics: async () => { throw new Error('boom'); } });
+    expect(await run(thrown)).toBe(0);
+    expect(l2.some((l) => l.includes('gcp analytics could not run'))).toBe(true);
   });
 
   it('post-deploy: readiness that cannot run warns only', async () => {

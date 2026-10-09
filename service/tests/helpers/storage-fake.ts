@@ -27,6 +27,7 @@ export class FakeStorage implements StoragePort {
   saveErrors: Error[] = [];
   downloads: string[] = [];
   readStreams: { name: string; stream: Readable }[] = [];
+  createReadStreamOverride?: () => Readable;
   deleteFilesCalls: Record<string, unknown>[] = [];
   deleteFilesError?: Error;
   policySets: IamPolicyPort[] = [];
@@ -34,6 +35,7 @@ export class FakeStorage implements StoragePort {
   forbidden: string[] = [];
 
   bucket(): BucketPort {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     return {
       file: (name: string): FilePort => self.filePort(name),
@@ -59,6 +61,7 @@ export class FakeStorage implements StoragePort {
   }
 
   private filePort(name: string): FilePort {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     return {
       async save(data, options) {
@@ -82,7 +85,7 @@ export class FakeStorage implements StoragePort {
       },
       createReadStream() {
         const o = self.objects.get(name);
-        const stream = Readable.from(o ? [o.data] : []);
+        const stream = self.createReadStreamOverride?.() ?? Readable.from(o ? [o.data] : []);
         self.readStreams.push({ name, stream });
         return stream;
       },

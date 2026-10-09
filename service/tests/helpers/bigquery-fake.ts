@@ -51,6 +51,7 @@ export class FakeBigQuery implements BigQueryPort {
   metadataError?: Error;
 
   dataset(): DatasetPort {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     return {
       table: (id: string): TablePort => self.tablePort(id),
@@ -71,6 +72,7 @@ export class FakeBigQuery implements BigQueryPort {
   }
 
   private tablePort(id: string): TablePort {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     return {
       async exists() {

@@ -82,6 +82,7 @@ export function safeFilename(name: string | undefined): string {
   return (
     (name ?? '')
       .normalize('NFKD')
+      .replace(/\p{M}/gu, '')
       .replace(/[^A-Za-z0-9._-]+/g, '_')
       .replace(/^[._]+|[._]+$/g, '')
       .slice(0, 80) || 'export'
