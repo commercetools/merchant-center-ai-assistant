@@ -16,7 +16,10 @@
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.integration.config.cjs",
     "check:foundation": "node scripts/check-foundation.mjs",
     "connector:post-deploy": "node build/connector/post-deploy.js",
-    "connector:pre-undeploy": "node build/connector/pre-undeploy.js"
+    "connector:pre-undeploy": "node build/connector/pre-undeploy.js",
+    "persistence:purge": "node --env-file=.env.local scripts/purge-containers.mjs",
+    "persistence:reencrypt": "node --env-file=.env.local scripts/reencrypt.mjs",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.integration.config.cjs"
   },
   "dependencies": {
     "@ai-sdk/google-vertex": "^5.0.109",

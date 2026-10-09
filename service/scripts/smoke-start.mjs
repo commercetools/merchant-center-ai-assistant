@@ -19,6 +19,8 @@ const baseEnv = {
   CTP_PROJECT_KEY: 'p',
   CTP_REGION: 'us-central1.gcp',
   PERSISTENCE_DRIVER: 'memory',
+  // fixed throw-away key, valid shape (base64 of 32 bytes)
+  ENCRYPTION_KEY: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=',
 };
 
 function start(env) {

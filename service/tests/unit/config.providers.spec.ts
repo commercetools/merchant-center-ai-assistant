@@ -75,11 +75,11 @@ describe('providers section', () => {
       ALGOLIA_MCP_URL: 'https://val-algolia.example.test/?key=abc',
       STRIPE_SECRET_KEY: 'val-stripe',
       GCP_SA_KEY_BASE64: sa,
-      ENCRYPTION_KEY: 'val-enc',
+      ENCRYPTION_KEY: 'dmFsLWVuYy12YWwtZW5jLXZhbC1lbmMtdmFsLWVuYyE=',
     });
     const json = JSON.stringify(c);
     expect((json.match(/\[secret\]/g) ?? []).length).toBeGreaterThanOrEqual(6);
-    for (const v of ['val-cs-api', 'val-cs-token', 'val-algolia', 'val-stripe', sa, 'val-enc']) {
+    for (const v of ['val-cs-api', 'val-cs-token', 'val-algolia', 'val-stripe', sa, 'dmFsLWVuYy12YWwtZW5j']) {
       expect(json).not.toContain(v);
     }
   });

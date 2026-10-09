@@ -62,14 +62,14 @@ describe('GET /service/status', () => {
     const res = await request(
       createApp(
         freshConfig({
-          ENCRYPTION_KEY: 'enc-secret-value',
+          ENCRYPTION_KEY: 'dmFsLWVuYy12YWwtZW5jLXZhbC1lbmMtdmFsLWVuYyE=',
           GCP_SA_KEY_BASE64: sa,
           CTP_CLIENT_SECRET: 'client-secret-value',
           STRIPE_SECRET_KEY: 'stripe-secret-value',
         })
       )
     ).get('/service/status');
-    for (const v of ['enc-secret-value', sa, 'client-secret-value', 'stripe-secret-value']) {
+    for (const v of ['dmFsLWVuYy12YWwtZW5jLXZhbC1lbmMtdmFsLWVuYyE=', sa, 'client-secret-value', 'stripe-secret-value']) {
       expect(res.text).not.toContain(v);
     }
   });

@@ -7,6 +7,17 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
 import { readConfiguration } from '../config';
 import CustomError from '../errors/custom.error';
+import {
+  ConflictError,
+  InvalidIdError,
+  NotFoundError,
+  PersistenceError,
+  QueryLimitError,
+  SessionTooLongError,
+  TooLargeError,
+  UnavailableError,
+  ValidationError,
+} from '../persistence/gateway/errors';
 import { logger } from '../utils/logger.utils';
 import { requestUrlForLog } from '../utils/log-url.utils';
 
@@ -32,12 +43,44 @@ const clientErrorStatus = (error: HttpError): number | undefined => {
     : undefined;
 };
 
+/**
+ * Persistence errors become fixed, generic HTTP answers. Messages never carry container
+ * names, ids or values.
+ */
+export function mapPersistenceError(error: unknown): CustomError | undefined {
+  if (!(error instanceof PersistenceError)) return undefined;
+  if (error instanceof NotFoundError || error instanceof InvalidIdError) {
+    return new CustomError(404, 'Not found');
+  }
+  if (error instanceof ConflictError) {
+    return new CustomError(409, 'Conflict, please retry');
+  }
+  if (error instanceof TooLargeError) {
+    return new CustomError(413, 'Payload too large');
+  }
+  if (error instanceof UnavailableError) {
+    return new CustomError(503, 'Storage temporarily unavailable, please retry');
+  }
+  if (error instanceof ValidationError) {
+    return new CustomError(400, 'Invalid request');
+  }
+  if (error instanceof SessionTooLongError) {
+    return new CustomError(413, 'Session is too long');
+  }
+  if (error instanceof QueryLimitError) {
+    return new CustomError(400, 'Invalid paging parameters');
+  }
+  return undefined;
+}
+
 export const errorMiddleware: ErrorRequestHandler = (
-  error: Error,
+  rawError: Error,
   req: Request,
   res: Response,
   _next: NextFunction
 ) => {
+  const mapped = mapPersistenceError(rawError);
+  const error: Error = mapped ?? rawError;
   const isDevelopment = readConfiguration().server.nodeEnv === 'development';
 
   if (error instanceof CustomError) {

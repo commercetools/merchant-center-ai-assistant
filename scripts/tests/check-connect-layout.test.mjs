@@ -55,6 +55,8 @@ function canonical() {
             k('GCP_BUCKET_LOCATION', { default: 'us-central1' }),
             k('IMAGE_URL_MODE', { default: 'private' }),
             k('MCP_TOOLS_TTL_MS', { default: '1800000' }),
+            k('PERSISTENCE_CONCURRENCY', { default: '8' }),
+            k('SETTINGS_CACHE_TTL_MS', { default: '5000' }),
             k('LOG_LEVEL', { default: 'info' }),
             k('ADMIN_USER_IDS', { required: false }),
             k('CONTENTSTACK_BRANCH', { required: false }),
@@ -64,6 +66,7 @@ function canonical() {
           securedConfiguration: [
             k('GCP_SA_KEY_BASE64', { required: true }),
             k('ENCRYPTION_KEY', { required: true }),
+            k('ENCRYPTION_KEY_PREVIOUS', { required: false }),
             k('CONTENTSTACK_API_KEY', { required: false }),
             k('CONTENTSTACK_MANAGEMENT_TOKEN', { required: false }),
             k('ALGOLIA_MCP_URL', { required: false }),

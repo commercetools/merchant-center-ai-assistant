@@ -69,6 +69,12 @@ deployAs:
         - key: MCP_TOOLS_TTL_MS
           description: In-process cache lifetime of fetched MCP tool sets in milliseconds
           default: '1800000'
+        - key: PERSISTENCE_CONCURRENCY
+          description: Maximum number of parallel Custom Object requests of bulk operations such as deleting a session (1 to 32)
+          default: '8'
+        - key: SETTINGS_CACHE_TTL_MS
+          description: In-process cache lifetime of the stored settings in milliseconds (0 disables the cache, at most 60000)
+          default: '5000'
         - key: LOG_LEVEL
           description: Logger level (error, warn, info, debug)
           default: 'info'
@@ -91,6 +97,9 @@ deployAs:
         - key: ENCRYPTION_KEY
           description: Base64 of a 32-byte AES-256-GCM key that protects stored identity tokens; changing it makes stored tokens unreadable (see change E for rotation)
           required: true
+        - key: ENCRYPTION_KEY_PREVIOUS
+          description: Optional comma-separated retired ENCRYPTION_KEY values (base64, 32 bytes each) used only to decrypt data written before a key rotation
+          required: false
         - key: CONTENTSTACK_API_KEY
           description: Optional Contentstack stack API key. Contentstack is enabled only when this and CONTENTSTACK_MANAGEMENT_TOKEN are both set
           required: false
