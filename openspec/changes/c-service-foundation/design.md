@@ -56,7 +56,7 @@ Facts verified on 2026-10-08. `L:` = legacy file under `/Users/behnam/code/multi
 | `src/cache/cache.types.ts`, `memory-cache.ts`, `index.ts` | `src/cache/*` | KEEP (limits from config; drop `PROJECT` namespace) |
 | `src/cache/mcp-tools.cache.ts` | (spec J / I) | DEFER: MCP-specific, ported with its first consumer; reads TTLs from `AppConfig.cache` |
 | `src/controllers/health.controller.ts`, `routes/health.route.ts` | `src/controllers/status.controller.ts`, `src/routes/status.route.ts` | CHANGE: `/status` + `/health` alias, `UP` body |
-| `src/routes/service.route.ts` | `src/routes/service.route.ts` | CHANGE: only status router now; D..N add theirs; drop `/gecx/config` |
+| `src/routes/service.route.ts` | `src/routes/service.route.ts` | CHANGE: only status router now; D..N add theirs; drop the legacy widget bootstrap route |
 | `src/utils/region.ts` | `src/config/region.ts` | CHANGE: keep API-region <-> MC cloud-identifier mapping only; MCP URL helpers move to spec I |
 | `src/types/service.types.ts` (`Project`, `AuthenticatedRequest`) | `src/types/request.types.ts` | CHANGE: `AuthenticatedRequest` defined by D; `Project` DROP |
 | `package.json`, `tsconfig.json`, `jest.config.cjs`, `.eslintrc.cjs`, `.prettierrc`, `.nvmrc`, `.env.example` | same names | CHANGE (pins, scripts, rules; see tasks) |

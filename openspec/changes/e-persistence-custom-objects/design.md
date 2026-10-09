@@ -78,7 +78,7 @@ Verified 2026-10-08 against the commercetools documentation (fetched markdown so
 | `setProjectSystemPrompt` | `SettingsStore.update(s => ({...s, systemPrompt}))` | CAS |
 | `readToolCallLogsFromProject`, `getToolCallLogsConfig` | `settings.get().toolCallLogs` | default `all` |
 | `setToolCallLogsConfig` | `SettingsStore.update` | validated enum |
-| `getProjectWidgetConfig` | **DROP** | GECX widget (Q7) |
+| `getProjectWidgetConfig` | **DROP** | legacy widget (Q7) |
 | `stripUndefined` | not needed (JSON round trip drops `undefined`; gateway dev check logs when `null` members are dropped) | |
 | `setIdentityMcpConfig` | `SettingsStore.update(s => ({...s, identityMcp}))` | |
 | `setIdentityMcpClient` | `SettingsStore.update` touching only `identityMcp.client` | CAS keeps `discovery`/`connectedAt` |

@@ -42,7 +42,7 @@ The assistant's core is the SSE chat endpoint: an orchestrator model that calls 
 - Model/provider construction and token counting internals (F) - H only calls `getModel`.
 - `create_composed_page` tool, `commercetools-ui.prompt.ts`, `nimbus-scope.ts` and its generated manifest (M).
 - BigQuery / GCS code (L), tool-result offload pipeline (L; H ships the analyzer it calls).
-- Any GECX widget stream or endpoint (Q7 DECIDED 2026-10-09: dropped; `POST /service/chat/stream` is the only chat entry point). Any admin gating of chat (chat is open to every signed-in member; administrators are users whose user id is in `ADMIN_USER_IDS`, change D).
+- Any legacy widget stream or endpoint (Q7 DECIDED 2026-10-09: dropped; `POST /service/chat/stream` is the only chat entry point). Any admin gating of chat (chat is open to every signed-in member; administrators are users whose user id is in `ADMIN_USER_IDS`, change D).
 
 ## Legacy source
 

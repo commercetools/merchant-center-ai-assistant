@@ -67,5 +67,5 @@ Row types: `Session`, `SessionListItem`, `AiSdkChatMessage`, `GroupedSessionTool
 - **THEN** every row 1-25 and row 28 matches an actual `(method, path)` and no other `(method, path)` exists under `/service` (rows 26, 27 and 29 are matched by prefix)
 
 #### Scenario: Removed legacy routes
-- **WHEN** a client calls `GET /service/gecx/config/anything` or `GET /service/mcp/anything-legacy`
+- **WHEN** a client calls `GET` on the removed legacy widget bootstrap path under `/service/` or `GET /service/mcp/anything-legacy`
 - **THEN** the status is 404 with the standard envelope

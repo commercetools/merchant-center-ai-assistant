@@ -85,7 +85,7 @@ The documentation SHALL list the exact API client scopes of the service (`inheri
 `FEATURES.md` SHALL be regenerated from the current code, listing each feature with key file paths, and SHALL NOT contain stale statements (multi-tenancy, Firestore, the former permission-group scheme, Team MCP, Data Warehouse, other LLM providers, starter boilerplate).
 
 #### Scenario: Stale vocabulary
-- **WHEN** `grep -rinE "tenant|firestore|team mcp|data warehouse|gecx|anthropic|openai|assistant-admin|permission group|cloud run|pub/sub" FEATURES.md README.md docs` runs
+- **WHEN** `grep -rinE "tenant|firestore|team mcp|data warehouse|g[e]cx|anthropic|openai|assistant-admin|permission group|cloud run|pub/sub" FEATURES.md README.md docs` runs
 - **THEN** it prints nothing
 
 ### Requirement: Per-application READMEs
