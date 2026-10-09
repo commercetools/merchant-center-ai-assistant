@@ -113,12 +113,11 @@ test('phase1: every passed key is declared by connect.yaml for that application'
   }
 });
 
-test('phase2: exactly four keys', () => {
+test('phase2: exactly three keys', () => {
   const args = phase2Args({ origin: 'https://service-abc.us-central1.gcp.commercetools.app' });
   assert.deepEqual(args, [
     'service.MC_AUDIENCE=https://service-abc.us-central1.gcp.commercetools.app',
     'mc-app.CHAT_SERVICE_ENDPOINT_URL=https://service-abc.us-central1.gcp.commercetools.app/service',
-    'composed-apps.CHAT_SERVICE_ENDPOINT_URL=https://service-abc.us-central1.gcp.commercetools.app/service',
     'mc-view-app.CHAT_SERVICE_ENDPOINT_URL=https://service-abc.us-central1.gcp.commercetools.app/service',
   ]);
 });

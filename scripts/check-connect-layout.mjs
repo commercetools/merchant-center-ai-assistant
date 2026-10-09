@@ -83,6 +83,13 @@ const MC_STANDARD = {
   CHAT_SERVICE_ENDPOINT_URL: { optional: true, default: PLACEHOLDER_URL },
 };
 
+// The Pages app reads composed pages straight from commercetools and makes no service calls.
+const COMPOSED_STANDARD = {
+  CUSTOM_APPLICATION_ID: { required: true },
+  ENTRY_POINT_URI_PATH: { required: true },
+  CLOUD_IDENTIFIER: { default: 'gcp-us' },
+};
+
 const VIEW_STANDARD = {
   CUSTOM_VIEW_ID: { required: true },
   CLOUD_IDENTIFIER: { default: 'gcp-us' },
@@ -209,10 +216,10 @@ export function checkConfigKeys(doc) {
     checkSection('service', 'standardConfiguration', keysOf(service, 'standardConfiguration'), SERVICE_STANDARD, errors);
     checkSection('service', 'securedConfiguration', keysOf(service, 'securedConfiguration'), SERVICE_SECURED, errors);
   }
-  for (const name of ['mc-app', 'composed-apps']) {
-    const app = entry(doc, name);
-    if (app) checkSection(name, 'standardConfiguration', keysOf(app, 'standardConfiguration'), MC_STANDARD, errors);
-  }
+  const mcApp = entry(doc, 'mc-app');
+  if (mcApp) checkSection('mc-app', 'standardConfiguration', keysOf(mcApp, 'standardConfiguration'), MC_STANDARD, errors);
+  const composed = entry(doc, 'composed-apps');
+  if (composed) checkSection('composed-apps', 'standardConfiguration', keysOf(composed, 'standardConfiguration'), COMPOSED_STANDARD, errors);
   const view = entry(doc, 'mc-view-app');
   if (view) checkSection('mc-view-app', 'standardConfiguration', keysOf(view, 'standardConfiguration'), VIEW_STANDARD, errors);
   // Dedupe (a misplaced key is reported by both the placement and the table pass).
@@ -246,7 +253,7 @@ function scopeList(text, which) {
   return m ? [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]) : null;
 }
 
-/** Each Merchant Center config file: plain mcp scopes, no additionalOAuthScopes. */
+/** Each Merchant Center config file: plain mcp scopes (not the Pages app), no additionalOAuthScopes. */
 export function checkMcScopes(files) {
   const errors = [];
   for (const { file, text: raw } of files) {
@@ -255,6 +262,8 @@ export function checkMcScopes(files) {
     if (text.includes('additionalOAuthScopes')) errors.push(`${file}: additionalOAuthScopes is not allowed`);
     const view = scopeList(text, 'view');
     const manage = scopeList(text, 'manage');
+    // The Pages app has no Managed MCP surface and asks for no MCP scopes (change R).
+    if (file.startsWith('composed-apps/')) continue;
     if (!view?.includes('view_mcp_servers')) errors.push(`${file}: oAuthScopes.view must contain view_mcp_servers`);
     if (!manage?.includes('manage_mcp_servers')) errors.push(`${file}: oAuthScopes.manage must contain manage_mcp_servers`);
   }

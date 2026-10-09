@@ -144,13 +144,12 @@ export function phase1Args(env) {
   ];
 }
 
-/** Phase 2: exactly four items, no secured value. `origin` has no path. */
+/** Phase 2: exactly three items (the Pages app makes no service calls), no secured value. `origin` has no path. */
 export function phase2Args({ origin }) {
   const endpoint = `${origin}/service`;
   return [
     `service.MC_AUDIENCE=${origin}`,
     `mc-app.CHAT_SERVICE_ENDPOINT_URL=${endpoint}`,
-    `composed-apps.CHAT_SERVICE_ENDPOINT_URL=${endpoint}`,
     `mc-view-app.CHAT_SERVICE_ENDPOINT_URL=${endpoint}`,
   ];
 }
