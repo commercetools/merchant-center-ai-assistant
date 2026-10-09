@@ -14,6 +14,8 @@ import type { IdentityStores } from './ports';
 export interface IdentityRuntime {
   config: AppConfig;
   stores: IdentityStores;
+  /** Test seam: replaces the global `fetch` for every outbound call of the HTTP handlers. */
+  fetchFn?: typeof fetch;
 }
 
 let override: IdentityRuntime | undefined;
@@ -33,3 +35,6 @@ export function setIdentityRuntimeForTests(
 ): void {
   override = runtime;
 }
+
+/** The fetch override of the test runtime, if any (the tool source has no runtime of its own). */
+export const getFetchOverride = (): typeof fetch | undefined => override?.fetchFn;

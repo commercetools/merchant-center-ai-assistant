@@ -17,6 +17,7 @@ import {
   IdentityReauthRequiredError,
 } from './errors';
 import { withToolResultPipeline } from './result-pipeline';
+import { getFetchOverride } from './runtime';
 import { getIdentityMcpToolSet } from './toolset';
 import type { IdentityToolSetDeps } from './toolset';
 
@@ -72,6 +73,7 @@ const notConnectedTool = (code: string, problem: Problem) =>
 const depsOf = (ctx: ToolContext): IdentityToolSetDeps => ({
   config: ctx.config,
   stores: createIdentityStores(ctx.stores),
+  fetchFn: getFetchOverride(),
 });
 
 export const commercetoolsToolSource: ToolSource = {

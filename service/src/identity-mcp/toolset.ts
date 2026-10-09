@@ -49,6 +49,8 @@ export interface IdentityToolSetDeps {
   cache?: CacheStore;
   /** Test seam; defaults to the SDK's `createMCPClient`. */
   createClient?: CreateMcpClient;
+  /** Test seam: the fetch used by the MCP transport and the OAuth flow (default: global). */
+  fetchFn?: typeof fetch;
 }
 
 /** What the cache holds: the tools, plus who they belong to. */
@@ -139,6 +141,7 @@ export async function getIdentityMcpToolSet(
         authProvider: provider,
         // The bearer is a USER's token: never follow a redirect that moves where it goes.
         redirect: 'error',
+        ...(deps.fetchFn ? { fetch: deps.fetchFn } : {}),
       },
       // commercetools' gateway answers 2025-06-18; probing the modern protocol first is a
       // wasted round trip that also makes the server log a bad request.

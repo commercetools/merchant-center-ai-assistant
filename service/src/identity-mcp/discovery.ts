@@ -85,12 +85,13 @@ export interface IdentityDiscoveryResult {
 
 const fetchWithTimeout = async (
   url: string,
-  init: Parameters<typeof fetch>[1] = {}
+  init: Parameters<typeof fetch>[1] = {},
+  fetchFn: typeof fetch = fetch
 ): Promise<Response> => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
   try {
-    return await fetch(url, {
+    return await fetchFn(url, {
       ...init,
       signal: controller.signal,
       // A redirect here would move the probe off the host we are trying to characterise.
@@ -121,8 +122,12 @@ export const probeIdentityMcp = async (params: {
   mcpUrl: string;
   /** Attempt an unauthenticated DCR POST. Read-only in effect: it registers nothing. */
   probeRegistration?: boolean;
+  /** Test seam (default: global fetch). */
+  fetchFn?: typeof fetch;
 }): Promise<IdentityDiscoveryResult> => {
   const { apiRegion, mcpUrl, probeRegistration = true } = params;
+  const probeFetch = (url: string, init: Parameters<typeof fetch>[1] = {}) =>
+    fetchWithTimeout(url, init, params.fetchFn);
   const problems: string[] = [];
   const expected = auth2Url(apiRegion);
 
@@ -140,7 +145,7 @@ export const probeIdentityMcp = async (params: {
   logger.info(log(`PROBE_START url=${mcpUrl}`));
 
   try {
-    const challenge = await fetchWithTimeout(mcpUrl, {
+    const challenge = await probeFetch(mcpUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -219,7 +224,7 @@ export const probeIdentityMcp = async (params: {
       );
     } else {
       try {
-        const prm = await fetchWithTimeout(result.resourceMetadataUrl);
+        const prm = await probeFetch(result.resourceMetadataUrl);
         result.resourceMetadataStatus = prm.status;
 
         if (!prm.ok) {
@@ -344,7 +349,7 @@ export const probeIdentityMcp = async (params: {
     )}/.well-known/oauth-authorization-server`;
 
     try {
-      const response = await fetchWithTimeout(metadataUrl);
+      const response = await probeFetch(metadataUrl);
       const snapshot: AuthServerMetadataSnapshot = { status: response.status };
 
       if (response.ok) {
@@ -423,7 +428,7 @@ export const probeIdentityMcp = async (params: {
     // WITHOUT registering anything. A 401 would mean it needs credentials we do not have;
     // a 404 would mean the feature is off despite being advertised.
     try {
-      const response = await fetchWithTimeout(
+      const response = await probeFetch(
         result.asMetadata.registrationEndpoint,
         {
           method: 'POST',

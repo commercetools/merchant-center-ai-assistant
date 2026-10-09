@@ -82,7 +82,7 @@ export const getIdentityMcp: RequestHandler = asyncHandler(
 
 export const putIdentityMcp: RequestHandler = asyncHandler(async (req, res) => {
   const authed = req as AuthenticatedRequest;
-  const { config, stores } = getIdentityRuntime();
+  const { config, stores, fetchFn } = getIdentityRuntime();
   const body = (req.body ?? {}) as Record<string, unknown>;
   const serverKey = body.serverKey;
 
@@ -114,6 +114,7 @@ export const putIdentityMcp: RequestHandler = asyncHandler(async (req, res) => {
   const discovery = await probeIdentityMcp({
     apiRegion: config.ctp.region,
     mcpUrl: expectedUrl,
+    fetchFn,
   });
   if (discovery.verdict !== 'auth2') {
     throw new CustomError(
@@ -142,13 +143,15 @@ export const putIdentityMcp: RequestHandler = asyncHandler(async (req, res) => {
 export const deleteIdentityMcp: RequestHandler = asyncHandler(
   async (req, res) => {
     const authed = req as AuthenticatedRequest;
-    const { config, stores } = getIdentityRuntime();
+    const { config, stores, fetchFn } = getIdentityRuntime();
     const binding = await stores.binding.get();
 
     // Tokens first (and revoked while the client registration is still readable), then the
     // binding: if the second step fails, users merely have to reconnect.
     const removed = await stores.tokens.deleteAll((record) =>
-      binding ? revokeStoredTokens(config, binding, record) : Promise.resolve()
+      binding
+        ? revokeStoredTokens(config, binding, record, fetchFn)
+        : Promise.resolve()
     );
     await stores.binding.clear();
     await invalidateAllToolSets();
@@ -189,7 +192,7 @@ export const getIdentityMcpStatus: RequestHandler = asyncHandler(
 export const verifyIdentityMcp: RequestHandler = asyncHandler(
   async (req, res) => {
     const userId = requireUserId(req);
-    const { config, stores } = getIdentityRuntime();
+    const { config, stores, fetchFn } = getIdentityRuntime();
     const binding = await stores.binding.get();
     if (!binding) throw new CustomError(409, 'No identity MCP Server is bound');
 
@@ -197,6 +200,7 @@ export const verifyIdentityMcp: RequestHandler = asyncHandler(
       const result = await getIdentityMcpToolSet(userId, binding, {
         config,
         stores,
+        fetchFn,
       });
       if (!result) {
         throw new CustomError(
@@ -229,11 +233,11 @@ export const verifyIdentityMcp: RequestHandler = asyncHandler(
 export const disconnectIdentityMcpUser: RequestHandler = asyncHandler(
   async (req, res) => {
     const userId = requireUserId(req);
-    const { config, stores } = getIdentityRuntime();
+    const { config, stores, fetchFn } = getIdentityRuntime();
     const binding = await stores.binding.get();
     const found = await stores.tokens.get(userId);
     if (found && binding) {
-      await revokeStoredTokens(config, binding, found.record);
+      await revokeStoredTokens(config, binding, found.record, fetchFn);
     }
     await stores.tokens.delete(userId);
     await invalidateToolSetsForUser(userId);
@@ -252,7 +256,7 @@ export const disconnectIdentityMcpUser: RequestHandler = asyncHandler(
  */
 export const authorizationRejectsClient = async (
   url: URL,
-  fetchFn: typeof fetch = fetch
+  fetchFn: typeof fetch = globalThis.fetch
 ): Promise<boolean> => {
   try {
     const response = await fetchFn(url, {
@@ -275,7 +279,7 @@ export const authorizationRejectsClient = async (
 export const authorizeIdentityMcp: RequestHandler = asyncHandler(
   async (req, res) => {
     const userId = requireUserId(req);
-    const { config, stores } = getIdentityRuntime();
+    const { config, stores, fetchFn } = getIdentityRuntime();
 
     let redirectUri: string;
     try {
@@ -315,6 +319,7 @@ export const authorizeIdentityMcp: RequestHandler = asyncHandler(
       const result = await auth(provider, {
         serverUrl: binding.url,
         scope: identityScope(config.ctp.projectKey, binding.serverKey),
+        fetchFn,
       });
 
       if (result === 'AUTHORIZED') {
@@ -334,7 +339,7 @@ export const authorizeIdentityMcp: RequestHandler = asyncHandler(
           `host=${authorizationUrl.host}`
       );
 
-      if (await authorizationRejectsClient(authorizationUrl)) {
+      if (await authorizationRejectsClient(authorizationUrl, fetchFn)) {
         if (attempt >= 2) {
           throw new Error(
             'The authorization server rejected the registered client twice'
@@ -406,7 +411,7 @@ export const callbackIdentityMcp: RequestHandler = async (req, res) => {
   }
 
   try {
-    const { config, stores } = getIdentityRuntime();
+    const { config, stores, fetchFn } = getIdentityRuntime();
 
     // Claim FIRST: a replayed callback must lose before any code exchange can happen.
     const claim = await stores.authStates.claim(state);
@@ -456,6 +461,7 @@ export const callbackIdentityMcp: RequestHandler = async (req, res) => {
       callbackState: state,
       callbackIssuer: queryString(req.query.iss),
       scope: identityScope(config.ctp.projectKey, binding.serverKey),
+      fetchFn,
     });
     if (result !== 'AUTHORIZED') {
       throw new Error(`Unexpected OAuth callback result: ${result}`);
