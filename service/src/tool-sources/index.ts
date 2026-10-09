@@ -7,6 +7,7 @@
 import { entityLinkSource } from './entity-link.source';
 import { exportSource } from './export.source';
 import { imageGenerationSource } from './image-generation.source';
+import { commercetoolsToolSource } from '../identity-mcp/tool-source';
 import { createToolSourceRegistry } from './registry';
 import type { ToolSource } from './types';
 import { visualizeSource } from './visualize.source';
@@ -43,6 +44,8 @@ registerToolSource(
   exportSource,
   imageGenerationSource
 );
+
+registerToolSource(commercetoolsToolSource); // I
 
 /*
  * Composition. A new tool source is one file plus one line here.

@@ -5,6 +5,7 @@
  */
 
 import { Router } from 'express';
+import { identityMcpRouter } from '../identity-mcp/routes';
 import { verifyMcSession } from '../middleware/mc-session.middleware';
 import { aiChatRouter } from './ai-chat.route';
 import { backofficeRouter } from './backoffice.route';
@@ -27,4 +28,5 @@ serviceRouter.use('/system-prompt', verifyMcSession, systemPromptRouter);
 serviceRouter.use('/tool-call-logs', verifyMcSession, toolCallLogsRouter);
 serviceRouter.use('/feedback', feedbackRouter);
 serviceRouter.use('/backoffice', backofficeRouter);
-// I..M mount their routers here.
+serviceRouter.use('/managed-mcp-identity', identityMcpRouter); // I
+// J..M mount their routers here.
