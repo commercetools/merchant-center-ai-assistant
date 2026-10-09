@@ -7,7 +7,10 @@
 import type { MessageStore, SessionStore } from '../persistence';
 import type { AiSdkChatMessage } from '../types/chat.types';
 
-type IncomingMessage = Pick<AiSdkChatMessage, 'id' | 'role' | 'parts'> & {
+type IncomingMessage = Pick<
+  AiSdkChatMessage,
+  'id' | 'role' | 'parts' | 'metadata'
+> & {
   timestamp?: number;
 };
 
@@ -40,6 +43,7 @@ export class MessageService {
         id: m.id,
         role: m.role,
         parts: m.parts,
+        ...(m.metadata ? { metadata: m.metadata } : {}),
         timestamp: Date.now(),
       }))
     );

@@ -67,7 +67,13 @@ export class GatewayMessageStore implements MessageStore {
       const id = assertSafeId(m.id);
       const timestamp = Math.max(m.timestamp ?? Date.now(), last + 1);
       last = timestamp;
-      const stored: StoredMessage = { id, role: m.role, parts: m.parts, timestamp };
+      const stored: StoredMessage = {
+        id,
+        role: m.role,
+        parts: m.parts,
+        timestamp,
+        ...(m.metadata ? { metadata: m.metadata } : {}),
+      };
       await this.deps.gw.put(container, id, messageToValue(stored));
       out.push(stored);
     }

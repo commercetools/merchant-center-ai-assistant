@@ -57,6 +57,8 @@ function canonical() {
             k('MCP_TOOLS_TTL_MS', { default: '1800000' }),
             k('PERSISTENCE_CONCURRENCY', { default: '8' }),
             k('SETTINGS_CACHE_TTL_MS', { default: '5000' }),
+            k('CHAT_REQUEST_BUDGET_MS', { default: '270000' }),
+            k('CHAT_FINALIZE_RESERVE_MS', { default: '30000' }),
             k('LOG_LEVEL', { default: 'info' }),
             k('ADMIN_USER_IDS', { required: false }),
             k('CONTENTSTACK_BRANCH', { required: false }),

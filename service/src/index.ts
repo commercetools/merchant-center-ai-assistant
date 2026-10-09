@@ -6,6 +6,8 @@
 
 import { AppConfig, readConfiguration } from './config';
 import { createApp } from './app';
+import { logGatedAgentKeys } from './agents/agent-keys';
+import { registry } from './tool-sources';
 import { logger } from './utils/logger.utils';
 
 let config: AppConfig;
@@ -36,6 +38,9 @@ for (const warning of config.providers.warnings) {
 for (const warning of config.gcp.warnings) {
   logger.warn(warning);
 }
+
+// One line: the registered tool sources and the agent keys that still wait for theirs.
+logGatedAgentKeys(registry, logger);
 
 const server = createApp(config).listen(config.server.port, () => {
   logger.info(`service listening on ${config.server.port}`);

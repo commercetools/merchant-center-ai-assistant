@@ -6,6 +6,7 @@
 
 import { parseAuth } from './auth';
 import { parseCache } from './cache';
+import { parseChat } from './chat';
 import { parseCtp } from './ctp';
 import { parseGcp } from './gcp';
 import { parseLlm } from './llm';
@@ -25,6 +26,7 @@ export const SECTIONS = {
   gcp: parseGcp,
   llm: parseLlm,
   cache: parseCache,
+  chat: parseChat,
   providers: parseProviders,
 } as const;
 

@@ -35,7 +35,7 @@ const TABLE: Row[] = [
   { n: 16, method: 'PUT', path: '/service/system-prompt' },
   { n: 17, method: 'GET', path: '/service/tool-call-logs' },
   { n: 18, method: 'PUT', path: '/service/tool-call-logs' },
-  { n: 19, method: 'POST', path: '/service/ai-chat/:sessionId/message/stream', pendingUntil: 'H' },
+  { n: 19, method: 'POST', path: '/service/ai-chat/:sessionId/message/stream' },
   { n: 20, method: 'POST', path: '/service/feedback/submit', pendingUntil: 'N' },
   { n: 21, method: 'GET', path: '/service/feedback/fetch', pendingUntil: 'N' },
   { n: 22, method: 'GET', path: '/service/feedback/fetch/:feedbackId', pendingUntil: 'N' },
