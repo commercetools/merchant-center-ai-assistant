@@ -19,7 +19,7 @@ export const GCP_SETTING_KEYS = [
   'IMAGE_URL_MODE',
 ];
 
-/** Optional third-party provider keys (owner decision Q4). */
+/** Optional third-party provider keys (maintainer decision Q4). */
 export const PROVIDER_KEYS = [
   'CONTENTSTACK_API_KEY',
   'CONTENTSTACK_MANAGEMENT_TOKEN',

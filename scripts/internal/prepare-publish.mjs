@@ -203,7 +203,7 @@ function stageOssify(ctx) {
   const dry = ossify([]);
   save('ossify-dry.txt', dry);
   need(dry.status === 0, 'ossify dry run failed');
-  need(/^0\s+FOREIGN COPYRIGHT/m.test(dry.stdout), 'ossify reports FOREIGN COPYRIGHT files');
+  need(/^\s*0\s+FOREIGN COPYRIGHT/m.test(dry.stdout), 'ossify reports FOREIGN COPYRIGHT files');
   need(!/THIRD-PARTY DIRECTORIES EXCLUDED/.test(dry.stdout), 'ossify reports third-party directories');
   const apply = ossify(['--apply']);
   save('ossify-apply.txt', apply);
@@ -212,9 +212,9 @@ function stageOssify(ctx) {
   log(`ossify: metadata set in ${changed.length} package.json file(s)`);
   const second = ossify([]);
   save('ossify-second.txt', second);
-  need(/^0\s+headered/m.test(second.stdout), 'second ossify run still headers files');
-  need(/^0\s+package\.json renamed/m.test(second.stdout), 'second ossify run still renames packages');
-  need(/^0\s+FOREIGN COPYRIGHT/m.test(second.stdout), 'second ossify run reports foreign copyright');
+  need(/^\s*0\s+headered/m.test(second.stdout), 'second ossify run still headers files');
+  need(/^\s*0\s+package\.json renamed/m.test(second.stdout), 'second ossify run still renames packages');
+  need(/^\s*0\s+FOREIGN COPYRIGHT/m.test(second.stdout), 'second ossify run reports foreign copyright');
   for (const f of packageJsonFiles(ctx.out)) {
     const name = JSON.parse(readFileSync(f, 'utf8')).name;
     need(name === undefined || /^@commercetools-labs\/ai-assistant/.test(name), `package name ${name} in ${relative(ctx.out, f)}`);

@@ -9,10 +9,10 @@
     "\\bowne[r](?:'s|\u2019s)?\\s+(?:decisions?|approvals?|questions?|answers?|steps?|choices?|reviews?|sign-?off|override|input)\\b",
     "\\b(?:ask|asks|asked|tell|ping|notify|inform|confirm with|approved by|decided by|per)\\s+(?:the\\s+)?owne[r]\\b",
     "\\bthe\\s+owne[r]\\s+(?:does|do|should|must|will|can|provides?|decides?|lists?|may|needs?|approves?|wants?|answers?|reviews?|tests?)\\b",
-    "\\(owne[r]\\)",
     "@commercetools\\.co[m]", "behna[m]"
   ],
   "blockPrivate": [],
+  "blockDocs": [ "\\(owne[r]\\)" ],
   "review": [ "\\btenant", "multitenan[t]", "firestor[e]", "cloud ru[n]", "\\bgec[x]\\b", "\\bPO[C]\\b", "pre-?sale[s]", "\\bdem[o]\\b" ],
   "allow": [
     { "path": "^\\.gitignore$", "pattern": "\\.claud[e]/|evidenc[e]/" },

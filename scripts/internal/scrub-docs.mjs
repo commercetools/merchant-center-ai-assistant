@@ -205,7 +205,8 @@ export function assertRootSafe(root, { allowAny = false, devRoot = DEV_ROOT, hom
 }
 
 export function scrubTree(root, { extra = [], policy = null, write = true } = {}) {
-  const patterns = loadPatterns(join(HERE, 'leak-patterns.json'), policy);
+  const loaded = loadPatterns(join(HERE, 'leak-patterns.json'), policy);
+  const patterns = { block: [...loaded.block, ...loaded.blockDocs] };
   const files = listTargets(root);
   const total = {};
   const perFile = [];
