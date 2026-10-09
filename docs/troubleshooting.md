@@ -51,7 +51,7 @@ Command-level problems of the deployment helper are in section 10 of [deployment
 | 413 `Session is too long` or `Payload too large` | A session reached the readable limit (10,000 messages) or an object exceeded the size limit | Delete the session and start a new one | [operations.md](./operations.md#capacity-scaling-and-cold-start) |
 | 409 `Conflict, please retry` | Two writes hit the same object at once | Retry | - |
 | Session titles stay "New chat" and follow-up chips never appear | The background digest failed (model error) or the instance stopped before it finished | Check the Vertex errors; try again with the next message | Log of the digest agent |
-| The first request after a quiet period takes about 15 seconds | Sandbox and preview deployments scale to zero | Expected for these deployment types ([deployment.md](./deployment.md#deployment-types)) | - |
+| The first request after a quiet period is slow (cold start) | Sandbox and preview deployments scale to zero | Expected for these deployment types ([deployment.md](./deployment.md#deployment-types)) | - |
 | Large results are returned in full or the model cannot query a table | BigQuery is not usable (no billing, missing role, dataset or location problem) | Read the `post-deploy: gcp analytics:` lines and fix the roles | Deployment log |
 | An image does not appear | The bucket role is missing (the service logs the fix), the object was removed, or `IMAGE_URL_MODE` was changed after the image was stored | Grant the role or pre-create the bucket ([configuration.md](./configuration.md#google-cloud)) | Log `Generated image upload failed`; `GET /service/files/...` 404 or 500 |
 

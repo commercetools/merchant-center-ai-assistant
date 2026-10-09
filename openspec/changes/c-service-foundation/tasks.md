@@ -249,7 +249,7 @@ You should now be able to explain: (a) why the router is mounted at `/service` a
 - [x] V.2 `npm run typecheck && npm run lint && npm run check:foundation && npm run build && node scripts/smoke-start.mjs`.
 - [ ] V.3 `commercetools connect application build|test` and `commercetools connect validate` exit 0 (task 6.2).
 - [x] V.4 Chrome E2E: none for this spec (no UI). Evidence: a text file `plans/evidence/c/status.txt` with the `curl -i http://127.0.0.1:8080/service/status` output (git-ignored).
-- [ ] V.5 Definition of Done (`plans/04-workflow.md` section 4): SPDX headers (`node scripts/spdx-check.mjs` from spec A), no `console.log`, no `any`, no tenant words.
+- [x] V.5 Definition of Done (`plans/04-workflow.md` section 4): SPDX headers (`node scripts/spdx-check.mjs` from spec A), no `console.log`, no `any`, no tenant words. (spdx, repo rules and foundation checks pass in the integrated tree)
 
 ## Docs to update (for spec W)
 

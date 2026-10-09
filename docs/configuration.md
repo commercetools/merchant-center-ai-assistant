@@ -147,6 +147,17 @@ A provider is enabled only when all of its required keys are set and valid. A pa
 with the names of missing keys, and nothing else (`GET /service/mcp/providers`). Use a Stripe restricted key and a Contentstack token scoped to what the assistant may change; the assistant can call every tool the key allows.
 The Algolia URL is checked to be a public HTTPS address (`service/src/mcp-providers/ssrf.ts`).
 
+### Stripe toolkit version
+
+The Stripe tools come from `@stripe/agent-toolkit`, which `service/package.json` pins to exactly `0.7.12`. That release
+declares a peer dependency on an older major version of the `ai` package than the one the service uses, so
+`service/package.json` carries an `overrides` entry that makes the toolkit use the service's `ai`
+(and another that aligns the `zod` version used by one of the toolkit's own dependencies). The tools are renamed to the entries of the tools menu
+and adapted to the current `ai` and `zod` (`service/src/tool-sources/stripe/source.ts`). Keep the pin and the
+overrides together when you upgrade, and run the Stripe tests after any change. Later toolkit releases use a different,
+hosted integration and are not supported by this source. The menu lists 24 entries (`service/src/tool-sources/stripe/constants.ts`);
+an entry that the pinned toolkit does not provide switches nothing.
+
 ## Models
 
 | Tier | Key | Default | Used for |
