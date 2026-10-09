@@ -7,15 +7,51 @@
 import type { ReactNode } from 'react';
 import { AuthProvider, useAuth } from './auth';
 import { ConnectProvider, useConnect } from './connect';
+import { SessionProvider, useSession } from './session';
+import {
+  ToolCallLogsConfigProvider,
+  useToolCallLogsConfigContext,
+} from './tool-call-logs-config';
+import {
+  ComposedPagesProvider,
+  useComposedPagesContext,
+} from './composed-pages-context';
+import {
+  TabbedHeaderProvider,
+  useTabbedHeaderContext,
+} from './tabbed-header-context';
 
-export { AuthProvider, useAuth, ConnectProvider, useConnect };
+export {
+  AuthProvider,
+  useAuth,
+  ConnectProvider,
+  useConnect,
+  SessionProvider,
+  useSession,
+  ToolCallLogsConfigProvider,
+  useToolCallLogsConfigContext,
+  ComposedPagesProvider,
+  useComposedPagesContext,
+  TabbedHeaderProvider,
+  useTabbedHeaderContext,
+};
 
-// Changes P and Q append their providers inside ConnectProvider, in this order:
-// Backoffice, ToolCallLogs, MCPConfig, SystemPrompt, ComposedPages, TabbedHeader, Session.
+// Nesting order (outermost first): Auth, Connect, [Q: Backoffice], ToolCallLogs,
+// [Q: McpProviders, SystemPromptConfig], ComposedPages, TabbedHeader, Session.
 export const AllProviders = ({ children }: { children: ReactNode }) => {
   return (
     <AuthProvider>
-      <ConnectProvider>{children}</ConnectProvider>
+      <ConnectProvider>
+        {/* Q: BackofficeProvider */}
+        <ToolCallLogsConfigProvider>
+          {/* Q: McpProvidersProvider, SystemPromptConfigProvider */}
+          <ComposedPagesProvider>
+            <TabbedHeaderProvider>
+              <SessionProvider autoCreateSession>{children}</SessionProvider>
+            </TabbedHeaderProvider>
+          </ComposedPagesProvider>
+        </ToolCallLogsConfigProvider>
+      </ConnectProvider>
     </AuthProvider>
   );
 };
