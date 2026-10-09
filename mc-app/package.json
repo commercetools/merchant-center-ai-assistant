@@ -23,7 +23,7 @@
     "postinstall": "npm run nimbus:typegen && npm run generate:nimbus-surface"
   },
   "dependencies": {
-    "@ai-sdk/react": "^4.0.95",
+    "@ai-sdk/react": "4.0.95",
     "@apollo/client": "3.13.9",
     "@babel/core": "^7.28.6",
     "@babel/runtime-corejs3": "^7.28.6",

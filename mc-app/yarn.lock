@@ -7,15 +7,6 @@
   resolved "https://registry.yarnpkg.com/@adobe/css-tools/-/css-tools-4.5.0.tgz#b5b71a25a4d16afa2482592ddfa62fccc60bc7d1"
   integrity sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q==
 
-"@ai-sdk/gateway@4.0.110":
-  version "4.0.110"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/gateway/-/gateway-4.0.110.tgz#8e59a2fbc16c3bf73af249702217a599785227a6"
-  integrity sha512-5IwnOR6v7KC+D9eddUqsCobXl/FbLUVb2LaQc/uyuQdpP3/n9s0YLc9zl4/W3IS/R2pjHrqUfCzEAeOu7bFLoQ==
-  dependencies:
-    "@ai-sdk/provider" "4.0.26"
-    "@ai-sdk/provider-utils" "5.0.58"
-    "@vercel/oidc" "3.2.0"
-
 "@ai-sdk/gateway@4.0.74":
   version "4.0.74"
   resolved "https://registry.yarnpkg.com/@ai-sdk/gateway/-/gateway-4.0.74.tgz#cd4380fe2a84c3c26d3c929b60bd633a80da8b4b"
@@ -25,13 +16,13 @@
     "@ai-sdk/provider-utils" "5.0.36"
     "@vercel/oidc" "3.2.0"
 
-"@ai-sdk/mcp@2.0.73":
-  version "2.0.73"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/mcp/-/mcp-2.0.73.tgz#aec7f4536a7ee08f1cce4d5d361c04592360eccc"
-  integrity sha512-k616Rv9WSVbr6fuB5otPztkULqi66dmR+RyH8GlOvVhOqQ1of8ePuHaoO79X+UHXCOABKHtrueLUSwiv+lj6yg==
+"@ai-sdk/mcp@2.0.44":
+  version "2.0.44"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/mcp/-/mcp-2.0.44.tgz#b39d24639a71d958b4f98a8a89f6af5ad34f9511"
+  integrity sha512-uYEnqkMvLSztOLgEDZ5hRyz8jgWsTjseS8e2iMBe6ddb4w1ubj5i2aSYytErqtatTjIvSq750g3UHPEiCao8QA==
   dependencies:
-    "@ai-sdk/provider" "4.0.26"
-    "@ai-sdk/provider-utils" "5.0.58"
+    "@ai-sdk/provider" "4.0.10"
+    "@ai-sdk/provider-utils" "5.0.36"
     cross-spawn "^7.0.6"
     pkce-challenge "^5.0.1"
 
@@ -46,17 +37,6 @@
     eventsource-parser "^3.0.8"
     undici "^7.29.0"
 
-"@ai-sdk/provider-utils@5.0.58":
-  version "5.0.58"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/provider-utils/-/provider-utils-5.0.58.tgz#75e802ad299562b87afa178f97d3f629d5753355"
-  integrity sha512-iXSwKR/7LpHzAlyrUl+bTinwzmZ3Nmup1viwPisM5Gn5cogRdIG4rV9w1ZDuKFcrXyu/AeVs42E1CX/0aNwrfQ==
-  dependencies:
-    "@ai-sdk/provider" "4.0.26"
-    "@standard-schema/spec" "^1.1.0"
-    "@workflow/serde" "4.1.0"
-    eventsource-parser "^3.0.8"
-    undici "^7.29.0"
-
 "@ai-sdk/provider@4.0.10":
   version "4.0.10"
   resolved "https://registry.yarnpkg.com/@ai-sdk/provider/-/provider-4.0.10.tgz#1c51d4e0991dea5773c8a74f9da16c52527bef8c"
@@ -64,22 +44,15 @@
   dependencies:
     json-schema "^0.4.0"
 
-"@ai-sdk/provider@4.0.26":
-  version "4.0.26"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/provider/-/provider-4.0.26.tgz#d08d74ecaf28d4e23366b6ca47ffb96f61ca2c49"
-  integrity sha512-BZ443uBEq6HuMA+Z4b7Hpm65GpZSo7pWqnYqpf/7tAO3C48JbtvAhOE2JnODFj+jodsZzfRHkAyQb64xuD2tZQ==
+"@ai-sdk/react@4.0.95":
+  version "4.0.95"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/react/-/react-4.0.95.tgz#fd8993073d15583e3b72494e66392415ceba4fe2"
+  integrity sha512-voKf++WBzJhyNlawdPUW/GckFjFtXyzXwTX6kvIow3ZrFlUdQX8JxbWOPyAXdlAadjU7BvealIJbF/1P1bO2+w==
   dependencies:
-    json-schema "^0.4.0"
-
-"@ai-sdk/react@^4.0.95":
-  version "4.0.140"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/react/-/react-4.0.140.tgz#5905cebb222a3fd595aa807f79aa2283282f12f8"
-  integrity sha512-ED/Q6VpWmo5kCwR4wNbyJbJSZ+3f/wcmTf/1gGtXYzM9KT3R+9X0Fuzb057ofb3wxobuDJykfB09iE+17xQAsw==
-  dependencies:
-    "@ai-sdk/mcp" "2.0.73"
-    "@ai-sdk/provider" "4.0.26"
-    "@ai-sdk/provider-utils" "5.0.58"
-    ai "7.0.137"
+    "@ai-sdk/mcp" "2.0.44"
+    "@ai-sdk/provider" "4.0.10"
+    "@ai-sdk/provider-utils" "5.0.36"
+    ai "7.0.92"
     swr "^2.4.1"
     throttleit "2.1.0"
 
@@ -7219,15 +7192,6 @@ agentation@3.1.2:
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/agentation/-/agentation-3.1.2.tgz#ebc9afe27024cce522cd9a1300c29ce652b9bb15"
   integrity sha512-ZZr6PRgX3ussGbvC9NVh5vFfKKFkQyHL6KuxOfBAAM/mJS3bM2XyhZ7wLPakDwU3pqkzq7u6vEfLikFsCOu5+Q==
-
-ai@7.0.137:
-  version "7.0.137"
-  resolved "https://registry.yarnpkg.com/ai/-/ai-7.0.137.tgz#cb7f817568157c229f2274aef0fc4fb39bd9ce25"
-  integrity sha512-JxrPkSQknxIN/gYqS3UQksExS6eWI23QMPBrKMGXeeFHhru6xFtF4MuMq17WaHD+lXPh0lne6H0BM2Z2VMW9EQ==
-  dependencies:
-    "@ai-sdk/gateway" "4.0.110"
-    "@ai-sdk/provider" "4.0.26"
-    "@ai-sdk/provider-utils" "5.0.58"
 
 ai@7.0.92:
   version "7.0.92"
