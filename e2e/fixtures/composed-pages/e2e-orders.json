@@ -1,0 +1,22 @@
+{
+  "key": "e2e-orders",
+  "title": "E2E orders",
+  "description": "E2E fixture, safe to delete",
+  "isPublished": true,
+  "components": [
+    {
+      "name": "Main",
+      "imports": [{ "source": "commercetools", "items": ["Stack", "Heading", "Text"] }],
+      "dataSources": [
+        {
+          "id": "orders",
+          "name": "Orders",
+          "query": "query($limit:Int){ orders(limit:$limit){ total } }",
+          "variables": [{ "name": "limit", "type": "number", "value": 5 }],
+          "target": "COMMERCETOOLS_PLATFORM"
+        }
+      ],
+      "componentBody": "return (<Stack direction=\"column\" gap=\"400\"><Heading as=\"h1\">E2E orders</Heading><Text>Total: {String(renderData.data.orders?.orders?.total ?? 'n/a')}</Text></Stack>);"
+    }
+  ]
+}

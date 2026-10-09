@@ -1,0 +1,14 @@
+{
+  "key": "e2e-broken",
+  "title": "E2E broken",
+  "description": "E2E fixture, safe to delete",
+  "isPublished": true,
+  "components": [
+    {
+      "name": "Main",
+      "imports": [{ "source": "commercetools", "items": ["Text"] }],
+      "dataSources": [],
+      "componentBody": "throw new Error('e2e-boom');"
+    }
+  ]
+}

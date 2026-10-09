@@ -1,0 +1,14 @@
+{
+  "key": "e2e-draft",
+  "title": "E2E draft",
+  "description": "E2E fixture, safe to delete",
+  "isPublished": false,
+  "components": [
+    {
+      "name": "Main",
+      "imports": [{ "source": "commercetools", "items": ["Heading"] }],
+      "dataSources": [],
+      "componentBody": "return (<Heading as=\"h1\">E2E draft page</Heading>);"
+    }
+  ]
+}
