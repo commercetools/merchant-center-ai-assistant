@@ -107,7 +107,7 @@ About 1.5 hours. Do not code before you can answer the questions at the end.
   **Done when:** tests `api: token request shape`, `api: getDeployment url`, `wait: resolves on Deployed`, `wait: throws on Failed`, `wait: times out` pass (use a fake clock/sleep; no real waiting).
   **Watch out:** never print the token or the client secret; error messages carry status code and the Connect error `message` only. Key characters: keep `encodeURIComponent` on the key.
 - [x] 4.2 `scripts/connect/lib/smoke.mjs`: status check with retries
-  **How:** `smoke({fetch, sleep, origin, attempts = 10, delayMs = 10000})` requests `${origin}/service/status`, accepts HTTP 200 with JSON `{status:'ok'}`; retries on network errors and 502/503/504 (cold start).
+  **How:** `smoke({fetch, sleep, origin, attempts = 10, delayMs = 10000})` requests `${origin}/service/status`, accepts HTTP 200 with JSON whose `status` is `UP`; retries on network errors and 502/503/504 (cold start).
   **Done when:** tests `smoke: retries on 503 then ok`, `smoke: fails after attempts` pass.
   **Watch out:** 401/403/404 are NOT retried (they mean a wrong path or auth, not cold start).
 
@@ -211,7 +211,7 @@ About 1.5 hours. Do not code before you can answer the questions at the end.
 ## Last: Verification
 
 - [ ] V.1 Commands and expected results
-  - `node --test scripts/tests/` -> all pass (A + B + this change's tests; no failures)
+  - `node --test scripts/tests/*.test.mjs` -> all pass (A + B + this change's tests; no failures)
   - `cd service && npm run build && npm test` -> connector tests pass
   - `node scripts/connect/connect.mjs deploy --dry-run` (example env) -> masked command, exit 0; `node scripts/connect/connect.mjs configure STRIPE_SECRET_KEY=sk_test_x --dry-run` -> one masked redeploy line, exit 0
   - `node scripts/check-repo-rules.mjs && node scripts/spdx-check.mjs && node scripts/check-connect-layout.mjs` -> exit 0

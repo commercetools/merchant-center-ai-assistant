@@ -112,6 +112,21 @@ terminated by `data: [DONE]`. Additional parts of this service:
 
 After headers are sent a failure is reported as an in-band error chunk followed by `[DONE]`. See `service/src/chat/stream.ts`.
 
+## Limits applied inside a chat turn
+
+These limits shape what a tool result can contain; they are not request parameters. Tool errors are returned to the model with a hint, so
+the assistant normally retries with a smaller request.
+
+| Area | Limit | Code |
+| --- | --- | --- |
+| History given to the model | the last 20 stored messages | `service/src/chat/constants.ts` (`CHAT_HISTORY_MESSAGES`) |
+| History given to the analyzer step that decides whether a tool result is offloaded | the last 10 messages | `service/src/chat/constants.ts` (`ANALYZER_HISTORY_MESSAGES`) |
+| Steps per turn | 50 | `service/src/chat/constants.ts` (`CHAT_MAX_STEPS`) |
+| CSV export (`export_data`, CSV only) | at most 50,000 rows and 5 MB of Base64-encoded content (about 3.75 MB of CSV); above either the tool answers an error and a hint to filter or aggregate first | `service/src/analytics/constants.ts`, `service/src/tools/export.tool.ts` |
+| Composed page (`create_composed_page`) | at most 20 components, 10 data sources and 20,000 characters per component body; the tool answers the list of fields to fix | `service/src/composed-pages/schema.ts` |
+| Result offloaded to a session table | at most 20,000 rows and 20 MB; tables expire after 7 days | `service/src/analytics/constants.ts` |
+| `query_aggregated_data` | `SELECT` only, at most 500 rows and 256 KiB returned, 200 MB billed, 60 s | `service/src/analytics/constants.ts` |
+
 ## Feedback and backoffice
 
 - `POST /service/feedback/submit` body: `sessionId` (required), `comment` (truncated at 5,000 characters), `messages` (the client's transcript; when empty the stored transcript is used), `userLabel`.

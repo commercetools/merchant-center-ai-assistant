@@ -29,7 +29,7 @@ You should now be able to explain: (a) what "not applicable" means for the event
   **Why:** aggregate facts instead of hand-copying.
   **Where:** `scripts/release/acceptance.mjs`, test `scripts/release/acceptance.test.mjs`.
   **How:** modes: `--table` (for each of A..X, Z plus T: check `openspec/changes/archive/*-<name>` exists, read its `tasks.md` Verification bullets to collect commands and `E2E-` ids; find statuses of those ids in the newest `plans/evidence/*/report.md`; write `plans/evidence/z/acceptance.md` with columns id, change, archived, commands, scenario statuses, evidence links, verifier), `--check` (exit non-zero if any change not archived, any scenario FAIL, or any evidence link missing), `--versions` (read the four `package.json` and `CHANGELOG.md`; all must equal the version argument default `0.1.0`).
-  **Done when:** `node --test scripts/release/` passes; `node scripts/release/acceptance.mjs --versions 0.1.0` prints OK on a fixture tree.
+  **Done when:** `node --test scripts/release/*.test.mjs` passes; `node scripts/release/acceptance.mjs --versions 0.1.0` prints OK on a fixture tree.
   **Watch out:** archive directory names may carry a date prefix - match by suffix.
 
 - [x] 2.2 `scripts/release/check-tasks-shape.mjs`.
@@ -169,7 +169,7 @@ You should now be able to explain: (a) what "not applicable" means for the event
 ## 9. Verification
 
 - Commands: `node scripts/release/acceptance.mjs --check`, `node scripts/release/check-tasks-shape.mjs`, `node scripts/e2e/extract-scenario-ids.mjs --lint --dangling --trace`, the anonymous clone commands (6.2), `commercetools connect validate`, the gate `CLEAR`.
-- Unit tests: `node --test scripts/release/`.
+- Unit tests: `node --test scripts/release/*.test.mjs`.
 - Chrome scenario ids executed in the final run: the full catalogue from change V on the sandbox deployment of the public tag, specifically **E2E-V-01** (preflight), **E2E-V-03** (non-admin user), **E2E-V-12** (forged e-mail, label or header), **E2E-V-13** (own user ID and administrator bootstrap), **E2E-V-04** (restart persistence), **E2E-V-05** (multi-instance), **E2E-V-06** (budget), **E2E-V-09** (cold start), **E2E-U-01 .. E2E-U-03**, and `E2E-T-*` only if T = Go.
 - `openspec validate z-release-verification --strict`.
 

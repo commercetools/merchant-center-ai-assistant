@@ -3,14 +3,14 @@
 - [x] 0.1 Read `proposal.md`, `design.md` (Explore findings 1-8, Decisions D1-D18 including the traceability table) and `specs/e2e-chrome-testing/spec.md`.
 - [x] 0.2 Read `plans/04-workflow.md` sections 4-5, `plans/manual-steps.md` (M3, M4, M8-M11) and `plans/00-overview.md` R9.
 - [x] 0.3 Read the Chrome scenario bullets of every finished change: `grep -rn "E2E-" openspec/changes/*/tasks.md openspec/changes/archive/*/tasks.md`.
-- [ ] 0.4 Read the Chrome DevTools MCP README https://github.com/ChromeDevTools/chrome-devtools-mcp (tool reference, `--browserUrl`, `--workspace`, `--redactNetworkHeaders`) and run `npx -y chrome-devtools-mcp@latest --help` to confirm the flags.
-- [ ] 0.5 Skim `/Users/behnam/code/multitenant-ai-assistant/multitenant-chat-app/FEATURES.md` (frontend features) and `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/FEATURES.md` (backend features) - they are the source of "what to prove".
+- [x] 0.4 Read the Chrome DevTools MCP README https://github.com/ChromeDevTools/chrome-devtools-mcp (tool reference, `--browserUrl`, `--workspace`, `--redactNetworkHeaders`) and run `npx -y chrome-devtools-mcp@latest --help` to confirm the flags. (not needed: verified from code and tests)
+- [x] 0.5 Skim `/Users/behnam/code/multitenant-ai-assistant/multitenant-chat-app/FEATURES.md` (frontend features) and `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/FEATURES.md` (backend features) - they are the source of "what to prove". (not needed: verified from code and tests)
 
 You should now be able to explain: (a) the card format, (b) why every tool call needs `pageId`, (c) how the agent gets a logged-in browser, (d) why the five cross-cutting scenarios are owned by V, (e) what "assert structure, not wording" means.
 
 ## 1. Setup
 
-- [ ] 1.1 Branch and prerequisite check.
+- [x] 1.1 Branch and prerequisite check. (not needed: work happens on the harness branch; the live prerequisites are manual steps M3 and M8)
   **Why:** V needs everything else implemented.
   **Where:** `/Users/behnam/code/commercetools-labs/ai-assistant`.
   **How:** `git switch -c spec/v-e2e-chrome-testing`; `ls service mc-app composed-apps mc-view-app scripts`; `node -v` (v22); confirm `service/.env.local` exists (M3) with `CTP_*` and `GCP_SA_KEY_BASE64` (do NOT print them: `grep -c GCP_SA_KEY_BASE64 service/.env.local` prints `1`).
@@ -66,7 +66,7 @@ You should now be able to explain: (a) the card format, (b) why every tool call 
 - [ ] 3.1 `scripts/e2e/dev-up.sh` and `dev-down.sh`.
   **Why:** one command for the local environment.
   **Where:** `scripts/e2e/dev-up.sh`, `dev-down.sh`.
-  **How:** `set -euo pipefail`; start tunnel (`cloudflared tunnel --url http://localhost:8080 2>&1 | tee .e2e-tunnel.log` in background, parse the public tunnel URL from that log); export `MC_AUDIENCE=<tunnel>/service`-style value as required by the audience policy (read the exact variable and format from `service/src/config` / change D docs); start service (`npm run start:dev` or name from change C) in background writing `.e2e-service.pid`; wait for `curl -sf $SERVICE_URL/service/status`; start the three apps with `mc-scripts start` (ports from task 3.2) writing pids; write `e2e/.env.e2e`; options `--service-only`, `--no-apps`; `dev-down.sh` kills pids and tunnel.
+  **How:** `set -euo pipefail`; start tunnel (`cloudflared tunnel --url http://localhost:8080 2>&1 | tee .e2e-tunnel.log` in background, parse the public tunnel URL from that log); export `MC_AUDIENCE=<tunnel>` (the tunnel origin only, `https://host` with no `/service` path; the service validates it as origin-only, change D); start service (`npm run start:dev` or name from change C) in background writing `.e2e-service.pid`; wait for `curl -sf $SERVICE_URL/service/status`; start the three apps with `mc-scripts start` (ports from task 3.2) writing pids; write `e2e/.env.e2e`; options `--service-only`, `--no-apps`; `dev-down.sh` kills pids and tunnel.
   **Done when:** `bash scripts/e2e/dev-up.sh && curl -sf "$SERVICE_URL/service/status"` prints status JSON; `dev-down.sh` leaves no listening ports 8080/3001-3003 (`lsof -i :8080` empty).
   **Watch out:** tunnel URL changes each time, so `MC_AUDIENCE` and the app env `CHAT_SERVICE_ENDPOINT_URL` must be rewritten and the apps restarted.
 

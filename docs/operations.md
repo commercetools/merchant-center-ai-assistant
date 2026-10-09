@@ -35,10 +35,26 @@ after a failed check so one log shows every problem (`service/src/connector/post
 
 ## Capacity, scaling and cold start
 
-- The service is stateless; Connect may run several instances and a sandbox scales to zero. The first request after a quiet period takes about 15 seconds. State and secrets survive because they are in Custom Objects.
+- The service is stateless; Connect may run several instances and a sandbox scales to zero. The first request after a quiet period is slower while an instance starts (a cold start); the duration depends on the platform and has not been measured for this connector. State and secrets survive because they are in Custom Objects.
 - The embedded Nimbus child needs about 70 MB of memory when started (measured on a workstation, not in Connect) and a 96 MB heap cap; it is started on first use and stopped after 10 minutes without a call. Set `NIMBUS_MCP_ENABLED=false` if memory is tight.
 - Custom Object requests have a 15 second timeout and up to 3 tries on transient errors. Large sessions are limited by what the platform returns (at most 10,000 messages readable per session) and by the object size limits in `service/src/persistence/limits.ts`.
 - There is no queue: a chat turn runs inside one HTTP request, limited to 270 seconds.
+
+## Known issues
+
+- **Some Managed MCP tool schemas cannot be sent to Gemini unchanged.** Gemini's function-calling schema is
+  smaller than JSON Schema, and one tool it cannot express makes the whole request fail, so every tool of
+  that turn is lost and the assistant answers with a schema error although every server is healthy. Constructs
+  seen in Managed MCP servers include references that are not direct children of the root definitions, recursive
+  references, arrays without an item type, tuple-style `items` and reference cycles made only of required
+  fields. The service rewrites the schemas of the merged tool set before each request and keeps the tool's own
+  input validation (`service/src/schema/json-schema.ts`, `service/src/schema/normalize-tool-set.ts`). The rewrite
+  is lossy only where a reference cannot be hoisted; the affected tool names are logged as warnings. If a
+  tool misbehaves after an update of the Managed MCP server, check those warnings first. When a server
+  publishes schemas that Gemini accepts, the rewrite does nothing.
+- **Stripe tools use a pinned toolkit release.** See [configuration.md](./configuration.md#stripe-toolkit-version).
+- **Cold start duration is not measured.** Sandbox and preview deployments scale to zero, so the first request after a
+  quiet period is slower; this document gives no figure because none has been measured for this connector.
 
 ## Fail-open and fail-closed behaviour
 

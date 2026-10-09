@@ -10,7 +10,8 @@ connector. It is installed once per commercetools project.
 - Status: version 0.1.0, unsupported (see [SUPPORT.md](./SUPPORT.md)).
 - The folders `plans/` and `openspec/` hold the design documentation of the project. They imply no support.
 - Documentation: this README is the connector README; the details are in [docs/](./docs) and in the
-  README of each application folder.
+  README of each application folder. Start with [docs/using-the-assistant.md](./docs/using-the-assistant.md)
+  if you use the assistant, or [docs/adding-a-store.md](./docs/adding-a-store.md) if you extend the service.
 
 ## Overview
 
@@ -85,6 +86,7 @@ gateway, which adds a short-lived signed token that the service verifies. See
 | `mc-app/`, `composed-apps/`, `mc-view-app/` | The Merchant Center applications (TypeScript, React, Yarn 1, one install per folder) |
 | `contract/` | Shared test fixture of the composed page format |
 | `docs/` | Documentation |
+| `e2e/` | Browser test playbooks and their helpers, see [e2e/README.md](./e2e/README.md) |
 | `scripts/` | Repository checks, the deployment helper (`scripts/connect`) and the documentation checks (`scripts/docs`) |
 | `plans/`, `openspec/` | Design documentation |
 
@@ -358,7 +360,7 @@ identity connection, or redeploy. See [docs/operations.md](./docs/operations.md#
 - Frontends: `yarn typecheck && yarn lint && yarn test && yarn build` in each folder (the build needs the variables of `.env.example`).
 - Repository checks: `node scripts/spdx-check.mjs`, `node scripts/check-repo-rules.mjs`, `node scripts/check-connect-layout.mjs`, `node scripts/check-duplicates.mjs`.
 - Documentation checks: `node scripts/docs/gen-config-table.mjs --check`, `check-links.mjs`, `check-api-doc.mjs`, `check-docs-claims.mjs`.
-- Live checks against a deployed connector need a Merchant Center login and are run by hand.
+- Live checks against a deployed connector need a Merchant Center login and are run by hand; the playbooks, tiers and evidence rules are in [e2e/README.md](./e2e/README.md).
 
 ## Contributing
 

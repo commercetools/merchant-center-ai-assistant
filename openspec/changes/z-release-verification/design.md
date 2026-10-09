@@ -40,7 +40,7 @@ Change Z (`z-release-verification`), wave 11, needs X (and T if unblocked). It i
 
 | ID | Change | Needs | Evidence required (record command, exit code, ids, artefact) |
 |---|---|---|---|
-| A | `a-repo-bootstrap-labs-compliance` | - | `node scripts/spdx-check.mjs` and `node scripts/check-repo-rules.mjs` exit 0; `node --test scripts/tests`; LICENSE, SUPPORT.md, CONTRIBUTING.md, README banner present |
+| A | `a-repo-bootstrap-labs-compliance` | - | `node scripts/spdx-check.mjs` and `node scripts/check-repo-rules.mjs` exit 0; `node --test scripts/tests/*.test.mjs`; LICENSE, SUPPORT.md, CONTRIBUTING.md, README banner present |
 | B | `b-connect-skeleton` | A | `commercetools connect validate` exit 0; four app folders; `connect.yaml` keys documented |
 | C | `c-service-foundation` | B | `cd service && npm run build && npm test`; E2E-C-01, E2E-C-02; `/service/status` UP on sandbox |
 | D | `d-mc-session-auth` | C | service tests; E2E-D-01..D-05, E2E-V-02, E2E-V-03, E2E-V-12, E2E-V-13; admin resolution by `ADMIN_USER_IDS` proven for the admin user and the non-admin user |

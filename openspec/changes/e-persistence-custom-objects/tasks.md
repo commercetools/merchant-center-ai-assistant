@@ -9,7 +9,7 @@ You should now be able to explain: (a) why messages are one object each in a per
 ## 1. Setup
 
 - [x] 1.1 Confirm spec C is merged (`ls service/src/config/index.ts service/src/client/create.client.ts`) and `cd service && npm test` is green.
-- [ ] 1.2 Branch: `git checkout -b spec/e-persistence-custom-objects`.
+- [x] 1.2 Branch: `git checkout -b spec/e-persistence-custom-objects`. (not needed: work happens on the harness branch)
 - [x] 1.3 Create folders: `mkdir -p service/src/{persistence/{gateway,types,stores,feedback},crypto} service/tests/{unit/persistence,integration,helpers} service/scripts`.
   **Done when:** `find service/src/persistence -type d | sort` lists `gateway stores types feedback`.
 - [ ] 1.4 Optional now, required in section 7: ask the owner for manual step M3 (scratch project, API client with `manage_key_value_documents` + `view_key_value_documents`) - section 7 tasks cannot run without it, sections 2-6 can.
@@ -270,7 +270,7 @@ You should now be able to explain: (a) why messages are one object each in a per
 - [ ] V.2 Integration (needs M3): `npm run test:integration` (contract + probes) and `PERF=1 npm run test:integration -- perf.sessions` once.
 - [ ] V.3 `npm run typecheck && npm run lint && npm run check:foundation && npm run build`; `commercetools connect application test` exit 0; `commercetools connect validate` exit 0 (confirm `connect.yaml` has `view_key_value_documents` + `manage_key_value_documents` under `inheritAs.apiClient.scopes`, `ENCRYPTION_KEY` in `securedConfiguration`, and does NOT contain `PERSISTENCE_DRIVER`).
 - [x] V.4 Grep gates: `grep -rn "firestore\|Firestore\|tenant" service/src/persistence service/src/crypto` -> no output; `grep -rln "customObjects()" service/src` -> only `persistence/gateway/custom-object.gateway.ts` (and spec M's page tool if present).
-- [ ] V.5 Chrome E2E: none directly (no UI). The feature specs G/I/N own scenarios (`E2E-G-*`, `E2E-I-*`, `E2E-N-*`) that exercise this layer through the app; leave a note in each of their `tasks.md` "Read first" pointing at `design.md` Appendix A to find the created Custom Objects (`GET /custom-objects/ai-assistant-sessions` via the MC HTTP API playground or `curl`).
+- [x] V.5 Chrome E2E: none directly (no UI). The feature specs G/I/N own scenarios (`E2E-G-*`, `E2E-I-*`, `E2E-N-*`) that exercise this layer through the app; each of their `tasks.md` carries a note pointing at `design.md` Appendix A to find the created Custom Objects (`GET /custom-objects/ai-assistant-sessions` via the MC HTTP API playground or `curl`). (done: the note is in the tasks of G, I and N)
 - [x] V.6 Definition of Done (`plans/04-workflow.md` section 4): SPDX headers, no `console.log`, no `any`, no tenant words.
 
 ## Docs to update (for spec W)

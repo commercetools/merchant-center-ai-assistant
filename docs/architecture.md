@@ -123,6 +123,21 @@ step to wrap up. At the hard deadline a notice and a stored `data-turn-status` p
 - Generated page code runs in the Merchant Center application's own origin (`mc-app/custom-application-config.mjs` allows `unsafe-eval` for it); the Custom View does not.
 - Details: [security.md](./security.md) and [permissions.md](./permissions.md).
 
+## Package names
+
+Every package in the development tree is private and named `ai-assistant-<suffix>`. The published
+repository carries the same packages under the scope `@commercetools-labs/`; the rename is applied when the
+repository is published, so a clone of the published repository shows the third column.
+
+| Folder | Development name | Published name |
+| --- | --- | --- |
+| `service/` | `ai-assistant-service` | `@commercetools-labs/ai-assistant-service` |
+| `mc-app/` | `ai-assistant-mc-app` | `@commercetools-labs/ai-assistant-mc-app` |
+| `composed-apps/` | `ai-assistant-composed-apps` | `@commercetools-labs/ai-assistant-composed-apps` |
+| `mc-view-app/` | `ai-assistant-mc-view-app` | `@commercetools-labs/ai-assistant-mc-view-app` |
+| `scripts/` | `ai-assistant-scripts` | `@commercetools-labs/ai-assistant-scripts` |
+| `@types-extensions/json-stable-stringify/` in each frontend | `ai-assistant-types-json-stable-stringify` | `@commercetools-labs/ai-assistant-types-json-stable-stringify` |
+
 ## Dependencies
 
 These are the external dependencies; [operations.md](./operations.md) has one row for each in its fail-open and fail-closed table.

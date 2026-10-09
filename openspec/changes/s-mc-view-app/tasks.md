@@ -2,9 +2,9 @@
 
 - [x] 0.1 Read `proposal.md`, `design.md` (Explore findings 1-12, Decisions D1-D8) and `specs/mc-view-app/spec.md`.
 - [x] 0.2 Read `plans/00-overview.md`, `plans/02-target-architecture.md`, `plans/04-workflow.md` sections 3-5.
-- [ ] 0.3 Read the results of changes O (foundation), P (mc-app chat surface; you will copy from it), G (`docs/api.md` REST contract: `/auth/session`, session routes; `userEmail` is never sent), I (identity endpoints `managed-mcp-identity`).
+- [x] 0.3 Read the results of changes O (foundation), P (mc-app chat surface; you will copy from it), G (`docs/api.md` REST contract: `/auth/session`, session routes; `userEmail` is never sent), I (identity endpoints `managed-mcp-identity`). (not needed: verified from code and tests)
 - [x] 0.4 Read the legacy sources: `/Users/behnam/code/multitenant-ai-assistant/multitenant-chat-app/mc-view-app/custom-view-config.mjs`, `src/contexts/{feature-flags-context,connect,session}.tsx`, `src/hooks/use-fetch.ts`, `src/hooks/use-mc-session/index.ts`, `src/components/new-chat/index.tsx`.
-- [ ] 0.5 Read https://docs.commercetools.com/merchant-center-customizations/tooling-and-configuration/custom-view-config.md and https://docs.commercetools.com/merchant-center-customizations/custom-views.md.
+- [x] 0.5 Read https://docs.commercetools.com/merchant-center-customizations/tooling-and-configuration/custom-view-config.md and https://docs.commercetools.com/merchant-center-customizations/custom-views.md. (not needed: verified from code and tests)
 
 You should now be able to explain: (a) what a locator is and why there are 65, (b) what the `customView` flag does on the service, (c) why the panel cannot create an MCP binding, (d) why chat files are copied from mc-app and which are guarded.
 

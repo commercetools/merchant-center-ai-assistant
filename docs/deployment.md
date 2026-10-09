@@ -49,7 +49,7 @@ The helper derives the Merchant Center cloud identifier (`gcp-us`, `gcp-eu`, `gc
 
 | Type | Use | Behaviour |
 | --- | --- | --- |
-| `sandbox` | First installs and testing | Needs a published connector; scales to zero, so the first request after a quiet period takes about 15 seconds |
+| `sandbox` | First installs and testing | Needs a published connector; scales to zero, so the first request after a quiet period is slower (cold start) |
 | `preview` | Trying a staged connector | Short lived; delete it when done |
 | `production` | Live use | Needs a published connector and a non-trial project; the helper refuses it without an explicit confirmation flag |
 

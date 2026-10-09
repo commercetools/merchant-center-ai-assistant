@@ -29,6 +29,9 @@ Chrome session or scratch project was available.
 | C20 | `grep -rilE firestore service/src service/package.json` | no match | R7 static proof |
 | C21 | find for a `workflows` folder outside `node_modules` | no match | R6 static proof |
 | C22 | `grep -nE "platform-sdk\|ts-client" service/package.json` | 0 | `^8.27.0` and `^4.10.0` |
+| C23 | `node scripts/docs/check-docs-claims.mjs --certify --citations --scrub --stale` (after r2-docs) | 0 | `--scrub` green after the three `e2e/README.md` lines were rewritten; the new guides pass the same checks |
+| C24 | `node --test scripts/tests/*.test.mjs scripts/docs/*.test.mjs scripts/internal/tests/*.test.mjs scripts/release/*.test.mjs` (after r2-docs) | 0 | 220 tests, 220 pass, 0 fail (includes the new `e2e-seeds` tests) |
+| C25 | `openspec validate --all --strict` (after r2-docs) | 0 | 24 passed, 0 failed |
 
 Not run (each blocked by the manual step in brackets): `connect validate` (M14), any `connect.mjs` command
 against Connect (M4, M16), sandbox deployment and `/service/status` (M6, M7, M15), live Custom Object

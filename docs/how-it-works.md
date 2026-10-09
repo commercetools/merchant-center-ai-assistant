@@ -101,7 +101,7 @@ Lists are read with the platform's query and limited to 500 results per page. La
 
 ## Large tool results and images
 
-Large results of commercetools tools are not given to the model whole. An analyzer step decides whether a result needs aggregation; if so the rows are written to a per-session BigQuery table (at most 20,000 rows, expiring after 7 days)
+Large results of commercetools tools are not given to the model whole. An analyzer step (it sees the last 10 messages of the conversation) decides whether a result needs aggregation; if so the rows are written to a per-session BigQuery table (at most 20,000 rows, expiring after 7 days)
 and the model receives the table reference and the column names instead (`service/src/analytics/pipeline/pipeline.ts`). The model then queries the table with `query_aggregated_data`, which accepts only `SELECT` over the session's own tables, checks a dry run first and
 limits rows (500) and billed bytes (200 MB) (`service/src/analytics/guard/sql-guard.ts`). Deleting a session drops its tables and its images through cleanup hooks (`service/src/analytics/cleanup/bigquery-hook.ts`, `service/src/storage/cleanup-hook.ts`).
 

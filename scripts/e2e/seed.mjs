@@ -7,9 +7,15 @@
 // Seeds test fixtures as Custom Objects of the scratch project (dev API client in service/.env.local).
 // Usage: node scripts/e2e/seed.mjs composed-pages [--dry-run]   five `e2e-*` pages for E2E-R-*
 //        node scripts/e2e/seed.mjs legacy-page [--dry-run]      `e2e-legacy` with schema 4.0 (E2E-R-09)
+//        node scripts/e2e/seed.mjs sessions-many --user-id <id> [--count N] [--dry-run]
+//                                                               N `e2e-` sessions of one user (list cap, paging)
+//        node scripts/e2e/seed.mjs large-snapshot [--out <dir>] [--user-id <id>] [--dry-run]
+//                                                               feedback payload files of about 6 and 11 MiB
+//                                                               (E2E-N-02); with --user-id also a session
 // composed-pages needs the built service (`cd service && npm run build`): each page is produced by the
 // service's own createComposedPage, so the stored schema equals what the assistant writes.
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -18,6 +24,50 @@ import { createClient } from './lib/ct-client.mjs';
 const REPO = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const FIXTURES = join(REPO, 'e2e', 'fixtures', 'composed-pages');
 const CONTAINER = 'shared-composed-pages';
+const SEEDS = join(REPO, 'e2e', 'fixtures', 'seeds');
+
+/** Reads one seed definition from e2e/fixtures/seeds. */
+export function loadSeed(name, dir = SEEDS) {
+  return JSON.parse(readFileSync(join(dir, `${name}.json`), 'utf8'));
+}
+
+const SAFE_ID = /^[A-Za-z0-9_-]{1,100}$/;
+
+/** Session records (value shape of the service's session store) for the sessions-many seed. */
+export function buildSessions(count, userId, def = loadSeed('sessions-many'), now = Date.now()) {
+  if (!Number.isInteger(count) || count < 1 || count > def.maxCount) throw new Error(`--count must be 1..${def.maxCount}`);
+  if (!SAFE_ID.test(userId ?? '')) throw new Error('--user-id is required and must be a plain id');
+  return Array.from({ length: count }, (_v, i) => {
+    const n = String(i + 1).padStart(4, '0');
+    const at = now - (count - i) * 1000;
+    return {
+      container: def.container,
+      key: `${def.keyPrefix}${n}`,
+      value: { id: `${def.keyPrefix}${n}`, userId, title: `${def.titlePrefix}${n}`, createdAt: at, updatedAt: at, schemaVersion: 1 },
+    };
+  });
+}
+
+/**
+ * Body of a POST feedback/submit request whose JSON is about `bytes` long: messages of
+ * `def.messageBytes` characters of filler, no real content.
+ */
+export function buildSnapshotBody(sessionId, bytes, def = loadSeed('large-snapshot')) {
+  if (!Number.isInteger(bytes) || bytes < 1024) throw new Error('size must be an integer of at least 1024 bytes');
+  const messages = [];
+  let left = bytes;
+  for (let i = 0; left > 0; i++) {
+    const n = Math.min(def.messageBytes, left);
+    messages.push({ id: `e2e-big-${i}`, role: i % 2 ? 'assistant' : 'user', parts: [{ type: 'text', text: 'x'.repeat(n) }] });
+    left -= n;
+  }
+  return { sessionId, comment: def.comment, messages };
+}
+
+function option(rest, name) {
+  const i = rest.indexOf(name);
+  return i >= 0 ? rest[i + 1] : undefined;
+}
 
 /** Reads and validates the fixture inputs; every key must start with `e2e-`. */
 export function loadFixtures(dir = FIXTURES) {
@@ -39,9 +89,48 @@ export function toStoredValue(fixture, output, createdBy = 'e2e-seed') {
 export async function run(argv, { client = null, log = console.log, createComposedPage = null } = {}) {
   const [what, ...rest] = argv;
   const dry = rest.includes('--dry-run');
-  if (what !== 'composed-pages' && what !== 'legacy-page') {
-    log('usage: seed.mjs composed-pages|legacy-page [--dry-run]');
+  if (!['composed-pages', 'legacy-page', 'sessions-many', 'large-snapshot'].includes(what)) {
+    log('usage: seed.mjs composed-pages|legacy-page|sessions-many|large-snapshot [options] [--dry-run]');
     return 2;
+  }
+  if (what === 'sessions-many') {
+    const def = loadSeed('sessions-many');
+    const userId = option(rest, '--user-id') ?? process.env.E2E_USER_ID;
+    const count = Number(option(rest, '--count') ?? def.defaultCount);
+    let rows;
+    try {
+      rows = buildSessions(count, userId, def);
+    } catch (e) {
+      log(`seed: ${e.message}`);
+      return 2;
+    }
+    const api = dry && !client ? null : client ?? createClient();
+    for (const r of rows) if (api) await api.put(r.container, r.key, r.value);
+    log(`${dry ? 'would write' : 'wrote'} ${rows.length} sessions in ${def.container} (${rows[0].key} .. ${rows[rows.length - 1].key})`);
+    return 0;
+  }
+  if (what === 'large-snapshot') {
+    const def = loadSeed('large-snapshot');
+    const userId = option(rest, '--user-id') ?? process.env.E2E_USER_ID;
+    const dir = resolve(option(rest, '--out') ?? join(process.env.TMPDIR || tmpdir(), 'e2e', 'seeds'));
+    mkdirSync(dir, { recursive: true });
+    for (const [label, bytes] of Object.entries(def.sizes)) {
+      const file = join(dir, `large-snapshot-${label}.json`);
+      writeFileSync(file, JSON.stringify(buildSnapshotBody(def.sessionKey, bytes, def)));
+      log(`wrote ${file} (${label}, about ${(bytes / 1048576).toFixed(0)} MiB)`);
+    }
+    if (userId) {
+      if (!SAFE_ID.test(userId)) {
+        log('seed: --user-id must be a plain id');
+        return 2;
+      }
+      const now = Date.now();
+      const value = { id: def.sessionKey, userId, title: def.comment, createdAt: now, updatedAt: now, schemaVersion: 1 };
+      const api = dry && !client ? null : client ?? createClient();
+      log(`${dry ? 'would write' : 'writing'} ai-assistant-sessions/${def.sessionKey}`);
+      if (api) await api.put('ai-assistant-sessions', def.sessionKey, value);
+    }
+    return 0;
   }
   const api = dry && !client ? null : client ?? createClient();
   if (what === 'legacy-page') {

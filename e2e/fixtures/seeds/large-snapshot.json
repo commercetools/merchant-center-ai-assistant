@@ -1,0 +1,7 @@
+{
+  "sessionKey": "e2e-large-snapshot",
+  "comment": "e2e-large-snapshot",
+  "messageBytes": 262144,
+  "sizes": { "accepted": 6291456, "rejected": 11534336 },
+  "note": "Payload bodies for POST feedback/submit; sizes are in bytes (6 MiB must be stored chunked, 11 MiB must be refused with a readable message)."
+}

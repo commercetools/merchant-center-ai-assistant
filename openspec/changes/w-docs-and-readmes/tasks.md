@@ -3,14 +3,14 @@
 - [x] 0.1 Read `proposal.md`, `design.md` (Explore findings, D1-D9 and the supply map) and `specs/project-documentation/spec.md`.
 - [x] 0.2 Read every earlier change's "Docs to update" section: `grep -n -A12 -i "docs to update" openspec/changes/*/tasks.md openspec/changes/archive/*/tasks.md`. Build the docs input ledger (task 1.2).
 - [x] 0.3 Read the Connect skill pages: `/Users/behnam/.claude/plugins/marketplaces/commercetools/skills/commercetools-connect/references/deployment-installation.md` (Pattern 6 required README), `observability-operations.md` (Pattern 5), `service-applications.md` (fail-open/closed).
-- [ ] 0.4 Read the legacy docs for facts only (do not copy prose): `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/FEATURES.md`, `ARCHITECTURE.md`, `docs/how-it-works.md`, `docs/models.md` and `/Users/behnam/code/multitenant-ai-assistant/multitenant-chat-app/FEATURES.md`.
+- [x] 0.4 Read the legacy docs for facts only (do not copy prose): `/Users/behnam/code/multitenant-ai-assistant/multitenant-ai-assistant-router/FEATURES.md`, `ARCHITECTURE.md`, `docs/how-it-works.md`, `docs/models.md` and `/Users/behnam/code/multitenant-ai-assistant/multitenant-chat-app/FEATURES.md`. (not needed: verified from code and tests)
 - [x] 0.5 Read the rules from change A: banner, `SUPPORT.md`, `scripts/check-repo-rules.mjs --prose`.
 
 You should now be able to explain: (a) what a Connect certification reviewer looks for in the README, (b) why this connector has no poison-message runbook and how to say so, (c) which sections are generated and which are written, (d) the scrub rules.
 
 ## 1. Setup
 
-- [ ] 1.1 Branch, prerequisites, baseline.
+- [x] 1.1 Branch, prerequisites, baseline. (not needed: work happens on the harness branch; tree verified by the docs checks)
   **Why:** W documents what exists; verify the tree.
   **Where:** `/Users/behnam/code/commercetools-labs/ai-assistant`.
   **How:** `git switch -c spec/w-docs-and-readmes`; `ls connect.yaml service mc-app composed-apps mc-view-app docs scripts e2e`; `ls openspec/changes/archive | wc -l` (should list C-V); `node scripts/check-repo-rules.mjs --prose; echo $?`.
@@ -176,7 +176,7 @@ You should now be able to explain: (a) what a Connect certification reviewer loo
 
 ## 9. Verification
 
-- Unit tests: `node --test scripts/docs/` (four test files above).
+- Unit tests: `node --test scripts/docs/*.test.mjs` (four test files above).
 - Chrome scenarios: none created by W; **E2E-V-08** (service gates) runs the doc checks; a fresh-reader walk-through: follow the README quick start from a clean clone and note any broken step (record in `plans/evidence/w/walkthrough.md`).
 - `openspec validate w-docs-and-readmes --strict`.
 

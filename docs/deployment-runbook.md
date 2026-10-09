@@ -52,7 +52,7 @@ The `post-deploy: gcp analytics:` log lines tell you when the dataset or the buc
 
 | Type | Command | Needs | Behaviour |
 |---|---|---|---|
-| `sandbox` (default) | `deploy` | a published connector | scales to zero, about 15 seconds cold start; cannot deploy a staged connector |
+| `sandbox` (default) | `deploy` | a published connector | scales to zero, so the first request after a quiet period is slower (cold start); cannot deploy a staged connector |
 | `preview` | `preview` | a staged connector that is previewable | short-lived; scales to zero; delete it when testing ends (`delete --preview --yes`) |
 | `production` | `deploy --type production --confirm-production` | a published connector and a non-trial project | refused without `--confirm-production` |
 
@@ -108,7 +108,7 @@ Run `update-code --tag <previous tag>`. If a new version fails to build, the pre
 | `ADMIN_USER_IDS` empty | nobody is an administrator |
 | a provider's keys are partial or absent | that provider is disabled, everything else works |
 | Vertex AI answers 5xx during postDeploy | warning only |
-| Vertex AI answers 4xx, malformed key, probe failure, audience mismatch | `post-deploy: FAILED <check>`; the deployment may still show `Deployed` |
+| Vertex AI answers 4xx, malformed key, probe failure (including `commercetools unavailable`), audience mismatch | `post-deploy: FAILED <check>`; the deployment may still show `Deployed` |
 
 ## 8. Required scopes
 
@@ -136,9 +136,9 @@ Secret values are passed as `--configuration` arguments to the CLI, so they are 
 | Symptom | What to do |
 |---|---|
 | deployment status `Failed` | `node scripts/connect/connect.mjs logs`; a failed status needs a new deployment or support |
-| `post-deploy: FAILED <check>` | read the reason on that line: `sa-key` (fix `GCP_SA_KEY_BASE64`), `vertex` (the hint names the role or model), `probe` (the API client lacks `manage_key_value_documents`), `audience` (see below) |
+| `post-deploy: FAILED <check>` | read the reason on that line: `sa-key` (fix `GCP_SA_KEY_BASE64`), `vertex` (the hint names the role or model), `probe` (the reason ends with `(HTTP <status>)`, for example 403 when the API client lacks `manage_key_value_documents`, or with `(commercetools unavailable)` when the platform answered 5xx or timed out after the built-in retries; in the second case run the deployment again once the platform recovers), `audience` (see below) |
 | the service answers 401 | `MC_AUDIENCE` is unset or differs from the service origin: run `finalize` again; `post-deploy: MC_AUDIENCE is not set. Set it to <origin>` shows the value |
-| first request is slow or `finalize` retries | sandbox and preview scale to zero (about 15 seconds); the smoke check retries up to 10 times |
+| first request is slow or `finalize` retries | sandbox and preview scale to zero (cold start); the smoke check retries up to 10 times |
 | a redeploy shows old behaviour | use `update-code` (stage, publish, redeploy with `--updateConnector`); a plain `configure` does not move to new code |
 | a provider shows "Not configured" in Settings | read the `post-deploy: providers` line for the missing key names, then run `configure` |
 | `deploy` says the deployment already exists | use `finalize` or `configure`, or `delete --yes` and start again |

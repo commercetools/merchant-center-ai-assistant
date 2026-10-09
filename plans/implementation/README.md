@@ -37,11 +37,13 @@ Order follows `plans/03-spec-dependency-map.md` (A to Z; T and Y are unused). St
 | R | composed-apps (Pages) read-only app | implemented + unit-tested (25 tests); needs live verification (local run, 9 cards) | [r-notes](r-notes.md) |
 | S | mc-view-app custom view panel | implemented + unit-tested (24 tests); needs live verification (iframe, 12 cards) | [s-notes](s-notes.md) |
 | U | Connect deployment scripts without CI, lifecycle scripts, runbook | implemented + unit-tested (fake CLI); needs live verification (rehearsal, U1-U10) | [u-notes](u-notes.md) |
-| V | Chrome E2E playbooks (147 cards) and helper scripts | cards and helpers written and lint/unit-tested; every card NOT RUN | [v-notes](v-notes.md) |
-| W | README, docs, config table generators, docs checks | implemented + unit-tested (31 tests); needs live verification (re-read after rehearsal) | [w-notes](w-notes.md) |
-| X | Publication toolkit: scrub, leak scan, prepare-publish, anon proof | implemented + unit-tested (24 tests) and dry-run on a copy; publication blocked on NEEDS-HUMAN lines, archive, M12 | [x-notes](x-notes.md) |
+| V | Chrome E2E playbooks (147 cards) and helper scripts (including the `large-snapshot` and `sessions-many` seeds and the evidence scrub pass) | cards and helpers written and lint/unit-tested; every card NOT RUN | [v-notes](v-notes.md) |
+| W | README, docs (now with the assistant and adding-a-store guides, limits, known issues), config table generators, docs checks | implemented + unit-tested (31 tests); needs live verification (re-read after rehearsal) | [w-notes](w-notes.md) |
+| X | Publication toolkit: scrub, leak scan, prepare-publish, anon proof | implemented + unit-tested (24 tests); dry run on a copy now has 0 NEEDS-HUMAN, 0 leak BLOCK and gate CLEAR (`scrubfix-notes.md`, not a live verification); publication still needs the REVIEW read, private-token list, archive, M12 | [x-notes](x-notes.md) |
 | Z | Release verification | written separately | not indexed |
 | cleanup | Integration fixes after the merges (envelope, seams, retry, aad, parser) | done; unit-tested (170 service suites) | [cleanup-notes](cleanup-notes.md) |
+
+Housekeeping done after the merges is described in [r2-docs-notes.md](r2-docs-notes.md) (spec text corrections, task ticks, docs, e2e seeds).
 
 ## Top blocking items (details in the three files)
 
@@ -53,5 +55,5 @@ Order follows `plans/03-spec-dependency-map.md` (A to Z; T and Y are unused). St
 6. Nimbus child within 512 MB on Connect (VD-11, Q-impl-20).
 7. 147 E2E cards not run (todos.md section b; M3 to M10).
 8. Rehearsal inputs missing: staging repo and region (Q-impl-19; M15).
-9. Publication: 61 NEEDS-HUMAN lines, archive, gate acknowledgement, private token list, M12 (TC-01 to TC-09; Q-impl-58, 61, 64, 66, 67).
+9. Publication: the dry-run copy has 0 NEEDS-HUMAN lines and a CLEAR gate (`scrubfix-notes.md`); still open on the real tree are the 373 leak REVIEW lines, archive, private token list and M12 (TC-01 to TC-09; Q-impl-58, 61, 64, 66, 67).
 10. Body ceilings and SSE limits on Connect (Q-impl-33, VD-13, VD-14).

@@ -74,7 +74,7 @@ Third-party credentials are Connect configuration only; do not add a screen or a
 ## End-to-end checks
 
 The apps can only be exercised fully in a browser that is logged in to the Merchant Center against a deployed sandbox connector. Keep such checks idempotent, clean up the sessions and objects they create, and assert structure
-rather than model wording. If the repository contains an `e2e/` folder, follow the README in it for the format of a check.
+rather than model wording. Follow [e2e/README.md](./e2e/README.md) for the format of a check, the tiers and the evidence rules.
 
 ## Commits and pull requests
 

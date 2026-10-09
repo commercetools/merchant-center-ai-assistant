@@ -121,7 +121,7 @@
 
 - [ ] 6.2 Frontend notes
       **Why:** P/R/O must adopt the fixed check.
-      **Where:** write the amendment text in `plans/questions-inbox/IJKLM-plan-amendments.md` (already drafted); no frontend edits here.
+      **Where:** record the amendment text in `plans/implementation/m-notes.md` (the `questions-inbox` file named in earlier drafts does not exist in the tree); no frontend edits here.
       **Done when:** P, R and O owners acknowledged (comment in their change PRs).
       **Watch out:** until adopted the frontends keep working (they re-transpile).
 
@@ -129,4 +129,4 @@
 
 - [x] 7.1 Automated: `npx jest tests/composed-pages` (contract.spec.ts, schema.spec.ts, validate.spec.ts, transpile.spec.ts, tool.spec.ts, tool-source.spec.ts, fixture.spec.ts, nimbus-scope.spec.ts, prompt.spec.ts); `npm run check:nimbus-surface`; `npm run build`; `npm run lint`.
 - [ ] 7.2 Chrome DevTools scenarios (run by V): E2E-M-01 ask for a dashboard, a `ui://composed-page/.../v1` part renders; E2E-M-02 ask to change the page, uri ends `/v2`; E2E-M-03 page with hooks renders using the server transpiled code (console shows no client re-transpile once P adopts the fix); E2E-M-04 ask for a page that uses `window`, assistant retries without it; E2E-M-05 save page, Custom Object appears in container `shared-composed-pages`; E2E-M-06 custom view session has no composed-page tool.
-- [ ] 7.3 Docs to update (change W): composed pages contract (fixture, container key, encoding), how to regenerate the Nimbus surface, validation limits and the defence-in-depth note.
+- [x] 7.3 Docs to update (change W): composed pages contract (fixture, container key, encoding), how to regenerate the Nimbus surface, validation limits and the defence-in-depth note. (done: docs/how-it-works.md, docs/api.md limits table, docs/operations.md Nimbus upgrade)

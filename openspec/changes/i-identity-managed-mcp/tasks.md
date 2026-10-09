@@ -229,6 +229,7 @@
 - [x] V.2 Repo gates
       **How:** `node scripts/spdx-check.mjs`; `grep -rn "console\.\|tenant\|projects/" service/src/identity-mcp` -> empty; `commercetools connect validate` unchanged (no new config keys, no new scopes).
 - [ ] V.3 Chrome scenarios (agent runs them against the scratch project; evidence in `plans/evidence/I/`; needs manual steps M3, M8, M10, M11)
+  Created Custom Objects (containers per `e-persistence-custom-objects/design.md` Appendix A) can be listed with `GET /custom-objects/ai-assistant-sessions` through the Merchant Center HTTP API playground or `curl`.
       - **E2E-I-01** fresh deployment: `GET /managed-mcp-identity` 404 `IDENTITY_MCP_NOT_CONFIGURED`; app shows the setup step (network log).
       - **E2E-I-02** admin user A (id in `ADMIN_USER_IDS`) binds the identity-mode server (verdict `auth2`); non-admin user B gets 403 `ADMIN_REQUIRED` on the same call (also with a forged e-mail/label header).
       - **E2E-I-03** "Connect my account": popup opens `auth2...`, consent, popup closes, `/status` `connected: true`; token record in Custom Objects has no plaintext `refresh_token`; record `scope` contains `mcp:` (OQ-I1).

@@ -63,4 +63,4 @@ Not decided (RQ13). Default: a private archive of the development repository. `p
 
 ## 12. What blocks v0.1.0
 
-See `open-items.md` section 1 (Z-01 to Z-09) and the "blocks release" rows of sections 2 and 3: no sandbox deployment, no E2E run, `connect validate` not run, gate not CLEAR, nothing archived, owner decisions pending. The release procedure to follow once they are cleared is in `release-log.md`.
+See `open-items.md` section 1 (Z-01 to Z-09) and the "blocks release" rows of sections 2 and 3: no sandbox deployment, no E2E run, `connect validate` not run, gate not yet confirmed CLEAR on a real publication tree (dry-run copy: 0 NEEDS-HUMAN, 0 leak BLOCK, CLEAR), nothing archived, owner decisions pending. The release procedure to follow once they are cleared is in `release-log.md`.

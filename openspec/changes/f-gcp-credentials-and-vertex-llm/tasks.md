@@ -16,7 +16,7 @@ You should now be able to explain: (a) why one Base64 JSON secret replaces API k
   npm ls @ai-sdk/google-vertex google-auth-library @google/genai     # expect one version each
   npm ls @ai-sdk/provider-utils                                       # note whether 5.0.36 and 5.0.57 both appear (design R3)
   ```
-  **Done when:** `npm run typecheck` still passes; if two `@ai-sdk/provider-utils` copies cause a type error later (task 3.1), bump `ai` within `7.0.x` (e.g. `npm install ai@7.0.134 --save-exact`) and record it in the PR.
+  **Done when:** `npm run typecheck` still passes; if two `@ai-sdk/provider-utils` copies cause a type error later (task 3.1), bump `ai` within `7.0.x` (`npm install ai@7.0.136 --save-exact`; 7.0.134 still left two copies of `@ai-sdk/provider`) and record it in the PR.
   **Watch out:** do NOT install `@ai-sdk/google`, `@ai-sdk/anthropic`, `openai` directly.
 - [ ] 1.3 Ask the owner for manual step **M5** now if not done (service-account JSON with the roles in design F/D2, `export GCP_SA_KEY_BASE64=$(base64 < key.json | tr -d '\n')` into `service/.env.local`). Sections 2-5 do not need it; section 6 does.
 
@@ -34,7 +34,7 @@ You should now be able to explain: (a) why one Base64 JSON secret replaces API k
   export function parseServiceAccountKey(input: string): ServiceAccountKey {
     const compact = input.replace(/\s+/g, '');
     if (!compact) throw new ServiceAccountKeyError('empty');
-    if (compact.length > 24_000) throw new ServiceAccountKeyError('too large');
+    if (compact.length > 16 * 1024) throw new ServiceAccountKeyError('too large');
     if (!/^[A-Za-z0-9+/_-]+={0,2}$/.test(compact)) throw new ServiceAccountKeyError('not valid base64');
     const text = Buffer.from(compact.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
     let obj: unknown; try { obj = JSON.parse(text); } catch { throw new ServiceAccountKeyError('decoded value is not JSON'); }   // never use the caught error's message

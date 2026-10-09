@@ -3,7 +3,7 @@
 - [x] 0.1 Read, in this order: `proposal.md`, `design.md` (especially "Explore findings" 6-9 and "Decisions" D-O3..D-O9) in this folder; `plans/02-target-architecture.md`; `plans/04-workflow.md` sections 3-5.
 - [x] 0.2 Read the legacy files you will copy from (read-only, never edit them), under `/Users/behnam/code/multitenant-ai-assistant/multitenant-chat-app/`:
   `mc-app/package.json`, `mc-app/custom-application-config.mjs`, `mc-app/src/constants.ts`, `mc-app/src/utils/forward-to.ts`, `mc-app/src/hooks/use-mc-session/index.ts`, `mc-app/src/contexts/{auth,connect,index}.tsx`, `mc-app/src/components/reauthenticate-dialog/index.tsx`, `mc-view-app/custom-view-config.mjs`, `composed-apps/custom-application-config.mjs`.
-- [ ] 0.3 Read the Connect skill reference `merchant-center-customizations.md` (patterns 2, 3, 5) and https://docs.commercetools.com/merchant-center-customizations/concepts/integrate-with-your-own-api.md.
+- [x] 0.3 Read the Connect skill reference `merchant-center-customizations.md` (patterns 2, 3, 5) and https://docs.commercetools.com/merchant-center-customizations/concepts/integrate-with-your-own-api.md. (not needed: verified from code and tests)
 
 You should now be able to explain: (a) what `/proxy/forward-to` does and why no query string may be put on it; (b) why the admin flag comes only from the service's `/auth/session` answer (the user id from the verified gateway JWT is in `ADMIN_USER_IDS`) and why the app never asks the gateway for permissions or sends an e-mail as identity; (c) why the three `forward-to.ts` files are copies and not a shared module; (d) what `${env:X}` does and what it cannot reach (imported modules).
 

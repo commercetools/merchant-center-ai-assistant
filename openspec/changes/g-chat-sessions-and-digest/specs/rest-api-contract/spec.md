@@ -31,7 +31,7 @@ The service SHALL expose exactly the following routes under the base path `/serv
 
 | # | Method | Path | Request (query / body) | Response `data` | Auth | Owner change |
 |---|---|---|---|---|---|---|
-| 1 | GET | `/status` | - | `{ status: 'ok' }` (no envelope) | none | C |
+| 1 | GET | `/status` | - | `{ status: 'UP', service, version, persistence, authConfigured, adminConfigured }` (no envelope; liveness only) | none | C |
 | 2 | POST | `/auth/session` | - | `{ projectKey, userId, isAdmin, identityMcpConfigured, ... }` (no `permissions`; `userId` feeds the frontends' read-only "Your user ID" line; contributors of G keep working; shape owned by D) | member | D |
 | 3 | POST | `/session` | body `{ title?, metadata?, featureFlags?, userLabel? }` (`userLabel` display-only, unverified, sanitised, see chat-sessions) | `Session` (201) | member | G |
 | 4 | GET | `/session` | flags as query (`customView=<b64>`) | last `Session` matching flags; 404 if none | member | G |
@@ -59,12 +59,14 @@ The service SHALL expose exactly the following routes under the base path `/serv
 | 26 | GET/POST/PUT/DELETE | `/managed-mcp-identity/*` | defined by change I | - | member | I |
 | 27 | GET | `/mcp/providers` | - | `{ provider, configured, enabled, missingKeys[] }[]` (names and booleans only; provider credentials are Connect configuration, read-only) | member | J |
 | 28 | GET | `/files/:sessionId/:fileName` | - (`:sessionId` UUID, `:fileName` `<digits>-<8 hex>.<png\|jpg\|webp\|gif>`) | raw image bytes (`image/*`, streamed, not enveloped; errors use the envelope; `Cache-Control: private, no-store`) | owner (or admin) | L |
+| 29 | GET | `/health` | - | same body as row 1 (no envelope; liveness only) | none | C |
+| 30 | GET | `/status/nimbus` | - | `{ status: 'ok'\|'degraded'\|'error'\|'disabled', nimbusMcp, tools? }` (no envelope; readiness of the embedded Nimbus MCP server) | none | K |
 
 Row types: `Session`, `SessionListItem`, `AiSdkChatMessage`, `GroupedSessionTools`, `PromptSuggestion` are defined in `service/src/types/chat.types.ts` (change G); `FeedbackListItem`, `FeedbackWithSnapshot`, `BackofficeThread` in change N.
 
 #### Scenario: Contract test enumerates the router
 - **WHEN** the contract test walks the Express router stack of the assembled app
-- **THEN** every row 1-25 and row 28 matches an actual `(method, path)` and no other `(method, path)` exists under `/service` (rows 26, 27 and 29 are matched by prefix)
+- **THEN** every row 1-25 and rows 28 to 30 matches an actual `(method, path)` and no other `(method, path)` exists under `/service` (rows 26 and 27 are matched by prefix)
 
 #### Scenario: Removed legacy routes
 - **WHEN** a client calls `GET` on the removed legacy widget bootstrap path under `/service/` or `GET /service/mcp/anything-legacy`
