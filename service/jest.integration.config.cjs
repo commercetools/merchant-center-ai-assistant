@@ -13,7 +13,7 @@ const base = require('./jest.config.cjs');
 module.exports = {
   ...base,
   displayName: 'Service integration',
-  testMatch: ['**/tests/integration/**/*.spec.ts'],
+  testMatch: ['**/tests/integration/**/*.spec.ts', '**/tests/**/*.int.spec.ts'],
   testPathIgnorePatterns: ['/node_modules/'],
   testTimeout: 60000,
   setupFiles: ['<rootDir>/tests/integration/load-env.cjs'],
