@@ -56,6 +56,8 @@ const SERVICE_STANDARD = {
   MCP_TOOLS_TTL_MS: { default: '1800000' },
   PERSISTENCE_CONCURRENCY: { default: '8' },
   SETTINGS_CACHE_TTL_MS: { default: '5000' },
+  CHAT_REQUEST_BUDGET_MS: { default: '270000' },
+  CHAT_FINALIZE_RESERVE_MS: { default: '30000' },
   LOG_LEVEL: { default: 'info' },
   ADMIN_USER_IDS: { optional: true },
   CONTENTSTACK_BRANCH: { optional: true },

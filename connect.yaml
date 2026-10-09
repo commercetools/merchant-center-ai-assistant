@@ -75,6 +75,12 @@ deployAs:
         - key: SETTINGS_CACHE_TTL_MS
           description: In-process cache lifetime of the stored settings in milliseconds (0 disables the cache, at most 60000)
           default: '5000'
+        - key: CHAT_REQUEST_BUDGET_MS
+          description: Time one chat reply may take in milliseconds, at most 285000 (Connect times a request out after 5 minutes; the reply is finished gracefully when this is reached)
+          default: '270000'
+        - key: CHAT_FINALIZE_RESERVE_MS
+          description: Part of the chat time budget reserved for the final summary step, in milliseconds (5000 up to half the budget)
+          default: '30000'
         - key: LOG_LEVEL
           description: Logger level (error, warn, info, debug)
           default: 'info'
