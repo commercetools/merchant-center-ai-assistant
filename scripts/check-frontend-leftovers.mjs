@@ -9,7 +9,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+// CHECK_ROOT lets the tests run the script against a fixture tree.
+const ROOT = process.env.CHECK_ROOT
+  ? path.resolve(process.env.CHECK_ROOT)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const APPS = ['mc-app', 'composed-apps', 'mc-view-app'];
 const SKIP_DIRS = new Set(['node_modules', 'public', 'dist', 'build']);
 const SKIP_FILES = new Set(['yarn.lock', 'package-lock.json']);
