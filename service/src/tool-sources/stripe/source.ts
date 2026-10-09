@@ -23,10 +23,13 @@ type ActionMap = Record<string, Record<string, true>>;
 export interface StripeToolkitLike {
   tools: Record<string, unknown>;
 }
-export type StripeToolkitFactory = (args: {
+export interface StripeToolkitArgs {
   secretKey: string;
   configuration: { actions: ActionMap; context?: { account: string } };
-}) => StripeToolkitLike;
+}
+export type StripeToolkitFactory = (
+  args: StripeToolkitArgs
+) => StripeToolkitLike;
 
 const defaultFactory: StripeToolkitFactory = (args) =>
   new StripeAgentToolkit(

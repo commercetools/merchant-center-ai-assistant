@@ -42,13 +42,20 @@ describe('providers section (validation)', () => {
     const c = freshConfig({ ALGOLIA_MCP_URL: 'https://169.254.169.254/x' });
     expect(statusOf(c, 'algolia')?.enabled).toBe(false);
     expect(c.providers.algolia).toBeUndefined();
-    expect(c.providers.warnings).toEqual(['PROVIDER algolia disabled: invalid ALGOLIA_MCP_URL']);
+    expect(c.providers.warnings).toEqual([
+      'PROVIDER algolia disabled: invalid ALGOLIA_MCP_URL',
+    ]);
   });
 
   it('an invalid Stripe key never appears in warnings and does not throw', () => {
-    const c = freshConfig({ STRIPE_SECRET_KEY: 'SENTINEL-bad', CONTENTSTACK_REGION: 'SENTINEL-r' });
+    const c = freshConfig({
+      STRIPE_SECRET_KEY: 'SENTINEL-bad',
+      CONTENTSTACK_REGION: 'SENTINEL-r',
+    });
     expect(c.providers.stripe).toBeUndefined();
-    expect(c.providers.warnings).toEqual(['PROVIDER stripe disabled: invalid STRIPE_SECRET_KEY']);
+    expect(c.providers.warnings).toEqual([
+      'PROVIDER stripe disabled: invalid STRIPE_SECRET_KEY',
+    ]);
     expect(JSON.stringify(c.providers)).not.toContain('SENTINEL');
   });
 

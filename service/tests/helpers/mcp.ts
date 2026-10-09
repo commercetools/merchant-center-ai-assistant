@@ -19,13 +19,25 @@ export const fakeMcpFactory = (o: {
   failTools?: Error;
   toolsDelayMs?: number;
 }): McpClientFactory & {
-  configs: Array<{ url: string; redirect: string; headers?: Record<string, string> }>;
+  configs: Array<{
+    url: string;
+    redirect: string;
+    headers?: Record<string, string>;
+  }>;
   closed: number;
 } => {
-  const configs: Array<{ url: string; redirect: string; headers?: Record<string, string> }> = [];
+  const configs: Array<{
+    url: string;
+    redirect: string;
+    headers?: Record<string, string>;
+  }> = [];
   const state = { closed: 0 };
   const factory: McpClientFactory = async (config) => {
-    configs.push({ url: config.url, redirect: config.redirect, headers: config.headers });
+    configs.push({
+      url: config.url,
+      redirect: config.redirect,
+      headers: config.headers,
+    });
     return {
       tools: async () => {
         if (o.toolsDelayMs) {
@@ -44,10 +56,8 @@ export const fakeMcpFactory = (o: {
       },
     };
   };
-  return Object.assign(factory, {
-    configs,
-    get closed() {
-      return state.closed;
-    },
-  });
+  Object.defineProperty(factory, 'closed', { get: () => state.closed });
+  return Object.assign(factory, { configs }) as ReturnType<
+    typeof fakeMcpFactory
+  >;
 };

@@ -5,7 +5,10 @@
  */
 
 import { describe, expect, it } from '@jest/globals';
-import { evaluateProvider, validateProvider } from '../../src/mcp-providers/schemas';
+import {
+  evaluateProvider,
+  validateProvider,
+} from '../../src/mcp-providers/schemas';
 
 const SENTINEL = 'SENTINEL-rejected-value';
 
@@ -17,7 +20,9 @@ describe('validateProvider', () => {
         STRIPE_CONNECTED_ACCOUNT_ID: 'acct_1A2b',
       })
     ).toEqual({ ok: true });
-    expect(validateProvider('stripe', { STRIPE_SECRET_KEY: 'rk_live_abc' })).toEqual({ ok: true });
+    expect(
+      validateProvider('stripe', { STRIPE_SECRET_KEY: 'rk_live_abc' })
+    ).toEqual({ ok: true });
     expect(
       validateProvider('contentstack', {
         CONTENTSTACK_API_KEY: 'a',
@@ -27,7 +32,9 @@ describe('validateProvider', () => {
       })
     ).toEqual({ ok: true });
     expect(
-      validateProvider('algolia', { ALGOLIA_MCP_URL: 'https://mcp.algolia.com/x?key=1' })
+      validateProvider('algolia', {
+        ALGOLIA_MCP_URL: 'https://mcp.algolia.com/x?key=1',
+      })
     ).toEqual({ ok: true });
   });
 
@@ -55,12 +62,19 @@ describe('validateProvider', () => {
     });
     expect(r.ok).toBe(false);
     if (!r.ok) {
-      expect([...r.invalidKeys].sort()).toEqual(['CONTENTSTACK_BRANCH', 'CONTENTSTACK_REGION']);
+      expect([...r.invalidKeys].sort()).toEqual([
+        'CONTENTSTACK_BRANCH',
+        'CONTENTSTACK_REGION',
+      ]);
     }
   });
 
   it('rejects non-https and private Algolia URLs', () => {
-    for (const url of ['http://mcp.algolia.com/x', 'https://169.254.169.254/x', SENTINEL]) {
+    for (const url of [
+      'http://mcp.algolia.com/x',
+      'https://169.254.169.254/x',
+      SENTINEL,
+    ]) {
       expect(validateProvider('algolia', { ALGOLIA_MCP_URL: url })).toEqual({
         ok: false,
         invalidKeys: ['ALGOLIA_MCP_URL'],
@@ -82,14 +96,18 @@ describe('evaluateProvider', () => {
   });
 
   it('partial Contentstack: disabled, warning names the missing key', () => {
-    const r = evaluateProvider('contentstack', { CONTENTSTACK_API_KEY: SENTINEL });
+    const r = evaluateProvider('contentstack', {
+      CONTENTSTACK_API_KEY: SENTINEL,
+    });
     expect(r.status).toEqual({
       provider: 'contentstack',
       configured: false,
       enabled: false,
       missingKeys: ['CONTENTSTACK_MANAGEMENT_TOKEN'],
     });
-    expect(r.warning).toBe('PROVIDER contentstack disabled: missing CONTENTSTACK_MANAGEMENT_TOKEN');
+    expect(r.warning).toBe(
+      'PROVIDER contentstack disabled: missing CONTENTSTACK_MANAGEMENT_TOKEN'
+    );
     expect(r.warning).not.toContain(SENTINEL);
   });
 
@@ -101,7 +119,9 @@ describe('evaluateProvider', () => {
       enabled: false,
       missingKeys: ['STRIPE_SECRET_KEY'],
     });
-    expect(r.warning).toBe('PROVIDER stripe disabled: invalid STRIPE_SECRET_KEY');
+    expect(r.warning).toBe(
+      'PROVIDER stripe disabled: invalid STRIPE_SECRET_KEY'
+    );
     expect(JSON.stringify(r)).not.toContain(SENTINEL);
   });
 

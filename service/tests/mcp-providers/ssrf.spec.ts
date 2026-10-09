@@ -5,7 +5,10 @@
  */
 
 import { describe, expect, it } from '@jest/globals';
-import { assertPublicHttpsUrl, isPublicHttpsUrl } from '../../src/mcp-providers/ssrf';
+import {
+  assertPublicHttpsUrl,
+  isPublicHttpsUrl,
+} from '../../src/mcp-providers/ssrf';
 
 describe('assertPublicHttpsUrl', () => {
   it.each([

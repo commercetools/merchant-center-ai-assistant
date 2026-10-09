@@ -102,6 +102,12 @@ export const createToolSourceRegistry = (
 
     const settled = await Promise.all(
       taking.map(async (source) => {
+        // `all_tools` switches the whole source off: skip it BEFORE any I/O (no handshake).
+        if (
+          ctx.session.disabledTools?.[source.name]?.includes(ALL_TOOLS) === true
+        ) {
+          return { source, tools: {} as ToolSet };
+        }
         try {
           const tools = await withTimeout(
             (async () =>

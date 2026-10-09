@@ -37,18 +37,39 @@ describe('GET /service/mcp/providers', () => {
           provider: 'contentstack',
           configured: false,
           enabled: false,
-          missingKeys: ['CONTENTSTACK_API_KEY', 'CONTENTSTACK_MANAGEMENT_TOKEN'],
+          missingKeys: [
+            'CONTENTSTACK_API_KEY',
+            'CONTENTSTACK_MANAGEMENT_TOKEN',
+          ],
         },
-        { provider: 'algolia', configured: false, enabled: false, missingKeys: ['ALGOLIA_MCP_URL'] },
-        { provider: 'stripe', configured: false, enabled: false, missingKeys: ['STRIPE_SECRET_KEY'] },
+        {
+          provider: 'algolia',
+          configured: false,
+          enabled: false,
+          missingKeys: ['ALGOLIA_MCP_URL'],
+        },
+        {
+          provider: 'stripe',
+          configured: false,
+          enabled: false,
+          missingKeys: ['STRIPE_SECRET_KEY'],
+        },
       ],
     });
   });
 
   it('the same data for an admin and a member', async () => {
-    const a = app({ ADMIN_USER_IDS: 'admin-1', STRIPE_SECRET_KEY: 'sk_test_abc' });
-    const asAdmin = await request(a).get('/service/mcp/providers').set('x-dev-user-id', 'admin-1').set('x-dev-admin', 'true');
-    const asMember = await request(a).get('/service/mcp/providers').set('x-dev-user-id', 'member-2');
+    const a = app({
+      ADMIN_USER_IDS: 'admin-1',
+      STRIPE_SECRET_KEY: 'sk_test_abc',
+    });
+    const asAdmin = await request(a)
+      .get('/service/mcp/providers')
+      .set('x-dev-user-id', 'admin-1')
+      .set('x-dev-admin', 'true');
+    const asMember = await request(a)
+      .get('/service/mcp/providers')
+      .set('x-dev-user-id', 'member-2');
     expect(asAdmin.status).toBe(200);
     expect(asMember.body).toEqual(asAdmin.body);
     expect(asMember.body.data[2]).toEqual({
@@ -60,27 +81,44 @@ describe('GET /service/mcp/providers', () => {
   });
 
   it('mixed state matches the spec scenario', async () => {
-    const res = await request(app({ STRIPE_SECRET_KEY: 'sk_test_abc', CONTENTSTACK_API_KEY: 'k' })).get(
-      '/service/mcp/providers'
-    );
-    expect(res.body.data.map((d: { provider: string; configured: boolean; enabled: boolean }) => [d.provider, d.configured, d.enabled])).toEqual([
+    const res = await request(
+      app({ STRIPE_SECRET_KEY: 'sk_test_abc', CONTENTSTACK_API_KEY: 'k' })
+    ).get('/service/mcp/providers');
+    expect(
+      res.body.data.map(
+        (d: { provider: string; configured: boolean; enabled: boolean }) => [
+          d.provider,
+          d.configured,
+          d.enabled,
+        ]
+      )
+    ).toEqual([
       ['contentstack', false, false],
       ['algolia', false, false],
       ['stripe', true, true],
     ]);
-    expect(res.body.data[0].missingKeys).toEqual(['CONTENTSTACK_MANAGEMENT_TOKEN']);
+    expect(res.body.data[0].missingKeys).toEqual([
+      'CONTENTSTACK_MANAGEMENT_TOKEN',
+    ]);
   });
 
   it('no sentinel value is serialised', async () => {
     const res = await request(app(SENTINELS)).get('/service/mcp/providers');
     expect(res.status).toBe(200);
-    expect(res.body.data.every((d: { enabled: boolean }) => d.enabled)).toBe(true);
+    expect(res.body.data.every((d: { enabled: boolean }) => d.enabled)).toBe(
+      true
+    );
     const text = JSON.stringify(res.body);
     for (const v of Object.values(SENTINELS)) expect(text).not.toContain(v);
     expect(text).not.toContain('SENTINEL');
     expect(text).not.toContain('sentinel.example');
     for (const entry of res.body.data) {
-      expect(Object.keys(entry).sort()).toEqual(['configured', 'enabled', 'missingKeys', 'provider']);
+      expect(Object.keys(entry).sort()).toEqual([
+        'configured',
+        'enabled',
+        'missingKeys',
+        'provider',
+      ]);
     }
   });
 
@@ -94,15 +132,16 @@ describe('GET /service/mcp/providers', () => {
     ['PUT', '/service/mcp/configs/abc'],
     ['DELETE', '/service/mcp/configs/abc'],
   ])('%s %s is 404', async (method, path) => {
-    const res = await request(app())
-      [method.toLowerCase() as 'get' | 'post' | 'put' | 'delete'](path)
-      .send({ provider: 'stripe' });
+    const verb = method.toLowerCase() as 'get' | 'post' | 'put' | 'delete';
+    const res = await request(app())[verb](path).send({ provider: 'stripe' });
     expect(res.status).toBe(404);
   });
 
   it('is rejected without a verified session', async () => {
     resetConfigurationForTests();
-    const real = createApp(freshConfig({ MC_AUDIENCE: 'https://svc.example.test' }));
+    const real = createApp(
+      freshConfig({ MC_AUDIENCE: 'https://svc.example.test' })
+    );
     const res = await request(real).get('/service/mcp/providers');
     expect([401, 403]).toContain(res.status);
     expect(JSON.stringify(res.body)).not.toContain('configured');
@@ -114,7 +153,13 @@ describe('getProviderStatuses', () => {
     const c = freshConfig({ STRIPE_SECRET_KEY: 'sk_test_abc' });
     const first = getProviderStatuses(c.providers);
     first[0].missingKeys.push('mutated');
-    expect(getProviderStatuses(c.providers)[0].missingKeys).not.toContain('mutated');
-    expect(first.map((s) => s.provider)).toEqual(['contentstack', 'algolia', 'stripe']);
+    expect(getProviderStatuses(c.providers)[0].missingKeys).not.toContain(
+      'mutated'
+    );
+    expect(first.map((s) => s.provider)).toEqual([
+      'contentstack',
+      'algolia',
+      'stripe',
+    ]);
   });
 });
