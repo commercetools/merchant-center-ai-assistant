@@ -4,11 +4,7 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-import {
-  convertToModelMessages,
-  type ModelMessage,
-  type UIMessage,
-} from 'ai';
+import { convertToModelMessages, type ModelMessage, type UIMessage } from 'ai';
 import type { MessageService } from '../services/message.service';
 import { getImageUploader } from '../tool-sources/image-uploader';
 import type { AiSdkChatMessage } from '../types/chat.types';

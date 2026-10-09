@@ -134,7 +134,11 @@ export const createChatStream = (params: CreateChatStreamParams) => {
         openText.clear();
         openReasoning.clear();
         write({ type: 'text-start', id: 'time-limit' });
-        write({ type: 'text-delta', id: 'time-limit', delta: TIME_LIMIT_NOTICE });
+        write({
+          type: 'text-delta',
+          id: 'time-limit',
+          delta: TIME_LIMIT_NOTICE,
+        });
         write({ type: 'text-end', id: 'time-limit' });
         write({
           type: TURN_STATUS_PART_TYPE,
@@ -230,5 +234,9 @@ export const createChatStream = (params: CreateChatStreamParams) => {
 
 /** Custom data chunks this stream writes itself. */
 type ChatUIMessageChunk =
-  | { type: typeof KEEPALIVE_PART_TYPE; data: Record<string, never>; transient: true }
+  | {
+      type: typeof KEEPALIVE_PART_TYPE;
+      data: Record<string, never>;
+      transient: true;
+    }
   | { type: typeof TURN_STATUS_PART_TYPE; data: { status: 'time-limit' } };

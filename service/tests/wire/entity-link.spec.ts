@@ -10,9 +10,16 @@ import { entityLinkSource } from '../../src/tool-sources/entity-link.source';
 import { createEntityLinkToolFactory } from '../../src/tools/entity-link.tool';
 import { makeToolContext } from '../helpers/stub-tool-source';
 
-type Input = Parameters<ReturnType<typeof createEntityLinkToolFactory>['execute']>[0];
-const run = async (projectKey: string, input: unknown): Promise<Record<string, unknown>> =>
-  JSON.parse(await createEntityLinkToolFactory(projectKey).execute(input as Input));
+type Input = Parameters<
+  ReturnType<typeof createEntityLinkToolFactory>['execute']
+>[0];
+const run = async (
+  projectKey: string,
+  input: unknown
+): Promise<Record<string, unknown>> =>
+  JSON.parse(
+    await createEntityLinkToolFactory(projectKey).execute(input as Input)
+  );
 
 describe('create_entity_link', () => {
   it('builds a relative order link starting with /<projectKey>/orders/', async () => {
@@ -37,7 +44,12 @@ describe('create_entity_link', () => {
   it('builds a variant link when both ids are given', async () => {
     const out = await run('p', {
       links: [
-        { entityType: 'product-variant', id: 'x', variantId: '2', displayText: 'V' },
+        {
+          entityType: 'product-variant',
+          id: 'x',
+          variantId: '2',
+          displayText: 'V',
+        },
       ],
     });
     expect(out.success).toBe(true);
@@ -67,9 +79,11 @@ describe('entity-link source', () => {
     const registry = createToolSourceRegistry();
     registry.register(entityLinkSource);
     const { tools } = await registry.resolve(ctx);
-    const execute = (tools.create_entity_link as unknown as {
-      execute: (input: unknown) => Promise<string>;
-    }).execute;
+    const execute = (
+      tools.create_entity_link as unknown as {
+        execute: (input: unknown) => Promise<string>;
+      }
+    ).execute;
     const out = JSON.parse(
       await execute({
         links: [{ entityType: 'customer', id: 'c1', displayText: 'C' }],

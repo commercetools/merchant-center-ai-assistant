@@ -126,7 +126,9 @@ describe('UI message stream wire contract', () => {
 
     const chunks = parseChunks((await request(server).post('/')).text);
     expect(chunks.some((c) => c.type === 'error')).toBe(true);
-    expect(chunks.map((c) => c.type as string).filter((t) => !isAccepted(t))).toEqual([]);
+    expect(
+      chunks.map((c) => c.type as string).filter((t) => !isAccepted(t))
+    ).toEqual([]);
   });
 });
 
@@ -169,4 +171,3 @@ describe('real chat stream', () => {
     }
   });
 });
-

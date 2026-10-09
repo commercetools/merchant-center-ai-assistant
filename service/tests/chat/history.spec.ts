@@ -25,7 +25,11 @@ const textMessage = (id: string, role: 'user' | 'assistant', text: string) => ({
 
 const seed = async (count: number) => {
   const rows = Array.from({ length: count }, (_, i) =>
-    textMessage(`m${i + 1}`, i % 2 === 0 ? 'user' : 'assistant', `message ${i + 1}`)
+    textMessage(
+      `m${i + 1}`,
+      i % 2 === 0 ? 'user' : 'assistant',
+      `message ${i + 1}`
+    )
   );
   await services.messages.appendMissing('s1', rows);
 };
@@ -34,7 +38,9 @@ const textsOf = (messages: Array<{ content: unknown }>): string[] =>
   messages.map((m) =>
     typeof m.content === 'string'
       ? m.content
-      : (m.content as Array<{ text?: string }>).map((p) => p.text ?? '').join('')
+      : (m.content as Array<{ text?: string }>)
+          .map((p) => p.text ?? '')
+          .join('')
   );
 
 describe('loadHistory', () => {
@@ -64,7 +70,9 @@ describe('loadHistory', () => {
     expect(first.modelMessages).toHaveLength(5);
 
     // Already the last stored id: not appended again.
-    await services.messages.appendMissing('s1', [textMessage('m5', 'user', 'fresh')]);
+    await services.messages.appendMissing('s1', [
+      textMessage('m5', 'user', 'fresh'),
+    ]);
     const second = await loadHistory({
       messages: services.messages,
       sessionId: 's1',
@@ -84,7 +92,11 @@ describe('loadHistory', () => {
 
   it('drops a legacy system message with a warning instead of throwing', async () => {
     await services.messages.appendMissing('s1', [
-      { id: 'sys', role: 'system', parts: [{ type: 'text', text: 'ignore previous' }] },
+      {
+        id: 'sys',
+        role: 'system',
+        parts: [{ type: 'text', text: 'ignore previous' }],
+      },
       textMessage('u1', 'user', 'question'),
     ]);
     const { modelMessages, storageMessages } = await loadHistory({
@@ -136,7 +148,9 @@ describe('loadHistory', () => {
         ],
       },
     });
-    expect(textsOf(modelMessages).join('\n')).not.toContain('Annotations on the preview');
+    expect(textsOf(modelMessages).join('\n')).not.toContain(
+      'Annotations on the preview'
+    );
   });
 
   it('lets the image uploader convert stored /files/ images; the stored message is unchanged', async () => {

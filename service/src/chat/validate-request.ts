@@ -9,8 +9,7 @@ import { logger } from '../utils/logger.utils';
 import type { IncomingMessage } from './history';
 
 export type ValidatedChatRequest =
-  | { ok: true; message: IncomingMessage }
-  | { ok: false; error: string };
+  { ok: true; message: IncomingMessage } | { ok: false; error: string };
 
 const MAX_MESSAGE_ID_CHARS = 200;
 
@@ -41,7 +40,11 @@ export const validateChatRequest = (req: Request): ValidatedChatRequest => {
     const receivedKeys = isObject(body) ? Object.keys(body) : [];
     const looksUnparsed =
       receivedKeys.length === 0 &&
-      !/^application\/json$/i.test(String(contentType ?? '').split(';')[0].trim());
+      !/^application\/json$/i.test(
+        String(contentType ?? '')
+          .split(';')[0]
+          .trim()
+      );
 
     logger.warn('Rejected message-less chat request', {
       sessionId: req.params.sessionId,

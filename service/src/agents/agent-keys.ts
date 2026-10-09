@@ -82,7 +82,9 @@ export const AGENT_META: Record<AgentKey, AgentMeta> = {
 };
 
 /** The agent keys that have no registered source (yet). */
-export const gatedAgentKeys = (registeredNames: readonly string[]): AgentKey[] => {
+export const gatedAgentKeys = (
+  registeredNames: readonly string[]
+): AgentKey[] => {
   const registered = new Set(registeredNames);
   return AGENT_KEYS.filter((key) => !registered.has(key));
 };

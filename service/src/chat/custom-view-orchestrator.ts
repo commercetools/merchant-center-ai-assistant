@@ -15,7 +15,10 @@ import { logger } from '../utils/logger.utils';
 import { createChatAgent, type BuiltAgent } from './orchestrator';
 
 /** The only sources a custom-view session may use (it answers about one entity). */
-export const CUSTOM_VIEW_SOURCES = ['commercetools', 'commercetools-knowledge'] as const;
+export const CUSTOM_VIEW_SOURCES = [
+  'commercetools',
+  'commercetools-knowledge',
+] as const;
 
 /** Longest decoded URL put into the instructions. */
 const MAX_CUSTOM_VIEW_URL_CHARS = 2000;

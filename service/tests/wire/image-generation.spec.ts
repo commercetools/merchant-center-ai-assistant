@@ -82,7 +82,8 @@ describe('imageGeneration source gating', () => {
 
 describe('uploadGeneratedImage', () => {
   it('replaces a generated data URL by what the uploader returns', async () => {
-    const calls: Array<{ size: number; mediaType: string; sessionId: string }> = [];
+    const calls: Array<{ size: number; mediaType: string; sessionId: string }> =
+      [];
     setImageUploader({
       upload: async (bytes, mediaType, sessionId) => {
         calls.push({ size: bytes.length, mediaType, sessionId });
@@ -92,7 +93,9 @@ describe('uploadGeneratedImage', () => {
     const out = await uploadGeneratedImage(imageMessage(), ctxOf());
     const last = out.parts[out.parts.length - 1] as { url: string };
     expect(last.url).toBe('/files/s1/generated.png');
-    expect(calls).toEqual([{ size: 4, mediaType: 'image/png', sessionId: 's1' }]);
+    expect(calls).toEqual([
+      { size: 4, mediaType: 'image/png', sessionId: 's1' },
+    ]);
   });
 
   it('leaves the message alone while the part is still streaming', async () => {

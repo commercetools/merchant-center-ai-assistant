@@ -120,10 +120,9 @@ export interface AnalyzeQueryDeps {
   }) => Promise<QueryAnalysis>;
 }
 
-const generateWithLiteModel: NonNullable<AnalyzeQueryDeps['generate']> = async ({
-  system,
-  messages,
-}) => {
+const generateWithLiteModel: NonNullable<
+  AnalyzeQueryDeps['generate']
+> = async ({ system, messages }) => {
   // The CHEAP model, deliberately: one boolean per tool call does not need the orchestrator's
   // thinking configuration (measured 2.9-4.3 s there). The safety net for a worse judgement
   // is the size gate, which offloads anything over `OFFLOAD_WITHOUT_ASKING_TOKENS` without

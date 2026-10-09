@@ -5,10 +5,7 @@
  */
 
 import type { ToolContext } from '../../tool-sources/types';
-import {
-  getBaseRules,
-  getReturnFormatSection,
-} from './base.prompt';
+import { getBaseRules, getReturnFormatSection } from './base.prompt';
 
 /**
  * System prompt for the visualize agent

@@ -21,7 +21,11 @@ afterEach(() => {
 type Executable = {
   execute: (
     input: { task: string },
-    options: { toolCallId: string; messages: unknown[]; abortSignal?: AbortSignal }
+    options: {
+      toolCallId: string;
+      messages: unknown[];
+      abortSignal?: AbortSignal;
+    }
   ) => AsyncIterable<UIMessage>;
   toModelOutput: (args: {
     toolCallId: string;
@@ -51,7 +55,10 @@ describe('createSubagentTool', () => {
     const ctx = makeToolContext();
     contexts.push(ctx);
     const { model } = scriptedModel([textTurn('child answer')]);
-    const t = createSubagentTool(definition(model), ctx) as unknown as Executable;
+    const t = createSubagentTool(
+      definition(model),
+      ctx
+    ) as unknown as Executable;
 
     const messages = await drain(
       t.execute({ task: 'do it' }, { toolCallId: 'c1', messages: [] })
@@ -59,7 +66,9 @@ describe('createSubagentTool', () => {
     expect(messages.length).toBeGreaterThan(0);
     const last = messages[messages.length - 1];
     expect(JSON.stringify(last.parts)).toContain('child answer');
-    expect(t.toModelOutput({ toolCallId: 'c1', input: {}, output: last })).toEqual({
+    expect(
+      t.toModelOutput({ toolCallId: 'c1', input: {}, output: last })
+    ).toEqual({
       type: 'text',
       value: 'child answer',
     });
@@ -69,7 +78,10 @@ describe('createSubagentTool', () => {
     const ctx = makeToolContext();
     contexts.push(ctx);
     const { model } = scriptedModel([textTurn('x')]);
-    const t = createSubagentTool(definition(model), ctx) as unknown as Executable;
+    const t = createSubagentTool(
+      definition(model),
+      ctx
+    ) as unknown as Executable;
     expect(
       t.toModelOutput({
         toolCallId: 'c1',
@@ -83,19 +95,26 @@ describe('createSubagentTool', () => {
     const ctx = makeToolContext();
     contexts.push(ctx);
     const { model, calls } = scriptedModel([textTurn('ok')]);
-    const t = createSubagentTool(definition(model), ctx) as unknown as Executable;
+    const t = createSubagentTool(
+      definition(model),
+      ctx
+    ) as unknown as Executable;
     await drain(
       t.execute(
         { task: 'draw a cat' },
         {
           toolCallId: 'c1',
-          messages: [{ role: 'user', content: [{ type: 'text', text: 'hello' }] }],
+          messages: [
+            { role: 'user', content: [{ type: 'text', text: 'hello' }] },
+          ],
         }
       )
     );
     const prompt = JSON.stringify(calls[0].prompt);
     expect(prompt.indexOf('hello')).toBeGreaterThan(-1);
-    expect(prompt.indexOf('draw a cat')).toBeGreaterThan(prompt.indexOf('hello'));
+    expect(prompt.indexOf('draw a cat')).toBeGreaterThan(
+      prompt.indexOf('hello')
+    );
   });
 
   it('gives the child the parent abort signal', async () => {
@@ -103,7 +122,10 @@ describe('createSubagentTool', () => {
     contexts.push(ctx);
     const parent = new AbortController();
     const { model, calls } = hangingModel();
-    const t = createSubagentTool(definition(model), ctx) as unknown as Executable;
+    const t = createSubagentTool(
+      definition(model),
+      ctx
+    ) as unknown as Executable;
     const run = drain(
       t.execute(
         { task: 'x' },
@@ -136,7 +158,9 @@ describe('createSubagentTool', () => {
         { task: 'x' },
         {
           toolCallId: 'c1',
-          messages: [{ role: 'user', content: [{ type: 'text', text: 'INHERITED' }] }],
+          messages: [
+            { role: 'user', content: [{ type: 'text', text: 'INHERITED' }] },
+          ],
         }
       )
     );

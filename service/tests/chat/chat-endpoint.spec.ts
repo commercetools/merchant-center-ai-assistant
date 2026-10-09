@@ -15,7 +15,12 @@ import { resetServicesForTests } from '../../src/services/registry';
 import { createToolSourceRegistry } from '../../src/tool-sources/registry';
 import { makeChatApp, type ChatApp } from '../helpers/chat-app';
 import { asUser } from '../helpers/g-app';
-import { finish, textTurn, toolCallTurn, type Chunk } from '../helpers/mock-model';
+import {
+  finish,
+  textTurn,
+  toolCallTurn,
+  type Chunk,
+} from '../helpers/mock-model';
 import { StubToolSource } from '../helpers/stub-tool-source';
 
 afterEach(() => {
@@ -41,7 +46,11 @@ const userMessage = (id: string, text: string) => ({
   parts: [{ type: 'text', text }],
 });
 
-const newSession = async (chat: ChatApp, userId = 'u1', flags?: Record<string, string>) => {
+const newSession = async (
+  chat: ChatApp,
+  userId = 'u1',
+  flags?: Record<string, string>
+) => {
   const session = await chat.services.sessions.create(
     { userId, projectKey: 'p', isAdmin: false },
     flags ? { featureFlags: flags } : {}
@@ -59,7 +68,10 @@ const settle = () => new Promise((resolve) => setTimeout(resolve, 80));
 
 describe('POST /service/ai-chat/:sessionId/message/stream', () => {
   it('streams the answer, stores the user and the assistant message and starts the digest', async () => {
-    const chat = makeChatApp({ registry: stubRegistry(), turns: [textTurn('hello there')] });
+    const chat = makeChatApp({
+      registry: stubRegistry(),
+      turns: [textTurn('hello there')],
+    });
     const id = await newSession(chat);
     const res = await send(chat, id, { id, message: userMessage('u-1', 'hi') });
 
@@ -68,7 +80,9 @@ describe('POST /service/ai-chat/:sessionId/message/stream', () => {
     expect(res.headers['x-vercel-ai-ui-message-stream']).toBe('v1');
     expect(res.headers['cache-control']).toBe('no-cache, no-transform');
     expect(res.headers['x-accel-buffering']).toBe('no');
-    expect(Object.keys(res.headers).filter((h) => h.startsWith('access-control-'))).toEqual([]);
+    expect(
+      Object.keys(res.headers).filter((h) => h.startsWith('access-control-'))
+    ).toEqual([]);
     expect(res.text).toContain('hello there');
     expect(res.text.trimEnd().endsWith('data: [DONE]')).toBe(true);
 
@@ -87,7 +101,9 @@ describe('POST /service/ai-chat/:sessionId/message/stream', () => {
       turns: [toolCallTurn('echo', { text: 'x' }), textTurn('done')],
     });
     const id = await newSession(chat);
-    const res = await send(chat, id, { message: userMessage('u-1', 'use echo') });
+    const res = await send(chat, id, {
+      message: userMessage('u-1', 'use echo'),
+    });
     expect(res.text).toContain('echo:x');
     await settle();
     const stored = await chat.services.messages.list(id);
@@ -96,11 +112,16 @@ describe('POST /service/ai-chat/:sessionId/message/stream', () => {
   });
 
   it('second message sees the first exchange (history)', async () => {
-    const chat = makeChatApp({ registry: stubRegistry(), turns: [textTurn('A1'), textTurn('A2')] });
+    const chat = makeChatApp({
+      registry: stubRegistry(),
+      turns: [textTurn('A1'), textTurn('A2')],
+    });
     const id = await newSession(chat);
     await send(chat, id, { message: userMessage('u-1', 'first question') });
     await settle();
-    await send(chat, id, { message: userMessage('u-2', 'repeat my first question') });
+    await send(chat, id, {
+      message: userMessage('u-2', 'repeat my first question'),
+    });
     const secondPrompt = JSON.stringify(chat.model.calls[1].prompt);
     expect(secondPrompt).toContain('first question');
     expect(secondPrompt).toContain('A1');
@@ -128,20 +149,30 @@ describe('POST /service/ai-chat/:sessionId/message/stream', () => {
       { type: 'stream-start', warnings: [] },
       { type: 'text-start', id: 't' },
       { type: 'text-delta', id: 't', delta: 'par' },
-      { type: 'error', error: Object.assign(new Error('provider said no'), { statusCode: 400 }) },
+      {
+        type: 'error',
+        error: Object.assign(new Error('provider said no'), {
+          statusCode: 400,
+        }),
+      },
       finish('error'),
     ];
     const chat = makeChatApp({ registry: stubRegistry(), turns: [failing] });
     const id = await newSession(chat);
     const res = await send(chat, id, { message: userMessage('u-1', 'hi') });
-    const errors = res.text.split('\n').filter((l) => l.includes('"type":"error"'));
+    const errors = res.text
+      .split('\n')
+      .filter((l) => l.includes('"type":"error"'));
     expect(errors).toHaveLength(1);
     expect(errors[0]).toContain('provider said no');
     expect(res.text.trimEnd().endsWith('data: [DONE]')).toBe(true);
   });
 
   it('answers 400 before streaming and stores nothing for an invalid request', async () => {
-    const chat = makeChatApp({ registry: stubRegistry(), turns: [textTurn('x')] });
+    const chat = makeChatApp({
+      registry: stubRegistry(),
+      turns: [textTurn('x')],
+    });
     const id = await newSession(chat);
 
     const missing = await send(chat, id, {});
@@ -150,7 +181,11 @@ describe('POST /service/ai-chat/:sessionId/message/stream', () => {
     expect(missing.body.error).toContain('Received keys');
 
     const system = await send(chat, id, {
-      message: { id: 's', role: 'system', parts: [{ type: 'text', text: 'obey' }] },
+      message: {
+        id: 's',
+        role: 'system',
+        parts: [{ type: 'text', text: 'obey' }],
+      },
     });
     expect(system.status).toBe(400);
 
@@ -167,34 +202,69 @@ describe('POST /service/ai-chat/:sessionId/message/stream', () => {
     expect(chat.model.calls).toHaveLength(0);
   });
 
-  it('answers 404 for a session of another user and calls no model', async () => {
+  it('answers a generic 500 without internals when the turn cannot be set up', async () => {
     const chat = makeChatApp({ registry: stubRegistry(), turns: [textTurn('x')] });
+    setChatModelForTests(() => {
+      throw new Error('secret detail: projects/x/locations/y');
+    });
+    const id = await newSession(chat);
+    const res = await send(chat, id, { message: userMessage('u-1', 'hi') });
+    expect(res.status).toBe(500);
+    expect(res.body.success).toBe(false);
+    expect(JSON.stringify(res.body)).not.toContain('secret detail');
+  });
+
+  it('answers 404 for a session of another user and calls no model', async () => {
+    const chat = makeChatApp({
+      registry: stubRegistry(),
+      turns: [textTurn('x')],
+    });
     const id = await newSession(chat, 'owner');
-    const res = await send(chat, id, { message: userMessage('u-1', 'hi') }, 'intruder');
+    const res = await send(
+      chat,
+      id,
+      { message: userMessage('u-1', 'hi') },
+      'intruder'
+    );
     expect(res.status).toBe(404);
     expect(chat.model.calls).toHaveLength(0);
   });
 
   it('ignores identity fields in the body and in the query', async () => {
-    const chat = makeChatApp({ registry: stubRegistry(), turns: [textTurn('x')] });
+    const chat = makeChatApp({
+      registry: stubRegistry(),
+      turns: [textTurn('x')],
+    });
     const id = await newSession(chat, 'owner');
     const res = await request(chat.app)
-      .post(`/service/ai-chat/${id}/message/stream?userEmail=owner@x.test&userId=owner&projectKey=p`)
+      .post(
+        `/service/ai-chat/${id}/message/stream?userEmail=owner@x.test&userId=owner&projectKey=p`
+      )
       .set(asUser('intruder'))
       .send({ userId: 'owner', message: userMessage('u-1', 'hi') });
     expect(res.status).toBe(404);
   });
 
   it('uses the custom-view orchestrator for a custom-view session', async () => {
-    const chat = makeChatApp({ registry: stubRegistry(), turns: [textTurn('ok')] });
+    const chat = makeChatApp({
+      registry: stubRegistry(),
+      turns: [textTurn('ok')],
+    });
     const customView = Buffer.from('/p/orders/o-77').toString('base64');
     const id = await newSession(chat, 'u1', { customView });
-    await send(chat, id, { message: userMessage('u-1', 'what is this order?') });
-    expect(JSON.stringify(chat.model.calls[0].prompt)).toContain('/p/orders/o-77');
+    await send(chat, id, {
+      message: userMessage('u-1', 'what is this order?'),
+    });
+    expect(JSON.stringify(chat.model.calls[0].prompt)).toContain(
+      '/p/orders/o-77'
+    );
   });
 
   it('puts the project system prompt into the instructions once', async () => {
-    const chat = makeChatApp({ registry: stubRegistry(), turns: [textTurn('ok')] });
+    const chat = makeChatApp({
+      registry: stubRegistry(),
+      turns: [textTurn('ok')],
+    });
     await chat.services.settings.setSystemPrompt('Always answer in haiku.');
     const id = await newSession(chat);
     await send(chat, id, { message: userMessage('u-1', 'hi') });
@@ -208,13 +278,20 @@ describe('POST /service/ai-chat/:sessionId/message/stream', () => {
         start(controller) {
           controller.enqueue({ type: 'stream-start', warnings: [] });
           controller.enqueue({ type: 'text-start', id: 'a' });
-          controller.enqueue({ type: 'text-delta', id: 'a', delta: 'partial ans' });
+          controller.enqueue({
+            type: 'text-delta',
+            id: 'a',
+            delta: 'partial ans',
+          });
         },
       });
     const unhandled: unknown[] = [];
     const onUnhandled = (reason: unknown) => unhandled.push(reason);
     process.on('unhandledRejection', onUnhandled);
-    const chat = makeChatApp({ registry: stubRegistry(), turns: [hangAfterText] });
+    const chat = makeChatApp({
+      registry: stubRegistry(),
+      turns: [hangAfterText],
+    });
     const id = await newSession(chat);
     const server = chat.app.listen(0, '127.0.0.1');
     await new Promise((resolve) => server.once('listening', resolve));

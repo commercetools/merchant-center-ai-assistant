@@ -19,13 +19,24 @@ describe('validateChatRequest', () => {
   it('accepts a user message', () => {
     const result = validateChatRequest(
       req(
-        { id: 's1', message: { id: 'm1', role: 'user', parts: [{ type: 'text', text: 'hi' }] } },
+        {
+          id: 's1',
+          message: {
+            id: 'm1',
+            role: 'user',
+            parts: [{ type: 'text', text: 'hi' }],
+          },
+        },
         'application/json'
       )
     );
     expect(result).toEqual({
       ok: true,
-      message: { id: 'm1', role: 'user', parts: [{ type: 'text', text: 'hi' }] },
+      message: {
+        id: 'm1',
+        role: 'user',
+        parts: [{ type: 'text', text: 'hi' }],
+      },
     });
   });
 
@@ -42,7 +53,9 @@ describe('validateChatRequest', () => {
 
   it('says the body was not parsed when the content type is not JSON', () => {
     const result = validateChatRequest(req({}, 'text/plain'));
-    expect(!result.ok && result.error).toContain('Content-Type: application/json');
+    expect(!result.ok && result.error).toContain(
+      'Content-Type: application/json'
+    );
     const none = validateChatRequest(req(undefined));
     expect(!none.ok && none.error).toContain('Content-Type: application/json');
   });
@@ -56,9 +69,14 @@ describe('validateChatRequest', () => {
 
   it('rejects the system role', () => {
     const result = validateChatRequest(
-      req({ message: { id: 'm1', role: 'system', parts: [] } }, 'application/json')
+      req(
+        { message: { id: 'm1', role: 'system', parts: [] } },
+        'application/json'
+      )
     );
-    expect(!result.ok && result.error).toContain('System messages are not accepted');
+    expect(!result.ok && result.error).toContain(
+      'System messages are not accepted'
+    );
   });
 
   it.each([
@@ -82,6 +100,8 @@ describe('validateChatRequest', () => {
         'application/json'
       )
     );
-    expect(result.ok && JSON.stringify(result.message)).not.toContain('attacker');
+    expect(result.ok && JSON.stringify(result.message)).not.toContain(
+      'attacker'
+    );
   });
 });

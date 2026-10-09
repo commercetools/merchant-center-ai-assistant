@@ -4,7 +4,12 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-import { stepCountIs, ToolLoopAgent, type LanguageModel, type ToolSet } from 'ai';
+import {
+  stepCountIs,
+  ToolLoopAgent,
+  type LanguageModel,
+  type ToolSet,
+} from 'ai';
 import { getProjectSystemPromptSection } from '../agents/prompts';
 import { getModel, getProviderOptions } from '../llm';
 import type { ToolSourceRegistry } from '../tool-sources/registry';
@@ -32,7 +37,9 @@ const defaultChatModel = (): ChatModel => ({
 let chatModel: () => ChatModel = defaultChatModel;
 
 /** Tests install a mock model here (`undefined` restores Vertex). */
-export const setChatModelForTests = (factory: (() => ChatModel) | undefined): void => {
+export const setChatModelForTests = (
+  factory: (() => ChatModel) | undefined
+): void => {
   chatModel = factory ?? defaultChatModel;
 };
 

@@ -44,7 +44,9 @@ const isStorableUrl = (url: unknown): url is string =>
  * Nested parts of a subagent output reduced to what is worth storing: text, files with a
  * storable URL, and terminal outputs of storable tools.
  */
-const filterSubagentOutputParts = (parts: unknown): Array<Record<string, unknown>> => {
+const filterSubagentOutputParts = (
+  parts: unknown
+): Array<Record<string, unknown>> => {
   if (!Array.isArray(parts)) return [];
   const kept: Array<Record<string, unknown>> = [];
   for (const nested of parts) {

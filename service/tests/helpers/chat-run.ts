@@ -7,11 +7,11 @@
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { pipeUIMessageStreamToResponse, type ToolSet } from 'ai';
-import { createChatAgent, setChatModelForTests } from '../../src/chat/orchestrator';
 import {
-  createChatStream,
-  type ChatTurnResult,
-} from '../../src/chat/stream';
+  createChatAgent,
+  setChatModelForTests,
+} from '../../src/chat/orchestrator';
+import { createChatStream, type ChatTurnResult } from '../../src/chat/stream';
 import { RequestBudget } from '../../src/chat/request-budget';
 import type { Chunk } from './mock-model';
 import { scriptedModel } from './mock-model';
@@ -79,7 +79,9 @@ export const serveChat = async (o: {
       keepAliveMs: o.keepAliveMs,
       onFinish: resolveFinished,
     });
-    void pipeUIMessageStreamToResponse({ response, stream }).catch(() => undefined);
+    void pipeUIMessageStreamToResponse({ response, stream }).catch(
+      () => undefined
+    );
   });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const { port } = server.address() as AddressInfo;

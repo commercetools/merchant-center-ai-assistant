@@ -34,8 +34,15 @@ describe('visualize_data', () => {
 
   it('rejects an invalid chart type at the schema', () => {
     const schema = visualizeDataTool.inputSchema;
-    expect(schema.safeParse({ chartType: 'Pyramid', data: TABLE }).success).toBe(false);
-    expect(schema.safeParse({ chartType: 'PieChart', data: TABLE, options: { title: 'x' } }).success
+    expect(
+      schema.safeParse({ chartType: 'Pyramid', data: TABLE }).success
+    ).toBe(false);
+    expect(
+      schema.safeParse({
+        chartType: 'PieChart',
+        data: TABLE,
+        options: { title: 'x' },
+      }).success
     ).toBe(true);
   });
 
@@ -45,7 +52,9 @@ describe('visualize_data', () => {
       data: { cols: TABLE.cols, rows: [{ c: [{ v: 'only one' }] }] },
     } as Input);
     expect(result.success).toBe(false);
-    expect(result.success === false && result.error).toContain('Row 0 has 1 cells');
+    expect(result.success === false && result.error).toContain(
+      'Row 0 has 1 cells'
+    );
   });
 
   it('reports empty columns', async () => {

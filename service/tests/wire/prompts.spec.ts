@@ -44,7 +44,10 @@ describe('base prompt', () => {
 });
 
 describe('source prompts', () => {
-  const builders: Record<string, (ctx: ReturnType<typeof makeToolContext>) => string> = {
+  const builders: Record<
+    string,
+    (ctx: ReturnType<typeof makeToolContext>) => string
+  > = {
     commercetools: (ctx) => getCommercetoolsPrompt(ctx),
     contentstack: getContentstackPrompt,
     algolia: getAlgoliaPrompt,
@@ -74,9 +77,12 @@ describe('source prompts', () => {
   it('the commercetools prompt embeds the optional developer tips (change J)', () => {
     const ctx = makeToolContext();
     contexts.push(ctx);
-    expect(getCommercetoolsPrompt(ctx, '<commercetools_api_tips>T</commercetools_api_tips>')).toContain(
-      '<commercetools_api_tips>T'
-    );
+    expect(
+      getCommercetoolsPrompt(
+        ctx,
+        '<commercetools_api_tips>T</commercetools_api_tips>'
+      )
+    ).toContain('<commercetools_api_tips>T');
     expect(getCommercetoolsPrompt(ctx)).not.toContain('commercetools_api_tips');
   });
 

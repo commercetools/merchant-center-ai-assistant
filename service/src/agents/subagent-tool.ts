@@ -75,7 +75,10 @@ export const createSubagentTool = (
         { role: 'user', content: task },
       ];
 
-      const result = await agent.stream({ messages: taskMessages, abortSignal });
+      const result = await agent.stream({
+        messages: taskMessages,
+        abortSignal,
+      });
 
       for await (const message of readUIMessageStream({
         stream: result.toUIMessageStream(),

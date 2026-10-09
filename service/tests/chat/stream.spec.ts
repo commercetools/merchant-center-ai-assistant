@@ -29,14 +29,19 @@ describe('createChatStream', () => {
     expect(res.headers.get('x-vercel-ai-ui-message-stream')).toBe('v1');
     expect(text.trimEnd().endsWith('data: [DONE]')).toBe(true);
     const chunks = parseChunks(text);
-    expect(chunks.some((c) => c.type === 'text-delta' && c.delta === 'hi')).toBe(true);
+    expect(
+      chunks.some((c) => c.type === 'text-delta' && c.delta === 'hi')
+    ).toBe(true);
   });
 
   it('attaches usage as message metadata on finish-step and reports the turn', async () => {
     served = await serveChat({ turns: [textTurn('hi')] });
     const { text } = await post(served.url);
     const metadata = parseChunks(text).filter(
-      (c) => c.type === 'finish-step' || c.type === 'message-metadata' || c.type === 'finish'
+      (c) =>
+        c.type === 'finish-step' ||
+        c.type === 'message-metadata' ||
+        c.type === 'finish'
     );
     expect(JSON.stringify(metadata)).toContain('"usage"');
     const turn = await served.finished;
@@ -71,7 +76,12 @@ describe('createChatStream', () => {
           { type: 'stream-start', warnings: [] },
           { type: 'text-start', id: 't' },
           { type: 'text-delta', id: 't', delta: 'par' },
-          { type: 'error', error: Object.assign(new Error('provider said no'), { statusCode: 400 }) },
+          {
+            type: 'error',
+            error: Object.assign(new Error('provider said no'), {
+              statusCode: 400,
+            }),
+          },
           finish('error'),
         ],
       ],

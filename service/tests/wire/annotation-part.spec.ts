@@ -24,7 +24,9 @@ describe('convertAnnotationDataPart', () => {
       data: payload,
     });
     expect(part?.type).toBe('text');
-    expect(part?.text.startsWith('## Annotations on the preview of "Landing"')).toBe(true);
+    expect(
+      part?.text.startsWith('## Annotations on the preview of "Landing"')
+    ).toBe(true);
     expect(part?.text).toContain('make it bigger');
   });
 
@@ -46,7 +48,9 @@ describe('convertAnnotationDataPart', () => {
   });
 
   it('ignores parts of another type', () => {
-    expect(convertAnnotationDataPart({ type: 'data-other', data: payload })).toBeUndefined();
+    expect(
+      convertAnnotationDataPart({ type: 'data-other', data: payload })
+    ).toBeUndefined();
   });
 
   it('ignores a malformed payload', () => {
@@ -56,6 +60,8 @@ describe('convertAnnotationDataPart', () => {
         data: { ...payload, annotations: 'nope' },
       })
     ).toBeUndefined();
-    expect(convertAnnotationDataPart({ type: ANNOTATIONS_PART_TYPE })).toBeUndefined();
+    expect(
+      convertAnnotationDataPart({ type: ANNOTATIONS_PART_TYPE })
+    ).toBeUndefined();
   });
 });

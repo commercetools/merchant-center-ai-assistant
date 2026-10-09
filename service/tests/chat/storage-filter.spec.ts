@@ -26,22 +26,40 @@ describe('processMessagesForStorage', () => {
   it('drops a base64 file and keeps a web file', () => {
     const out = store([
       { type: 'text', text: 'x' },
-      { type: 'file', mediaType: 'image/png', url: 'data:image/png;base64,AAAA' },
-      { type: 'file', mediaType: 'image/png', url: 'https://example.test/a.png' },
+      {
+        type: 'file',
+        mediaType: 'image/png',
+        url: 'data:image/png;base64,AAAA',
+      },
+      {
+        type: 'file',
+        mediaType: 'image/png',
+        url: 'https://example.test/a.png',
+      },
     ]);
     expect(out[0].parts).toEqual([
       { type: 'text', text: 'x' },
-      { type: 'file', url: 'https://example.test/a.png', mediaType: 'image/png' },
+      {
+        type: 'file',
+        url: 'https://example.test/a.png',
+        mediaType: 'image/png',
+      },
     ]);
   });
 
   it('keeps a service-relative /files/ image path', () => {
-    const out = store([{ type: 'file', mediaType: 'image/png', url: '/files/s1/a.png' }]);
+    const out = store([
+      { type: 'file', mediaType: 'image/png', url: '/files/s1/a.png' },
+    ]);
     expect(out[0].parts[0]).toMatchObject({ url: '/files/s1/a.png' });
   });
 
   it('keeps the annotation part unchanged', () => {
-    const data = { pageTitle: 'P', annotations: [{ comment: 'c' }], components: [] };
+    const data = {
+      pageTitle: 'P',
+      annotations: [{ comment: 'c' }],
+      components: [],
+    };
     const out = store([{ type: 'data-ct-annotations', data }]);
     expect(out[0].parts).toEqual([{ type: 'data-ct-annotations', data }]);
   });
@@ -64,16 +82,33 @@ describe('processMessagesForStorage', () => {
       output: { success: true },
     });
     expect(
-      store([{ type: 'tool-visualize_data', toolCallId: 'c2', state: 'input-available' }])
+      store([
+        {
+          type: 'tool-visualize_data',
+          toolCallId: 'c2',
+          state: 'input-available',
+        },
+      ])
     ).toEqual([]);
   });
 
   it('keeps export_data and create_composed_page outputs', () => {
     const out = store([
-      { type: 'tool-export_data', state: 'output-available', output: { success: true } },
-      { type: 'tool-create_composed_page', state: 'output-available', output: { key: 'k' } },
+      {
+        type: 'tool-export_data',
+        state: 'output-available',
+        output: { success: true },
+      },
+      {
+        type: 'tool-create_composed_page',
+        state: 'output-available',
+        output: { key: 'k' },
+      },
     ]);
-    expect(out[0].parts.map((p) => p.toolName)).toEqual(['export_data', 'create_composed_page']);
+    expect(out[0].parts.map((p) => p.toolName)).toEqual([
+      'export_data',
+      'create_composed_page',
+    ]);
   });
 
   it('drops tool parts of other tools', () => {
@@ -93,7 +128,11 @@ describe('processMessagesForStorage', () => {
           parts: [
             { type: 'text', text: 'done' },
             { type: 'text', text: '' },
-            { type: 'file', mediaType: 'image/png', url: 'data:image/png;base64,AAAA' },
+            {
+              type: 'file',
+              mediaType: 'image/png',
+              url: 'data:image/png;base64,AAAA',
+            },
             { type: 'file', mediaType: 'image/png', url: '/files/s1/g.png' },
             { type: 'step-start' },
             {
@@ -105,8 +144,15 @@ describe('processMessagesForStorage', () => {
         },
       },
     ]);
-    const output = out[0].parts[0].output as { role: string; parts: Array<Record<string, unknown>> };
-    expect(output.parts.map((p) => p.type)).toEqual(['text', 'file', 'tool-visualize_data']);
+    const output = out[0].parts[0].output as {
+      role: string;
+      parts: Array<Record<string, unknown>>;
+    };
+    expect(output.parts.map((p) => p.type)).toEqual([
+      'text',
+      'file',
+      'tool-visualize_data',
+    ]);
     expect(output.parts[1].url).toBe('/files/s1/g.png');
   });
 
@@ -137,7 +183,14 @@ describe('processMessagesForStorage', () => {
 
   it('keeps only the usage counters of the metadata', () => {
     const out = store([{ type: 'text', text: 'x' }], {
-      metadata: { usage: { inputTokens: 3, outputTokens: 4, totalTokens: 7, cachedInputTokens: 9 } },
+      metadata: {
+        usage: {
+          inputTokens: 3,
+          outputTokens: 4,
+          totalTokens: 7,
+          cachedInputTokens: 9,
+        },
+      },
     });
     expect(out[0].metadata).toEqual({
       usage: { inputTokens: 3, outputTokens: 4, totalTokens: 7 },

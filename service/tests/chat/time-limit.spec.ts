@@ -48,25 +48,39 @@ describe('hard deadline', () => {
     expect(text.trimEnd().endsWith('data: [DONE]')).toBe(true);
     const chunks = parseChunks(text);
     expect(chunks.some((c) => c.type === 'data-turn-status')).toBe(true);
-    const terminal = chunks.findIndex((c) => c.type === 'finish' || c.type === 'abort');
+    const terminal = chunks.findIndex(
+      (c) => c.type === 'finish' || c.type === 'abort'
+    );
     expect(terminal).toBeGreaterThan(-1);
-    expect(chunks.findIndex((c) => c.type === 'text-delta')).toBeLessThan(terminal);
+    expect(chunks.findIndex((c) => c.type === 'text-delta')).toBeLessThan(
+      terminal
+    );
 
     const turn = await served.finished;
     logs.stop();
     expect(turn.timeLimit).toBe(true);
     const assistant = turn.messages.find((m) => m.role === 'assistant');
-    expect(JSON.stringify(assistant?.parts)).toContain(TIME_LIMIT_NOTICE.slice(0, 40));
+    expect(JSON.stringify(assistant?.parts)).toContain(
+      TIME_LIMIT_NOTICE.slice(0, 40)
+    );
     expect(JSON.stringify(assistant?.parts)).toContain('time-limit');
     expect(logs.lines.join('')).toContain('chat.time_limit_reached');
   });
 
   it('closes a text part that was cut mid-sentence before the notice', async () => {
-    served = await serveChat({ turns: [hangAfterText], budgetMs: 1500, reserveMs: 500 });
+    served = await serveChat({
+      turns: [hangAfterText],
+      budgetMs: 1500,
+      reserveMs: 500,
+    });
     const text = await (await fetch(served.url, { method: 'POST' })).text();
     const chunks = parseChunks(text);
-    const endOfPartial = chunks.findIndex((c) => c.type === 'text-end' && c.id === 'a');
-    const noticeStart = chunks.findIndex((c) => c.type === 'text-start' && c.id === 'time-limit');
+    const endOfPartial = chunks.findIndex(
+      (c) => c.type === 'text-end' && c.id === 'a'
+    );
+    const noticeStart = chunks.findIndex(
+      (c) => c.type === 'text-start' && c.id === 'time-limit'
+    );
     expect(endOfPartial).toBeGreaterThan(-1);
     expect(endOfPartial).toBeLessThan(noticeStart);
     const turn = await served.finished;
@@ -83,24 +97,36 @@ describe('hard deadline', () => {
     const lines = logs.lines.filter((l) => l.includes('chat turn finished'));
     expect(lines).toHaveLength(1);
     const entry = JSON.parse(lines[0]) as Record<string, unknown>;
-    expect(entry).toMatchObject({ steps: 1, timeLimit: false, phase: 'normal' });
+    expect(entry).toMatchObject({
+      steps: 1,
+      timeLimit: false,
+      phase: 'normal',
+    });
     expect(typeof entry.elapsedMs).toBe('number');
   });
 });
 
 describe('client disconnect', () => {
   it('aborts the model run within 100 ms, writes no notice and still finishes the turn', async () => {
-    served = await serveChat({ turns: [hangAfterText], budgetMs: 60_000, reserveMs: 10_000 });
+    served = await serveChat({
+      turns: [hangAfterText],
+      budgetMs: 60_000,
+      reserveMs: 10_000,
+    });
     const received: string[] = [];
     await new Promise<void>((resolve, reject) => {
-      const request = http.request(served?.url ?? '', { method: 'POST' }, (response) => {
-        response.on('data', (buffer: Buffer) => {
-          received.push(buffer.toString());
-          // First chunk seen: hang up.
-          request.destroy();
-          resolve();
-        });
-      });
+      const request = http.request(
+        served?.url ?? '',
+        { method: 'POST' },
+        (response) => {
+          response.on('data', (buffer: Buffer) => {
+            received.push(buffer.toString());
+            // First chunk seen: hang up.
+            request.destroy();
+            resolve();
+          });
+        }
+      );
       request.on('error', () => resolve());
       request.end();
       setTimeout(() => reject(new Error('no first chunk')), 5000).unref();
@@ -132,7 +158,11 @@ describe('soft deadline and wrap-up', () => {
         }),
     });
     served = await serveChat({
-      turns: [toolCallTurn('slow', {}), toolCallTurn('slow', {}, 'call-2'), textTurn('summary')],
+      turns: [
+        toolCallTurn('slow', {}),
+        toolCallTurn('slow', {}, 'call-2'),
+        textTurn('summary'),
+      ],
       tools: { slow },
       budgetMs: 8000,
       reserveMs: 6000,
@@ -156,7 +186,9 @@ describe('keep-alive', () => {
       keepAliveMs: 100,
     });
     const text = await (await fetch(served.url, { method: 'POST' })).text();
-    const keepalives = parseChunks(text).filter((c) => c.type === 'data-keepalive');
+    const keepalives = parseChunks(text).filter(
+      (c) => c.type === 'data-keepalive'
+    );
     expect(keepalives.length).toBeGreaterThanOrEqual(1);
     expect(keepalives[0].transient).toBe(true);
 

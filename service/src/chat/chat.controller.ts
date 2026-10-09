@@ -4,7 +4,7 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-import type { RequestHandler, Response } from 'express';
+import type { NextFunction, RequestHandler, Response } from 'express';
 import { pipeUIMessageStreamToResponse } from 'ai';
 import { runTurnDigest } from '../agents/turn-digest';
 import { getLoadedSession } from '../middleware/load-session.middleware';
@@ -54,7 +54,7 @@ export const createSendAiChatMessage =
     toolRegistry: ToolSourceRegistry,
     deps: ChatControllerDeps = { runTurnDigest }
   ): RequestHandler =>
-  async (req, res) => {
+  async (req, res, next) => {
     const { sessionId } = req.params;
     const user = (req as AuthenticatedRequest).user;
     const budget = getRequestBudget(res);
@@ -132,19 +132,24 @@ export const createSendAiChatMessage =
       logger.error(`Error in AI chat for session ${sessionId}`, {
         reason: messageOf(error, 'unknown'),
       });
-      reportFailure(res, error);
+      reportFailure(res, next, error);
     } finally {
       budget.dispose();
     }
   };
 
 /**
- * Before the headers: a JSON envelope. After streaming started: an in-band error frame
+ * Before the headers: the error middleware answers (persistence errors mapped, everything else
+ * a generic 500 that never leaks internals). After streaming started: an in-band error frame
  * followed by [DONE] (the one error shape the client's UI message reader validates).
  */
-const reportFailure = (res: Response, error: unknown): void => {
+const reportFailure = (
+  res: Response,
+  next: NextFunction,
+  error: unknown
+): void => {
   if (!res.headersSent) {
-    fail(res, 500, messageOf(error, 'Internal server error'));
+    next(error);
     return;
   }
   if (!res.writableEnded) {

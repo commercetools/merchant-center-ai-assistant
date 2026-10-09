@@ -14,7 +14,11 @@ import {
 } from '../../src/agents/agent-keys';
 import { buildPreamble } from '../../src/chat/preamble';
 import { registry } from '../../src/tool-sources';
-import { fakeLog, makeToolContext, StubToolSource } from '../helpers/stub-tool-source';
+import {
+  fakeLog,
+  makeToolContext,
+  StubToolSource,
+} from '../helpers/stub-tool-source';
 
 const contexts: Array<{ dispose: () => void }> = [];
 afterEach(() => {
@@ -31,7 +35,11 @@ describe('built-in sources', () => {
       'export_data',
       'visualize_data',
     ]);
-    expect(contributing.map((s) => s.name)).toEqual(['entity-link', 'visualize', 'export']);
+    expect(contributing.map((s) => s.name)).toEqual([
+      'entity-link',
+      'visualize',
+      'export',
+    ]);
     expect(registry.list().map((s) => s.name)).toContain('imageGeneration');
   });
 
@@ -68,7 +76,13 @@ describe('agent keys', () => {
   it('reports the keys without a source in one info line', () => {
     const log = fakeLog();
     const gated = logGatedAgentKeys(
-      { list: () => [{ name: 'visualize' }, { name: 'export' }, { name: 'entity-link' }] },
+      {
+        list: () => [
+          { name: 'visualize' },
+          { name: 'export' },
+          { name: 'entity-link' },
+        ],
+      },
       log
     );
     expect(gated).toEqual([
@@ -90,7 +104,9 @@ describe('preamble', () => {
     new StubToolSource({ name, displayName, description });
 
   it('lists only the contributing sources', () => {
-    const text = buildPreamble([stub('visualize', 'Data visualization', 'Makes charts.')]);
+    const text = buildPreamble([
+      stub('visualize', 'Data visualization', 'Makes charts.'),
+    ]);
     expect(text).toContain('### Data visualization');
     expect(text).toContain('Makes charts.');
     expect(text.toLowerCase()).not.toContain('stripe');

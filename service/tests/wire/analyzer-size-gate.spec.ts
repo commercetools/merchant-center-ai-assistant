@@ -87,7 +87,9 @@ describe('analyzer size gate', () => {
    * spot silently.
    */
   test('an unserializable result with no supplied size measures as small', () => {
-    const circular: Record<string, unknown> = { padding: 'x'.repeat(OVERSIZED_CHARS) };
+    const circular: Record<string, unknown> = {
+      padding: 'x'.repeat(OVERSIZED_CHARS),
+    };
     circular.self = circular;
     expect(sizeOf(circular)).toBe('[object Object]'.length);
   });
@@ -96,7 +98,12 @@ describe('analyzer size gate', () => {
     const result = await analyzeQueryTask(
       {
         messages: [],
-        toolCallParams: { args: {}, toolName: 'read_orders', result: {}, resultChars: OVERSIZED_CHARS },
+        toolCallParams: {
+          args: {},
+          toolName: 'read_orders',
+          result: {},
+          resultChars: OVERSIZED_CHARS,
+        },
       },
       neverCalled()
     );
@@ -109,10 +116,17 @@ describe('analyzer size gate', () => {
         messages: [
           {
             role: 'assistant',
-            content: [{ type: 'tool-call', toolCallId: 'c', toolName: 't', input: {} }],
+            content: [
+              { type: 'tool-call', toolCallId: 'c', toolName: 't', input: {} },
+            ],
           },
         ],
-        toolCallParams: { args: {}, toolName: 't', result: {}, resultChars: 10 },
+        toolCallParams: {
+          args: {},
+          toolName: 't',
+          result: {},
+          resultChars: 10,
+        },
       },
       neverCalled()
     );
@@ -126,7 +140,12 @@ describe('analyzer model path', () => {
     const result = await analyzeQueryTask(
       {
         messages: MESSAGES,
-        toolCallParams: { args: { a: 1 }, toolName: 'read_orders', result: {}, resultChars: 1000 },
+        toolCallParams: {
+          args: { a: 1 },
+          toolName: 'read_orders',
+          result: {},
+          resultChars: 1000,
+        },
       },
       { generate }
     );
@@ -142,7 +161,12 @@ describe('analyzer model path', () => {
           { role: 'user', content: 'list orders' },
           { role: 'assistant', content: 'here they are' },
         ],
-        toolCallParams: { args: {}, toolName: 'read_orders', result: {}, resultChars: 10 },
+        toolCallParams: {
+          args: {},
+          toolName: 'read_orders',
+          result: {},
+          resultChars: 10,
+        },
       },
       {
         generate: async ({ messages }) => {
@@ -163,7 +187,12 @@ describe('analyzer model path', () => {
     await analyzeQueryTask(
       {
         messages: [...many, { role: 'user', content: 'last' }],
-        toolCallParams: { args: {}, toolName: 'read_orders', result: {}, resultChars: 10 },
+        toolCallParams: {
+          args: {},
+          toolName: 'read_orders',
+          result: {},
+          resultChars: 10,
+        },
       },
       {
         generate: async (input) => {
