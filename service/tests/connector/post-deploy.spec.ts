@@ -7,7 +7,16 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import type { GcpAnalyticsReport } from '../../src/analytics/self-check';
+import { resetEnsureDatasetForTests } from '../../src/analytics/bigquery/ensure-dataset';
+import { setBigQueryForTests } from '../../src/analytics/bigquery/ports';
+import { resetTablesForTests } from '../../src/analytics/bigquery/tables';
+import { checkGcpAnalytics, type GcpAnalyticsReport } from '../../src/analytics/self-check';
+import { resetConfigurationForTests } from '../../src/config';
+import { resetEnsureBucketForTests } from '../../src/storage/ensure-bucket';
+import { setStorageForTests } from '../../src/storage/ports';
+import { FakeBigQuery } from '../helpers/bigquery-fake';
+import { useGcpEnv } from '../helpers/gcp-env';
+import { FakeStorage } from '../helpers/storage-fake';
 import type { ReadinessReport } from '../../src/gcp/readiness';
 import { PostDeployDeps, run } from '../../src/connector/post-deploy';
 import { createLifecycleApiRoot, runProbe } from '../../src/connector/checks/custom-object-probe';
@@ -138,6 +147,37 @@ describe('post-deploy run()', () => {
     const { deps: d, lines } = deps({}, { gcpAnalytics: async () => ({ ...ALL_OK, visibility: 'bucket is publicly readable although IMAGE_URL_MODE=private' }) });
     expect(await run(d)).toBe(0);
     expect(lines.some((l) => l.startsWith('post-deploy: gcp analytics: visibility:'))).toBe(true);
+  });
+
+  it('post-deploy: analytics self-check creates dataset and bucket when permitted', async () => {
+    // The real self-check over fake Google clients: a fresh project, a service account that may create.
+    useGcpEnv();
+    const bq = new FakeBigQuery();
+    const st = new FakeStorage();
+    bq.datasetExists = false;
+    st.bucketExists = false;
+    setBigQueryForTests(bq);
+    setStorageForTests(st);
+    resetEnsureDatasetForTests();
+    resetEnsureBucketForTests();
+    resetTablesForTests();
+    try {
+      const { deps: d, lines } = deps(
+        {},
+        { gcpAnalytics: () => checkGcpAnalytics({ head: async () => 403 }) }
+      );
+      expect(await run(d)).toBe(0);
+      expect(bq.createDatasetCalls).toHaveLength(1);
+      expect(st.createBucketCalls).toHaveLength(1);
+      // Everything was created and the probes removed: no warning line at all.
+      expect(lines.some((l) => l.startsWith('post-deploy: gcp analytics:'))).toBe(false);
+      expect(lines[lines.length - 1]).toBe('post-deploy: OK');
+      expect(st.objects.size).toBe(0);
+    } finally {
+      setBigQueryForTests(undefined);
+      setStorageForTests(undefined);
+      resetConfigurationForTests();
+    }
   });
 
   it('post-deploy: analytics self-check passes silently when permitted and present', async () => {
