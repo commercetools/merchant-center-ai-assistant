@@ -94,6 +94,7 @@ export const SaveActions: React.FC<SaveActionsProps> = ({
     borderTopColor="neutral.6"
   >
     <Button
+      data-testid="admin-config-save"
       variant="solid"
       colorPalette="primary"
       onPress={() => {

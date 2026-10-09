@@ -6,7 +6,10 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { isUsableTranspiledCode } from './babel-renderer';
+import {
+  hasOwnReturnStatement,
+  isUsableTranspiledCode,
+} from './babel-renderer';
 
 // The shared contract fixture is written by the service (change M). mc-app cannot import
 // the service module (separate build context), so the shared values are checked against it.
@@ -54,6 +57,14 @@ describe('composed page contract', () => {
     expect(isUsableTranspiledCode('function Main( {', 'Main')).toBe(false);
     expect(isUsableTranspiledCode('function Main() {}\nMain;', 'Main')).toBe(
       true
+    );
+  });
+
+  it('wraps a body by its own return statement, not by the text "return "', () => {
+    expect(hasOwnReturnStatement('useState(0);\nreturn <p />;')).toBe(true);
+    expect(hasOwnReturnStatement('const f = () => { return 1; };')).toBe(false);
+    expect(hasOwnReturnStatement('<div>please return (soon)</div>')).toBe(
+      false
     );
   });
 });

@@ -9,9 +9,10 @@ import { useMemo } from 'react';
 
 export type CurrentUser = {
   /**
-   * Falls back to `'anonymous'`, which every identity site on the chat surface already uses.
-   * It has to: sessions were CREATED under this value, and the router checks ownership
-   * against it while rejecting an empty `?userEmail=` outright.
+   * Falls back to the display placeholder `'anonymous'` when Merchant Center gives no user.
+   * It is only a label: the service identifies the caller from the gateway token, never from
+   * this value, so nothing is sent to the service as an identity (no `?userEmail=`).
+   * Callers that need a real address compare against `'anonymous'` (see `session.tsx`).
    */
   email: string;
   firstName: string;

@@ -13,9 +13,11 @@ import {
   Stack,
   Text,
 } from '@commercetools/nimbus';
+import { useMcpProviders } from '../../../contexts/mcp-providers';
 import { useSession } from '../../../contexts/session';
 import { GroupedSessionTools } from '../../../hooks/use-chat-service-connector/types';
 import MCPGroup from './group';
+import { findUnconfiguredProvider } from './provider-status';
 
 /**
  * The per-session tool switchboard: every tool the assistant can reach, grouped by source,
@@ -33,10 +35,16 @@ import MCPGroup from './group';
  */
 export const ToolsPanel: React.FC = () => {
   const { sessionTools, isLoadingTools, updateTools } = useSession();
+  const { providers, ensureProvidersLoaded } = useMcpProviders();
   const [localTools, setLocalTools] = useState<GroupedSessionTools[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [filterText, setFilterText] = useState('');
+
+  // Provider status is fetched once; until it arrives (or when it fails) no group is greyed.
+  useEffect(() => {
+    void ensureProvidersLoaded();
+  }, [ensureProvidersLoaded]);
 
   useEffect(() => {
     setLocalTools(sessionTools);
@@ -140,6 +148,7 @@ export const ToolsPanel: React.FC = () => {
             <MCPGroup
               key={group.mcp}
               group={group}
+              unconfigured={findUnconfiguredProvider(providers, group.mcp)}
               onToggleTool={handleToggleTool}
               onToggleAll={handleToggleAll}
             />

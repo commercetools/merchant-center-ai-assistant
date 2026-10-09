@@ -27,12 +27,19 @@ interface MCPGroupProps {
   group: GroupedSessionTools;
   onToggleTool: (mcpName: string, toolName: string) => void;
   onToggleAll: (mcpName: string) => void;
+  /**
+   * Set when the service reports the provider as not configured (`GET mcp/providers`).
+   * The group is greyed out and its checkboxes are disabled: switching them on would do
+   * nothing. Missing key names are shown, never values.
+   */
+  unconfigured?: { missingKeys: string[] };
 }
 
 const MCPGroup: React.FC<MCPGroupProps> = ({
   group,
   onToggleTool,
   onToggleAll,
+  unconfigured,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -43,6 +50,8 @@ const MCPGroup: React.FC<MCPGroupProps> = ({
 
   return (
     <Box
+      data-unconfigured={unconfigured ? 'true' : undefined}
+      opacity={unconfigured ? 0.6 : undefined}
       borderBottomWidth="25"
       borderBottomStyle="solid"
       borderBottomColor="neutral.6"
@@ -79,15 +88,27 @@ const MCPGroup: React.FC<MCPGroupProps> = ({
           <Badge size="2xs">
             {enabledCount}/{group.tools.length}
           </Badge>
+          {unconfigured && (
+            <Badge size="2xs" colorPalette="warning">
+              Not configured
+            </Badge>
+          )}
         </Stack>
 
         <Checkbox
           aria-label={`Toggle all ${group.mcp} tools`}
           isSelected={allEnabled}
           isIndeterminate={someEnabled}
+          isDisabled={Boolean(unconfigured)}
           onChange={() => onToggleAll(group.mcp)}
         />
       </Stack>
+
+      {unconfigured && unconfigured.missingKeys.length > 0 && (
+        <Text fontSize="xs" color="neutral.11" paddingLeft="600">
+          Missing: {unconfigured.missingKeys.join(', ')}
+        </Text>
+      )}
 
       {isExpanded && (
         <Stack
@@ -102,6 +123,7 @@ const MCPGroup: React.FC<MCPGroupProps> = ({
               <Checkbox
                 key={`${group.mcp}:${tool.toolName}`}
                 isSelected={tool.enabled}
+                isDisabled={Boolean(unconfigured)}
                 onChange={() => onToggleTool(group.mcp, tool.toolName)}
               >
                 <Code variant="plain" size="xs">

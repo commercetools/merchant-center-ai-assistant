@@ -20,6 +20,7 @@ import { AttachButton } from './attach-button';
 import { Disclaimer } from './disclaimer';
 import { SelectedFiles } from './selected-files';
 import { SendButton } from './send-button';
+import { StopButton } from './stop-button';
 import { SendHint } from './send-hint';
 import { SourcesPanel } from './sources-panel';
 import { ToolsButton } from './tools-button';
@@ -29,6 +30,8 @@ type Props = {
   onChange: (value: string) => void;
   onSubmit: () => void;
   isLoading: boolean;
+  /** The chat's `stop()`; while a turn runs the send button becomes a stop button. */
+  onStop?: () => void;
   error?: Error | null;
   files?: FileList;
   onFilesChange?: (files: FileList | undefined) => void;
@@ -50,6 +53,7 @@ export const Composer: React.FC<Props> = ({
   onChange,
   onSubmit,
   isLoading,
+  onStop,
   error,
   files,
   onFilesChange,
@@ -127,6 +131,7 @@ export const Composer: React.FC<Props> = ({
 
       <Box
         as="form"
+        data-testid="chat-composer"
         onSubmit={handleSubmit}
         backgroundColor="bg"
         borderWidth="25"
@@ -167,7 +172,11 @@ export const Composer: React.FC<Props> = ({
           />
           <Box flex="1" />
           <SendHint hasText={hasText} />
-          <SendButton isDisabled={!hasText || isLoading} />
+          {isLoading && onStop ? (
+            <StopButton onStop={onStop} />
+          ) : (
+            <SendButton isDisabled={!hasText || isLoading} />
+          )}
         </Flex>
 
         {isToolsOpen && <SourcesPanel />}
