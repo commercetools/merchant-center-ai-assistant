@@ -21,6 +21,11 @@ export const FORBIDDEN_DEPENDENCIES = [
   '@commercetools/sdk-client-v2',
 ];
 export const FORBIDDEN_SOURCE = /tenant|firestore|validateProject|dotenv/i;
+// Removed Google/LLM provider surface (change F). Only the config file that names the
+// legacy variables for the boot warning and the express-mode guard may contain them.
+export const FORBIDDEN_PROVIDER_SOURCE =
+  /GEMINI_API_KEY|createGoogleGenerativeAI|createAnthropic|CLAUDE_API_KEY|OPENAI_API_KEY|ANTHROPIC_|GCP_SERVICE_ACCOUNT_|secrets\.utils|GOOGLE_APPLICATION_CREDENTIALS|from 'openai'/;
+export const PROVIDER_SOURCE_ALLOWLIST = ['src/config/sections/gcp.ts'];
 
 function sourceFiles(dir) {
   return readdirSync(dir).flatMap((name) => {
@@ -51,6 +56,12 @@ export function check() {
       .forEach((line, i) => {
         if (FORBIDDEN_SOURCE.test(line)) {
           problems.push(`${relative(root, file)}:${i + 1}: forbidden word in source`);
+        }
+        if (
+          FORBIDDEN_PROVIDER_SOURCE.test(line) &&
+          !PROVIDER_SOURCE_ALLOWLIST.includes(relative(root, file))
+        ) {
+          problems.push(`${relative(root, file)}:${i + 1}: removed provider identifier in source`);
         }
       });
   }
