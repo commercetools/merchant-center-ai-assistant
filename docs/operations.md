@@ -95,6 +95,10 @@ How an operator deletes data:
 All durable state is in Custom Objects of your project, so project-level export of Custom Objects is the backup. Encrypted objects can only be read with the `ENCRYPTION_KEY` (and `ENCRYPTION_KEY_PREVIOUS`) that wrote them; keep those values safe.
 The BigQuery tables and the image bucket are derived or replaceable data and are not part of a backup of the conversations (images referenced by stored messages would be lost).
 
+## Rollback
+
+Redeploy the previous tag: `node scripts/connect/connect.mjs update-code --tag <previous tag>` (stage the old tag, publish, redeploy with `--updateConnector`), see [the deployment runbook](./deployment-runbook.md#5-rollback). If needed delete the deployment with `delete --yes`; the Custom Objects stay. This procedure has been unit-tested with a fake CLI only and has not yet been rehearsed on a real deployment.
+
 ## Upgrading Nimbus
 
 The Nimbus MCP package version is pinned and must equal the version of `@commercetools/nimbus` that the frontends resolve. To bump it, change `@commercetools/nimbus-mcp` in `service/package.json` and `@commercetools/nimbus*` in all three frontends,
