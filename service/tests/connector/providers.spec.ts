@@ -36,11 +36,25 @@ describe('reportProviders', () => {
       STRIPE_SECRET_KEY: 'sk_test_SENTINEL',
       CONTENTSTACK_API_KEY: 'SENTINEL-api',
       CONTENTSTACK_MANAGEMENT_TOKEN: 'SENTINEL-token',
-      ALGOLIA_MCP_URL: 'https://SENTINEL.example/mcp?key=SENTINEL',
-      CONTENTSTACK_REGION: 'SENTINEL-region',
+      ALGOLIA_MCP_URL: 'https://SENTINEL.example.com/mcp?key=SENTINEL',
+      CONTENTSTACK_REGION: 'eu',
     });
     expect(lines.join('\n')).not.toContain('SENTINEL');
     expect(lines.every((l) => l.endsWith(': configured'))).toBe(true);
+  });
+
+  it('providers: an invalid value is reported by key name, never by value', () => {
+    const { lines } = reportProviders({
+      STRIPE_SECRET_KEY: 'hello-SENTINEL',
+      ALGOLIA_MCP_URL: 'https://169.254.169.254/SENTINEL',
+    });
+    expect(lines).toContain(
+      'post-deploy: providers stripe: not configured (invalid: STRIPE_SECRET_KEY)'
+    );
+    expect(lines).toContain(
+      'post-deploy: providers algolia: not configured (invalid: ALGOLIA_MCP_URL)'
+    );
+    expect(lines.join('\n')).not.toContain('SENTINEL');
   });
 });
 

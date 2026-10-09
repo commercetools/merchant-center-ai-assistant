@@ -42,7 +42,7 @@ describe('providers section', () => {
     const { providers } = freshConfig({ CONTENTSTACK_API_KEY: 'cs-key-value' });
     const cs = providers.status.find((s) => s.provider === 'contentstack');
     expect(cs?.enabled).toBe(false);
-    expect(cs?.configured).toBe(true);
+    expect(cs?.configured).toBe(false);
     expect(cs?.missingKeys).toEqual(['CONTENTSTACK_MANAGEMENT_TOKEN']);
     expect(providers.warnings).toEqual([
       'PROVIDER contentstack disabled: missing CONTENTSTACK_MANAGEMENT_TOKEN',
@@ -73,13 +73,13 @@ describe('providers section', () => {
       CONTENTSTACK_API_KEY: 'val-cs-api',
       CONTENTSTACK_MANAGEMENT_TOKEN: 'val-cs-token',
       ALGOLIA_MCP_URL: 'https://val-algolia.example.test/?key=abc',
-      STRIPE_SECRET_KEY: 'val-stripe',
+      STRIPE_SECRET_KEY: 'sk_test_valstripe',
       GCP_SA_KEY_BASE64: sa,
       ENCRYPTION_KEY: 'dmFsLWVuYy12YWwtZW5jLXZhbC1lbmMtdmFsLWVuYyE=',
     });
     const json = JSON.stringify(c);
     expect((json.match(/\[secret\]/g) ?? []).length).toBeGreaterThanOrEqual(6);
-    for (const v of ['val-cs-api', 'val-cs-token', 'val-algolia', 'val-stripe', sa, 'dmFsLWVuYy12YWwtZW5j']) {
+    for (const v of ['val-cs-api', 'val-cs-token', 'val-algolia', 'sk_test_valstripe', sa, 'dmFsLWVuYy12YWwtZW5j']) {
       expect(json).not.toContain(v);
     }
   });

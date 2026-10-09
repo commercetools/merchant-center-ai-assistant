@@ -4,55 +4,56 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-import { Secret } from '../secret';
+import { evaluateProvider } from '../../mcp-providers/schemas';
+import { PROVIDERS } from '../../mcp-providers/types';
 import { str } from '../parse';
-import {
-  ProvidersConfig,
-  ProviderStatus,
-  providerStatus,
-} from '../provider-status';
+import { ProvidersConfig } from '../provider-status';
+import { Secret } from '../secret';
 import { SectionParser } from '../types';
 
+const PROVIDER_KEYS = [
+  'CONTENTSTACK_API_KEY',
+  'CONTENTSTACK_MANAGEMENT_TOKEN',
+  'CONTENTSTACK_BRANCH',
+  'CONTENTSTACK_REGION',
+  'ALGOLIA_MCP_URL',
+  'STRIPE_SECRET_KEY',
+  'STRIPE_CONNECTED_ACCOUNT_ID',
+] as const;
+
 /**
- * Presence-only logic. Change J replaces the validators (formats, Contentstack
- * region, Algolia URL guard) inside this file and keeps the exported types.
- * Providers are optional: this parser never adds errors.
+ * Provider enablement (change J): a provider is enabled iff all required keys are set and
+ * every set key is valid. A partial or invalid set disables the provider with a warning that
+ * names keys only; it never adds an error, so a typo cannot stop the service. No network.
  */
 export const parseProviders: SectionParser<ProvidersConfig> = (env) => {
-  const csKey = str(env, 'CONTENTSTACK_API_KEY');
-  const csToken = str(env, 'CONTENTSTACK_MANAGEMENT_TOKEN');
-  const algolia = str(env, 'ALGOLIA_MCP_URL');
-  const stripe = str(env, 'STRIPE_SECRET_KEY');
+  const raw: Record<string, string | undefined> = {};
+  for (const key of PROVIDER_KEYS) raw[key] = str(env, key);
 
-  const checks = [
-    providerStatus('contentstack', {
-      CONTENTSTACK_API_KEY: csKey,
-      CONTENTSTACK_MANAGEMENT_TOKEN: csToken,
-    }),
-    providerStatus('algolia', { ALGOLIA_MCP_URL: algolia }),
-    providerStatus('stripe', { STRIPE_SECRET_KEY: stripe }),
-  ];
-  const status: ProviderStatus[] = checks.map((c) => c.status);
+  const checks = PROVIDERS.map((p) => evaluateProvider(p, raw));
+  const status = checks.map((c) => c.status);
   const warnings = checks.flatMap((c) => (c.warning ? [c.warning] : []));
   const enabled = (name: string) =>
     status.find((s) => s.provider === name)?.enabled === true;
 
   const value: ProvidersConfig = { status, warnings };
+  const csKey = raw.CONTENTSTACK_API_KEY;
+  const csToken = raw.CONTENTSTACK_MANAGEMENT_TOKEN;
   if (enabled('contentstack') && csKey && csToken) {
     value.contentstack = {
       apiKey: new Secret(csKey),
       managementToken: new Secret(csToken),
-      branch: str(env, 'CONTENTSTACK_BRANCH'),
-      region: str(env, 'CONTENTSTACK_REGION') ?? 'na',
+      branch: raw.CONTENTSTACK_BRANCH,
+      region: raw.CONTENTSTACK_REGION ?? 'na',
     };
   }
-  if (enabled('algolia') && algolia) {
-    value.algolia = { url: new Secret(algolia) };
+  if (enabled('algolia') && raw.ALGOLIA_MCP_URL) {
+    value.algolia = { url: new Secret(raw.ALGOLIA_MCP_URL) };
   }
-  if (enabled('stripe') && stripe) {
+  if (enabled('stripe') && raw.STRIPE_SECRET_KEY) {
     value.stripe = {
-      secretKey: new Secret(stripe),
-      connectedAccountId: str(env, 'STRIPE_CONNECTED_ACCOUNT_ID'),
+      secretKey: new Secret(raw.STRIPE_SECRET_KEY),
+      connectedAccountId: raw.STRIPE_CONNECTED_ACCOUNT_ID,
     };
   }
   return { value, errors: [] };
