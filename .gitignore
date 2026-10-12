@@ -31,3 +31,4 @@ plans/evidence/
 
 # E2E helper runtime files (scripts/e2e/dev-up.sh)
 .e2e-*
+.connect/
