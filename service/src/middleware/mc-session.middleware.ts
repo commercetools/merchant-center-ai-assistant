@@ -95,7 +95,10 @@ export const verifyMcSession: RequestHandler = async (
   if (auth.authDisabled) {
     // Unreachable in production: readConfiguration() refuses the flag there.
     const userId = headerOf(req, 'x-dev-user-id') ?? 'dev-user';
-    const isAdmin = headerOf(req, 'x-dev-admin') === 'true';
+    // The direct browser path cannot set x-dev-admin, so the allowlist counts here too.
+    const isAdmin =
+      headerOf(req, 'x-dev-admin') === 'true' ||
+      isAdminUser(userId, auth.adminUserIds);
     logger.debug('MC_AUTH_DISABLED bypass used');
     attachUser(req, res, { userId, projectKey: config.ctp.projectKey, isAdmin });
     return next();

@@ -10,6 +10,7 @@ import { installGcpImageUploader } from './analytics/register';
 import type { AppConfig } from './config';
 import { SERVICE_BASE_PATH } from './constants/service-path';
 import CustomError from './errors/custom.error';
+import { devCors } from './middleware/dev-cors.middleware';
 import { initRequestContext } from './middleware/context.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
 import { verifyMcSession } from './middleware/mc-session.middleware';
@@ -44,8 +45,10 @@ export function createApp(config: AppConfig): Express {
     });
   }
 
-  // No CORS middleware: traffic is server-to-server from the Merchant Center
-  // gateway (/proxy/forward-to), never a browser.
+  // No CORS in production: traffic is server-to-server from the Merchant Center
+  // gateway (/proxy/forward-to), never a browser. The one exception is local
+  // development, where the frontends call an http service directly from localhost.
+  if (config.auth.authDisabled) app.use(devCors);
 
   // Feedback snapshots carry the client's whole in-memory useChat array and exceed the 100kb
   // body-parser default. Registered BEFORE the global parser (body-parser sets req._body and

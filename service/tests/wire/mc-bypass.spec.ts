@@ -48,6 +48,14 @@ describe('development bypass', () => {
     expect(res.body.isAdmin).toBe(true);
   });
 
+  it('treats a dev user on the ADMIN_USER_IDS allowlist as an admin', async () => {
+    const res = await request(bypassApp({ ADMIN_USER_IDS: 'dev-user' }))
+      .post('/service/admin-probe')
+      .send({});
+    expect(res.status).toBe(200);
+    expect(res.body.isAdmin).toBe(true);
+  });
+
   it('x-dev-admin is only honoured when it is exactly "true"', async () => {
     const res = await request(bypassApp())
       .post('/service/admin-probe')

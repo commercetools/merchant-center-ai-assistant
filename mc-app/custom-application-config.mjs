@@ -31,7 +31,7 @@ const config = {
     csp: {
       // The browser never contacts the service directly: every call goes through the
       // Merchant Center API's /proxy/forward-to, whose origin app-kit already allows.
-      'connect-src': ['*.commercetools.app', '*.gstatic.com'],
+      'connect-src': ['*.commercetools.app', '*.gstatic.com', 'localhost:8080'],
       // 'unsafe-eval' is needed by the generated-page renderer (change P).
       'script-src': [
         '*.commercetools.app',

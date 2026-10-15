@@ -88,7 +88,7 @@ export const toUri = (input: RequestInfo | URL): string =>
  * `data: res` returns the untouched `Response`, so a streaming body is read incrementally
  * by the caller, and `init.signal` is forwarded so aborting still cancels the request.
  */
-export const forwardToFetch: typeof fetch = async (input, init = {}) => {
+const forwardToGatewayFetch: typeof fetch = async (input, init = {}) => {
   const uri = toUri(input);
   const method = (init.method ?? 'GET').toUpperCase();
   const hasBody = init.body !== undefined && init.body !== null;
@@ -151,6 +151,33 @@ export const forwardToFetch: typeof fetch = async (input, init = {}) => {
     }
     throw err;
   }
+};
+
+/**
+ * The gateway only reaches public https URLs, so under `mc-scripts start` (`window.app.env`
+ * is `development`) an `http://` service - in practice the local one - is called directly.
+ * The service must run with `MC_AUTH_DISABLED=true`: there is no gateway JWT on this path.
+ */
+export const isDirectServiceUri = (uri: string): boolean =>
+  (window as { app?: { env?: string } }).app?.env === 'development' &&
+  new URL(uri).protocol === 'http:';
+
+/**
+ * Drop-in replacement for the gateway call: same signature, but development with an
+ * `http://` service skips `/proxy/forward-to` and fetches the service itself. The headers
+ * go out as given (no `x-forward-header-` relay); `accept` and, for a string body, `content-type` default to JSON.
+ */
+export const forwardToFetch: typeof fetch = (input, init = {}) => {
+  const uri = toUri(input);
+  if (!isDirectServiceUri(uri)) return forwardToGatewayFetch(input, init);
+  const headers = new Headers(init.headers);
+  if (!headers.has('accept')) headers.set('accept', 'application/json');
+  // The gateway hop sets this on the outer request; direct, the service's JSON parser
+  // skips a body that arrives without it and every field reads as missing.
+  if (typeof init.body === 'string' && !headers.has('content-type')) {
+    headers.set('content-type', 'application/json');
+  }
+  return fetch(uri, { ...init, headers, cache: 'no-store' });
 };
 
 /**
