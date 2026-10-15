@@ -8,10 +8,11 @@ import { useApplicationContext } from '@commercetools-frontend/application-shell
 
 export const useChatServiceEndpoint = () => {
   const { chatServiceEndpointUrl } = useApplicationContext((context) => {
-    let chatServiceEndpointUrl =
-      'chatServiceEndpointUrl' in context.environment
+    let chatServiceEndpointUrl = context.environment
+      ? 'chatServiceEndpointUrl' in context.environment
         ? (context.environment.chatServiceEndpointUrl as string)
-        : undefined;
+        : undefined
+      : undefined;
 
     if (chatServiceEndpointUrl && !chatServiceEndpointUrl.endsWith('/')) {
       chatServiceEndpointUrl = chatServiceEndpointUrl + '/';

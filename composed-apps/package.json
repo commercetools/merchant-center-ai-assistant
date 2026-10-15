@@ -16,6 +16,7 @@
     "format": "prettier --write '**/*.{js,ts,tsx}'",
     "typecheck": "tsc --noEmit",
     "nimbus:typegen": "chakra typegen node_modules/@commercetools/nimbus/dist/theme.es.js",
+    "versions:appkit": "manypkg upgrade @commercetools-frontend",
     "postinstall": "npm run nimbus:typegen"
   },
   "dependencies": {
@@ -83,6 +84,7 @@
     "nwsapi": "2.2.7"
   },
   "devDependencies": {
+    "@manypkg/cli": "^0.25.1",
     "@types/babel__standalone": "^7.1.9",
     "jsdom": "^21.1.2"
   },
