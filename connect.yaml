@@ -153,19 +153,6 @@ deployAs:
           description: Full URL of the service including /service; set on redeploy after the first deployment
           required: false
           default: 'https://not-configured.invalid/service'
-  - name: composed-apps
-    applicationType: merchant-center-custom-application
-    configuration:
-      standardConfiguration:
-        - key: CUSTOM_APPLICATION_ID
-          description: The Custom Application ID returned when registering the Pages application in the Merchant Center
-          required: true
-        - key: ENTRY_POINT_URI_PATH
-          description: Entry point URI path of the Pages Custom Application (unique per cloud region, different from the chat application)
-          required: true
-        - key: CLOUD_IDENTIFIER
-          description: Merchant Center API cloud identifier (for example gcp-us)
-          default: 'gcp-us'
   - name: mc-view-app
     applicationType: merchant-center-custom-view
     configuration:
