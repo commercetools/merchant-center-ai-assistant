@@ -5,7 +5,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from '@jest/globals';
@@ -85,12 +85,19 @@ describe('page-generation prompt', () => {
   });
 });
 
+// The check compares against mc-app's manifest, which Connect's per-application build context lacks.
+const itWithMcApp = existsSync(
+  join(process.cwd(), '../mc-app/src/utils/nimbus-surface.generated.ts')
+)
+  ? it
+  : it.skip;
+
 describe('Nimbus surface manifest', () => {
   it('exports a semver NIMBUS_VERSION', () => {
     expect(NIMBUS_VERSION).toMatch(/^\d+\.\d+\.\d+/);
   });
 
-  it('check:nimbus-surface exits non-zero on a version mismatch and names the fix', () => {
+  itWithMcApp('check:nimbus-surface exits non-zero on a version mismatch and names the fix', () => {
     const dir = mkdtempSync(join(tmpdir(), 'nimbus-surface-'));
     const copy = join(dir, 'surface.ts');
     const source = readFileSync(
