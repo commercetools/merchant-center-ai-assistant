@@ -10,7 +10,7 @@
  * This module is the ONLY definition of the schema version, the URI scheme, the Custom
  * Object container, the code encoding and the "is this transpiled script usable" check.
  * It imports nothing from persistence or commercetools clients: the service never stores
- * pages, the frontends do (see `contract/composed-page.fixture.json` for the shared sample).
+ * pages, the frontends do (see `service/contract/composed-page.fixture.json` for the shared sample).
  */
 
 import { parse } from '@babel/parser';

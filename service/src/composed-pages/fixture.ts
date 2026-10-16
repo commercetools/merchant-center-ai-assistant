@@ -66,7 +66,7 @@ const sortKeys = (value: unknown): unknown => {
   return value;
 };
 
-/** The exact text of `contract/composed-page.fixture.json`. */
+/** The exact text of `service/contract/composed-page.fixture.json`. */
 export const buildComposedPageFixtureJson = async (): Promise<string> => {
   const output = await createComposedPage(FIXTURE_INPUT);
   if (!output.success) {

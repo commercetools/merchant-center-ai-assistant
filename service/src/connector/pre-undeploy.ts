@@ -37,10 +37,10 @@ export interface PreUndeployDeps {
 
 /**
  * Removes only the probe object and reports which data containers remain. Undeploy must never
- * be blocked: an unreachable API is a warning and the exit code stays 0. The only DELETE this
+ * be blocked: an unreachable API is a warning and the process exit code stays 0. The only DELETE this
  * script can issue is for the probe object.
  */
-export async function run(deps: PreUndeployDeps): Promise<number> {
+export async function run(deps: PreUndeployDeps): Promise<void> {
   const { log } = deps;
   let env: LifecycleEnv;
   try {
@@ -49,7 +49,7 @@ export async function run(deps: PreUndeployDeps): Promise<number> {
     log(
       'pre-undeploy: warning: the lifecycle environment is incomplete; nothing was cleaned up'
     );
-    return 0;
+    return;
   }
 
   try {
@@ -86,7 +86,6 @@ export async function run(deps: PreUndeployDeps): Promise<number> {
     );
   }
   log('pre-undeploy: done');
-  return 0;
 }
 
 export function defaultDeps(): PreUndeployDeps {
@@ -100,7 +99,7 @@ export function defaultDeps(): PreUndeployDeps {
 }
 
 async function main(): Promise<void> {
-  process.exitCode = await run(defaultDeps());
+  await run(defaultDeps());
 }
 
 if (typeof require !== 'undefined' && require.main === module) {

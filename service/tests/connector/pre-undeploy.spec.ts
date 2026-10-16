@@ -34,7 +34,7 @@ describe('pre-undeploy run()', () => {
     const store = new Map([[`${PROBE_CONTAINER}/${PROBE_KEY}`, { container: PROBE_CONTAINER, key: PROBE_KEY, value: {} }]]);
     server.use(tokenHandler, ...customObjectHandlers(store));
     const { deps: d, lines } = deps();
-    expect(await run(d)).toBe(0);
+    await expect(run(d)).resolves.toBeUndefined();
     expect(store.size).toBe(0);
     expect(lines).toContain('pre-undeploy: probe object removed');
   });
@@ -42,7 +42,7 @@ describe('pre-undeploy run()', () => {
   it('pre-undeploy: no probe is fine', async () => {
     server.use(tokenHandler, ...customObjectHandlers(new Map()));
     const { deps: d, lines } = deps();
-    expect(await run(d)).toBe(0);
+    await expect(run(d)).resolves.toBeUndefined();
     expect(lines).toContain('pre-undeploy: no probe object to remove');
   });
 
@@ -61,7 +61,7 @@ describe('pre-undeploy run()', () => {
       ...customObjectHandlers(store)
     );
     const { deps: d, lines } = deps();
-    expect(await run(d)).toBe(0);
+    await expect(run(d)).resolves.toBeUndefined();
     expect(store.size).toBe(2);
     expect(deletes).toEqual([`/p1/custom-objects/${PROBE_CONTAINER}/${PROBE_KEY}`]);
     expect(lines).toContain('pre-undeploy: data retained in ai-assistant-sessions');
@@ -80,14 +80,14 @@ describe('pre-undeploy run()', () => {
       })
     );
     const { deps: d, lines } = deps();
-    expect(await run(d)).toBe(0);
+    await expect(run(d)).resolves.toBeUndefined();
     expect(apiCalls).toBe(1);
     expect(lines.some((l) => l.startsWith('pre-undeploy: warning: cleanup incomplete'))).toBe(true);
   }, 2000);
 
   it('pre-undeploy: an incomplete environment does not block', async () => {
     const lines: string[] = [];
-    expect(await run({ readEnv: () => readLifecycleEnv({}), apiRoot: () => { throw new Error('unused'); }, log: (l) => lines.push(l) })).toBe(0);
+    await expect(run({ readEnv: () => readLifecycleEnv({}), apiRoot: () => { throw new Error('unused'); }, log: (l) => lines.push(l) })).resolves.toBeUndefined();
     expect(lines[0]).toContain('warning');
   });
 });

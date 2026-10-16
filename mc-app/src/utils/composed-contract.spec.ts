@@ -12,10 +12,11 @@ import {
 } from './babel-renderer';
 
 // The shared contract fixture is written by the service (change M). mc-app cannot import
-// the service module (separate build context), so the shared values are checked against it.
+// the service module (separate build context), so the shared values are checked against its own
+// copy of the fixture (the service's drift test keeps the copies identical).
 const fixture = JSON.parse(
   fs.readFileSync(
-    path.resolve(__dirname, '../../../contract/composed-page.fixture.json'),
+    path.resolve(__dirname, 'composed-page.fixture.json'),
     'utf8'
   )
 ) as {

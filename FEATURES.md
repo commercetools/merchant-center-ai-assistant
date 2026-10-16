@@ -54,7 +54,7 @@ What is not implemented is listed in [docs/operations.md](./docs/operations.md) 
 - Embedded Nimbus design-system documentation tools as a managed child process with kill switch, recycling, idle shutdown and readiness: `service/src/nimbus/process-manager.ts`, `service/src/nimbus/tool-source.ts`.
 - Result offloading to per-session BigQuery tables with an analyzer gate, a SELECT-only SQL guard, dry-run checks and caps: `service/src/analytics/pipeline/pipeline.ts`, `service/src/analytics/guard/sql-guard.ts`, `service/src/analytics/tools/query.ts`.
 - Image generation into a private bucket with streamed, owner-checked reads and no signed URLs: `service/src/tool-sources/image-generation.source.ts`, `service/src/storage/gcs-objects.ts`, `service/src/storage/files-route.ts`.
-- Composed pages: validated, transpiled generated React pages with read-only GraphQL data sources, schema version 5.0: `service/src/composed-pages/tool.ts`, `service/src/composed-pages/contract.ts`, `contract/composed-page.fixture.json`.
+- Composed pages: validated, transpiled generated React pages with read-only GraphQL data sources, schema version 5.0: `service/src/composed-pages/tool.ts`, `service/src/composed-pages/contract.ts`, `service/contract/composed-page.fixture.json`.
 - Custom View orchestrator limited to the commercetools and Knowledge sources, with the host page URL as context: `service/src/chat/custom-view-orchestrator.ts`.
 
 ## Identity Managed MCP

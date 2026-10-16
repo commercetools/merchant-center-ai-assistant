@@ -67,14 +67,12 @@ describe('parseComposedPage', () => {
 });
 
 // The shared contract fixture is written by the service (change M); composed-apps cannot
-// import the service module, so the stored shape is checked against the file.
+// import the service module, so the stored shape is checked against its own copy of the
+// file (the service's drift test keeps the copies identical).
 describe('shared composed page fixture', () => {
   const fixture = JSON.parse(
     fs.readFileSync(
-      path.resolve(
-        __dirname,
-        '../../../../contract/composed-page.fixture.json'
-      ),
+      path.resolve(__dirname, 'composed-page.fixture.json'),
       'utf8'
     )
   ) as {

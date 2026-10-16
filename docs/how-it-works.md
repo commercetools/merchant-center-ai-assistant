@@ -76,7 +76,7 @@ A composed page is a React component that the assistant generates, together with
    checks that data-source queries are read-only GraphQL, transpiles the JSX with Babel and returns the schema and a URI. It stores nothing.
 2. The chat app renders a preview from the tool result (`mc-app/src/components/compose-preview/compose-preview.tsx`). When the user saves it in the dialog (name and icon), the app writes the page as a Custom Object in
    `shared-composed-pages` with the user's own token (`mc-app/src/hooks/use-composed-pages-storage/use-composed-pages-storage.ts`); the record carries the saving user's e-mail address as `createdBy`.
-3. `mc-app` and `composed-apps` render pages in the browser (`mc-app/src/utils/babel-renderer.tsx`, `composed-apps/src/utils/babel-renderer.tsx`). The shared format and the container key are pinned by `contract/composed-page.fixture.json`,
+3. `mc-app` and `composed-apps` render pages in the browser (`mc-app/src/utils/babel-renderer.tsx`, `composed-apps/src/utils/babel-renderer.tsx`). The shared format and the container key are pinned by `service/contract/composed-page.fixture.json`,
    and the service and mc-app tests both read that fixture.
 4. Data sources run as GraphQL requests through the Merchant Center proxy with the signed-in user's token, so a page can only read or change what that user may.
 

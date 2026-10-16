@@ -4,7 +4,7 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from '@jest/globals';
 import {
@@ -14,7 +14,12 @@ import {
 } from '../../src/composed-pages/contract';
 import { buildComposedPageFixtureJson } from '../../src/composed-pages/fixture';
 
-const FIXTURE = join(process.cwd(), '../contract/composed-page.fixture.json');
+const FIXTURE = join(process.cwd(), 'contract/composed-page.fixture.json');
+// The frontends cannot import the service, so each keeps a committed copy of the fixture.
+const FRONTEND_COPIES = [
+  '../mc-app/src/utils/composed-page.fixture.json',
+  '../composed-apps/src/hooks/use-composed-pages-storage/composed-page.fixture.json',
+].map((p) => join(process.cwd(), p));
 
 describe('shared composed page fixture', () => {
   it('matches what the tool produces now (no drift)', async () => {
@@ -22,7 +27,7 @@ describe('shared composed page fixture', () => {
     const actual = readFileSync(FIXTURE, 'utf8');
     if (actual !== expected) {
       throw new Error(
-        'contract/composed-page.fixture.json is stale. Regenerate it with: cd service && npm run update:composed-page-fixture'
+        'service/contract/composed-page.fixture.json is stale. Regenerate it with: cd service && npm run update:composed-page-fixture'
       );
     }
   });
@@ -51,6 +56,12 @@ describe('shared composed page fixture', () => {
         )
       ).toBe(true);
     }
+  });
+
+  it.each(FRONTEND_COPIES)('frontend copy %s is identical', (copy) => {
+    // Absent when the service is built or tested on its own (Connect validates each app alone).
+    if (!existsSync(copy)) return;
+    expect(readFileSync(copy, 'utf8')).toBe(readFileSync(FIXTURE, 'utf8'));
   });
 
   it('contains no timestamps or random ids', () => {

@@ -16,6 +16,9 @@
  */
 module.exports = {
   displayName: 'Service',
+  // Each worker loads the ESM AI SDKs; many parallel workers get OOM-killed in the memory-limited
+  // Connect validation container (SIGKILL), so the worker count is capped.
+  maxWorkers: 4,
   moduleDirectories: ['node_modules', 'src'],
   testMatch: ['**/tests/**/*.spec.ts'],
   // Live tests run through jest.integration.config.cjs (npm run test:integration).

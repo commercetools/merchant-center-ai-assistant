@@ -5,7 +5,8 @@
  */
 
 /**
- * Regenerates `contract/composed-page.fixture.json` from the built service
+ * Regenerates `service/contract/composed-page.fixture.json` and the copies kept by mc-app and
+ * composed-apps from the built service
  * (run `npm run build` first; `npm run update:composed-page-fixture` does both).
  */
 
@@ -20,7 +21,14 @@ const { buildComposedPageFixtureJson } = require(
   path.join(HERE, '../build/composed-pages/fixture.js')
 );
 
-const out = path.resolve(HERE, '../../contract/composed-page.fixture.json');
-fs.mkdirSync(path.dirname(out), { recursive: true });
-fs.writeFileSync(out, await buildComposedPageFixtureJson());
-process.stdout.write(`wrote ${path.relative(process.cwd(), out)}\n`);
+const json = await buildComposedPageFixtureJson();
+const outputs = [
+  '../contract/composed-page.fixture.json',
+  '../../mc-app/src/utils/composed-page.fixture.json',
+  '../../composed-apps/src/hooks/use-composed-pages-storage/composed-page.fixture.json',
+].map((p) => path.resolve(HERE, p));
+for (const out of outputs) {
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  fs.writeFileSync(out, json);
+  process.stdout.write(`wrote ${path.relative(process.cwd(), out)}\n`);
+}
