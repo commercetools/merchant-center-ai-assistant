@@ -1,8 +1,0 @@
-{
-  "container": "ai-assistant-sessions",
-  "keyPrefix": "e2e-sm-",
-  "titlePrefix": "e2e-many-",
-  "defaultCount": 120,
-  "maxCount": 1000,
-  "note": "The session list returns at most 500 sessions per user; use --count 520 to exercise that cap."
-}
