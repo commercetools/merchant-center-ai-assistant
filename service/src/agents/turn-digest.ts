@@ -70,7 +70,7 @@ export const runTurnDigest = (
   params: RunTurnDigestParams,
   deps: TurnDigestDeps = defaultDeps
 ): void => {
-  void startTurnDigest(params, deps);
+  startTurnDigest(params, deps);
 };
 
 /**

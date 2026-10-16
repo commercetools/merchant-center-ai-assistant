@@ -27,6 +27,7 @@ import {
 } from './prompt/nimbus-scope';
 import {
   composedPageInputSchema,
+  type ComponentInput,
   parseComposedPageInput,
   type ValidationIssue,
 } from './schema';
@@ -53,25 +54,11 @@ const errorResult = (
   hint: string
 ): TComposedPageError => ({ success: false, errors, hint });
 
-/**
- * The whole tool, without the AI SDK wrapper: validate, transpile, build `{ uri, schema }`.
- * Errors are RETURNED so the model can fix and retry in the same turn.
- */
-export const createComposedPage = async (
-  rawInput: unknown,
-  options: Pick<ComposedPageToolOptions, 'generateKey'> = {}
-): Promise<ComposedPageResult> => {
-  const parsed = parseComposedPageInput(rawInput);
-  if (!parsed.success) {
-    return errorResult(
-      parsed.errors,
-      'Fix the listed fields and call the tool again. Component names are PascalCase, at most 20 components, 10 data sources, 20000 characters per body.'
-    );
-  }
-  const input = parsed.data;
-
+const collectComponentIssues = (
+  components: ComponentInput[]
+): ValidationIssue[] => {
   const issues: ValidationIssue[] = [];
-  input.components.forEach((component, index) => {
+  components.forEach((component, index) => {
     const body = validateComponentBody(component.componentBody, component.name);
     if (!body.valid) {
       issues.push({
@@ -89,6 +76,53 @@ export const createComposedPage = async (
       }
     });
   });
+  return issues;
+};
+
+type DataSourceInput = NonNullable<ComponentInput['dataSources']>[number];
+type ImportInput = NonNullable<ComponentInput['imports']>[number];
+
+const toDataSource = (source: DataSourceInput) => ({
+  id: source.id,
+  name: source.name,
+  query: source.query,
+  variables: (source.variables ?? []).map((variable) => ({
+    name: variable.name,
+    type: variable.type,
+    ...(variable.value !== undefined ? { value: variable.value } : {}),
+    ...(variable.fromContext ? { fromContext: variable.fromContext } : {}),
+    ...(variable.fromUrl ? { fromUrl: variable.fromUrl } : {}),
+  })),
+  ...(source.target ? { target: source.target } : {}),
+  ...(source.pollInterval !== undefined && source.pollInterval > 0
+    ? { pollInterval: source.pollInterval }
+    : {}),
+});
+
+const toImport = (entry: ImportInput) => ({
+  source: entry.source,
+  items: entry.items,
+  ...(entry.from ? { from: entry.from } : {}),
+});
+
+/**
+ * The whole tool, without the AI SDK wrapper: validate, transpile, build `{ uri, schema }`.
+ * Errors are RETURNED so the model can fix and retry in the same turn.
+ */
+export const createComposedPage = async (
+  rawInput: unknown,
+  options: Pick<ComposedPageToolOptions, 'generateKey'> = {}
+): Promise<ComposedPageResult> => {
+  const parsed = parseComposedPageInput(rawInput);
+  if (!parsed.success) {
+    return errorResult(
+      parsed.errors,
+      'Fix the listed fields and call the tool again. Component names are PascalCase, at most 20 components, 10 data sources, 20000 characters per body.'
+    );
+  }
+  const input = parsed.data;
+
+  const issues = collectComponentIssues(input.components);
   if (issues.length > 0) {
     return errorResult(
       issues,
@@ -115,29 +149,8 @@ export const createComposedPage = async (
     }
     components.push({
       name: component.name,
-      dataSources: (component.dataSources ?? []).map((source) => ({
-        id: source.id,
-        name: source.name,
-        query: source.query,
-        variables: (source.variables ?? []).map((variable) => ({
-          name: variable.name,
-          type: variable.type,
-          ...(variable.value !== undefined ? { value: variable.value } : {}),
-          ...(variable.fromContext
-            ? { fromContext: variable.fromContext }
-            : {}),
-          ...(variable.fromUrl ? { fromUrl: variable.fromUrl } : {}),
-        })),
-        ...(source.target ? { target: source.target } : {}),
-        ...(source.pollInterval !== undefined && source.pollInterval > 0
-          ? { pollInterval: source.pollInterval }
-          : {}),
-      })),
-      imports: (component.imports ?? []).map((entry) => ({
-        source: entry.source,
-        items: entry.items,
-        ...(entry.from ? { from: entry.from } : {}),
-      })),
+      dataSources: (component.dataSources ?? []).map(toDataSource),
+      imports: (component.imports ?? []).map(toImport),
       code: {
         text: encodeCode(component.componentBody),
         transpiledCode: encodeCode(result.code),

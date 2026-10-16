@@ -41,8 +41,7 @@ const MAX_ENCODED_LENGTH = 16 * 1024;
 const REQUIRED_FIELDS = ['type', 'project_id', 'client_email', 'private_key'] as const;
 const OPTIONAL_FIELDS = ['private_key_id', 'client_id', 'token_uri'] as const;
 
-/** Decodes and validates the Base64 service-account JSON. Throws ServiceAccountKeyError. */
-export function parseServiceAccountKey(input: string): ServiceAccountKey {
+function decodeJsonObject(input: string): Record<string, unknown> {
   const compact = input.replace(/\s+/g, '');
   if (!compact) throw new ServiceAccountKeyError('empty');
   if (compact.length > MAX_ENCODED_LENGTH) throw new ServiceAccountKeyError('too large');
@@ -64,7 +63,21 @@ export function parseServiceAccountKey(input: string): ServiceAccountKey {
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new ServiceAccountKeyError('decoded JSON is not an object');
   }
-  const obj = parsed as Record<string, unknown>;
+  return parsed as Record<string, unknown>;
+}
+
+function normalizePrivateKey(raw: string): string {
+  const privateKey =
+    !raw.includes('\n') && raw.includes('\\n') ? raw.replace(/\\n/g, '\n') : raw;
+  if (!/^-----BEGIN (RSA )?PRIVATE KEY-----/.test(privateKey)) {
+    throw new ServiceAccountKeyError('private_key is not a PEM private key');
+  }
+  return privateKey;
+}
+
+/** Decodes and validates the Base64 service-account JSON. Throws ServiceAccountKeyError. */
+export function parseServiceAccountKey(input: string): ServiceAccountKey {
+  const obj = decodeJsonObject(input);
 
   for (const field of REQUIRED_FIELDS) {
     const value = obj[field];
@@ -79,13 +92,7 @@ export function parseServiceAccountKey(input: string): ServiceAccountKey {
   if (!email.includes('@') || !email.endsWith('gserviceaccount.com')) {
     throw new ServiceAccountKeyError('client_email is not a service-account address');
   }
-  let privateKey = obj.private_key as string;
-  if (!privateKey.includes('\n') && privateKey.includes('\\n')) {
-    privateKey = privateKey.replace(/\\n/g, '\n');
-  }
-  if (!/^-----BEGIN (RSA )?PRIVATE KEY-----/.test(privateKey)) {
-    throw new ServiceAccountKeyError('private_key is not a PEM private key');
-  }
+  const privateKey = normalizePrivateKey(obj.private_key as string);
 
   const key: ServiceAccountKey = {
     type: 'service_account',

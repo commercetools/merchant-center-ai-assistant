@@ -32,6 +32,82 @@ export interface CommercetoolsUIPromptOptions {
 
 const L = NIMBUS_LOOKUP_TOOLS;
 
+type Has = (name: string) => boolean;
+
+const DOCS_DESCRIPTION = 'guidelines, patterns and hooks documentation';
+
+const docsLookupLine = (has: Has): string => {
+  if (has(L.searchDocs) && has(L.getDocsPage)) {
+    return `- \`${L.searchDocs}\` / \`${L.getDocsPage}\` - ${DOCS_DESCRIPTION}`;
+  }
+  if (has(L.searchDocs)) return `- \`${L.searchDocs}\` - ${DOCS_DESCRIPTION}`;
+  if (has(L.getDocsPage)) return `- \`${L.getDocsPage}\` - ${DOCS_DESCRIPTION}`;
+  return '';
+};
+
+const buildLookupLines = (has: Has): string[] => {
+  const entries: [string, string][] = [
+    [
+      L.listComponents,
+      `- \`${L.listComponents}\` - browse everything, optionally filtered by category or a fuzzy query`,
+    ],
+    [
+      L.getComponents,
+      `- \`${L.getComponents}\` - documentation for SEVERAL components at once: \`{ names: ["Button", "Card"], sections: ["props"] }\`. Omit \`sections\` for metadata plus each one's available sections.`,
+    ],
+    [
+      L.getTokens,
+      `- \`${L.getTokens}\` - design tokens (spacing, color, fontSize, ...); also resolves a legacy UI Kit token name`,
+    ],
+    [L.searchIcons, `- \`${L.searchIcons}\` - find an icon by name or keyword`],
+  ];
+  return [
+    ...entries.map(([tool, line]) => (has(tool) ? line : '')),
+    docsLookupLine(has),
+    has(L.migrateFromUikit)
+      ? `- \`${L.migrateFromUikit}\` - the old UI Kit -> Nimbus mapping, if a user pastes legacy UI Kit JSX`
+      : '',
+  ].filter(Boolean);
+};
+
+const buildBatchRule = (has: Has): string =>
+  has(L.getComponents)
+    ? `Rule of thumb: if you are about to write a prop you have not seen in this prompt, look it
+up first - and **look up every component you intend to use in ONE \`${L.getComponents}\` call**,
+not one call per component. Decide the components first, then ask for all of them together:
+\`{ names: ["Stack", "Card", "Text", "NumberInput"], sections: ["props"] }\`. One call with
+ten names is far cheaper than ten calls with one.
+
+`
+    : `Rule of thumb: if you are about to write a prop you have not seen in this prompt, look it
+up first.
+
+`;
+
+const buildLookupSection = (has: Has): string => {
+  const lookupLines = buildLookupLines(has);
+  if (lookupLines.length === 0) return '';
+
+  return `### Look up the Nimbus API before you generate
+Nimbus has ~143 exported components and 2000+ icons. You have MCP tools that serve its live
+documentation - **use them instead of guessing prop names**:
+${lookupLines.join('\n')}
+
+${buildBatchRule(has)}`;
+};
+
+const buildGuideline = (has: Has): string => {
+  const guidelineTools = [
+    L.getComponents,
+    L.listComponents,
+    L.getTokens,
+    L.searchIcons,
+  ].filter(has);
+  if (guidelineTools.length === 0) return '';
+
+  return `- **Use the Nimbus MCP tools (${guidelineTools.map((n) => `\`${n}\``).join(', ')}) to confirm props${has(L.searchIcons) ? ' and find icons' : ''} before generating pages${has(L.getComponents) ? ` - batching every component into a single \`${L.getComponents}\` call` : ''}**`;
+};
+
 /**
  * System prompt for the commercetools UI agent
  * Handles dashboard creation, UI components, and composed pages using the
@@ -44,61 +120,8 @@ export const getCommercetoolsUIPrompt = (
   const has = (name: string): boolean =>
     options.hasTool ? options.hasTool(name) : options.nimbusTools;
 
-  const lookupLines = [
-    has(L.listComponents)
-      ? `- \`${L.listComponents}\` - browse everything, optionally filtered by category or a fuzzy query`
-      : '',
-    has(L.getComponents)
-      ? `- \`${L.getComponents}\` - documentation for SEVERAL components at once: \`{ names: ["Button", "Card"], sections: ["props"] }\`. Omit \`sections\` for metadata plus each one's available sections.`
-      : '',
-    has(L.getTokens)
-      ? `- \`${L.getTokens}\` - design tokens (spacing, color, fontSize, ...); also resolves a legacy UI Kit token name`
-      : '',
-    has(L.searchIcons)
-      ? `- \`${L.searchIcons}\` - find an icon by name or keyword`
-      : '',
-    has(L.searchDocs) && has(L.getDocsPage)
-      ? `- \`${L.searchDocs}\` / \`${L.getDocsPage}\` - guidelines, patterns and hooks documentation`
-      : has(L.searchDocs)
-        ? `- \`${L.searchDocs}\` - guidelines, patterns and hooks documentation`
-        : has(L.getDocsPage)
-          ? `- \`${L.getDocsPage}\` - guidelines, patterns and hooks documentation`
-          : '',
-    has(L.migrateFromUikit)
-      ? `- \`${L.migrateFromUikit}\` - the old UI Kit -> Nimbus mapping, if a user pastes legacy UI Kit JSX`
-      : '',
-  ].filter(Boolean);
-  const batchRule = has(L.getComponents)
-    ? `Rule of thumb: if you are about to write a prop you have not seen in this prompt, look it
-up first - and **look up every component you intend to use in ONE \`${L.getComponents}\` call**,
-not one call per component. Decide the components first, then ask for all of them together:
-\`{ names: ["Stack", "Card", "Text", "NumberInput"], sections: ["props"] }\`. One call with
-ten names is far cheaper than ten calls with one.
-
-`
-    : `Rule of thumb: if you are about to write a prop you have not seen in this prompt, look it
-up first.
-
-`;
-  const nimbusLookupSection =
-    lookupLines.length > 0
-      ? `### Look up the Nimbus API before you generate
-Nimbus has ~143 exported components and 2000+ icons. You have MCP tools that serve its live
-documentation - **use them instead of guessing prop names**:
-${lookupLines.join('\n')}
-
-${batchRule}`
-      : '';
-  const guidelineTools = [
-    L.getComponents,
-    L.listComponents,
-    L.getTokens,
-    L.searchIcons,
-  ].filter(has);
-  const nimbusGuideline =
-    guidelineTools.length > 0
-      ? `- **Use the Nimbus MCP tools (${guidelineTools.map((n) => `\`${n}\``).join(', ')}) to confirm props${has(L.searchIcons) ? ' and find icons' : ''} before generating pages${has(L.getComponents) ? ` - batching every component into a single \`${L.getComponents}\` call` : ''}**`
-      : '';
+  const nimbusLookupSection = buildLookupSection(has);
+  const nimbusGuideline = buildGuideline(has);
   const iconHint = has(L.searchIcons)
     ? `Use \`${L.searchIcons}\` to find the right name.`
     : '';

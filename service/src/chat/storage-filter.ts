@@ -75,33 +75,7 @@ const filterSubagentOutputParts = (
   return kept;
 };
 
-const toStorablePart = (part: Part): Record<string, unknown> | null => {
-  // Transient parts (keep-alive) and unknown data parts are never stored.
-  if (part.transient === true) return null;
-
-  if (part.type === 'text') {
-    return str(part.text) ? { type: 'text', text: part.text } : null;
-  }
-
-  if (part.type === 'file') {
-    return str(part.mediaType) && isStorableUrl(part.url)
-      ? { type: 'file', url: part.url, mediaType: part.mediaType }
-      : null;
-  }
-
-  // The preview-annotation part is preserved as is: its `data` is the contract, and dropping it
-  // would erase the annotations from history after the turn that carried them.
-  if (part.type === ANNOTATIONS_PART_TYPE) {
-    return part.data ? { type: part.type, data: part.data } : null;
-  }
-
-  // The persisted time-limit marker.
-  if (part.type === TURN_STATUS_PART_TYPE) {
-    return part.data ? { type: part.type, data: part.data } : null;
-  }
-
-  const terminal = part.state === 'output-available' && 'output' in part;
-
+const toStorableToolPart = (part: Part, terminal: boolean): Record<string, unknown> | null => {
   const storable = storableToolOf(part);
   if (storable) {
     return terminal
@@ -132,6 +106,30 @@ const toStorablePart = (part: Part): Record<string, unknown> | null => {
   }
 
   return null;
+};
+
+const toStorablePart = (part: Part): Record<string, unknown> | null => {
+  // Transient parts (keep-alive) and unknown data parts are never stored.
+  if (part.transient === true) return null;
+
+  if (part.type === 'text') {
+    return str(part.text) ? { type: 'text', text: part.text } : null;
+  }
+
+  if (part.type === 'file') {
+    return str(part.mediaType) && isStorableUrl(part.url)
+      ? { type: 'file', url: part.url, mediaType: part.mediaType }
+      : null;
+  }
+
+  // The preview-annotation part is preserved as is: its `data` is the contract, and dropping it
+  // would erase the annotations from history after the turn that carried them. The persisted
+  // time-limit marker is kept the same way.
+  if (part.type === ANNOTATIONS_PART_TYPE || part.type === TURN_STATUS_PART_TYPE) {
+    return part.data ? { type: part.type, data: part.data } : null;
+  }
+
+  return toStorableToolPart(part, part.state === 'output-available' && 'output' in part);
 };
 
 /**

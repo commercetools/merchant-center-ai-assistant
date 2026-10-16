@@ -50,76 +50,86 @@ export interface ParsedTables {
   count?: number;
 }
 
+const ROW_KEYS = ['results', 'data', 'items'] as const;
+
+/** The first of `results`/`data`/`items` that is a non-empty array. */
+function findRows(obj: Record<string, unknown>): TableData | undefined {
+  for (const key of ROW_KEYS) {
+    const value = obj[key];
+    if (Array.isArray(value) && value.length > 0) return value as TableData;
+  }
+  return undefined;
+}
+
+/** A nested array of objects is the table; otherwise the object is a one-row table. */
+function addNestedTables(tables: TablesInput, tableName: string, obj: Record<string, unknown>): void {
+  let foundArray = false;
+  for (const [nestedKey, nestedValue] of Object.entries(obj)) {
+    if (Array.isArray(nestedValue) && nestedValue.length > 0 && typeof nestedValue[0] === 'object') {
+      tables[toTableName(nestedKey)] = nestedValue as TableData;
+      foundArray = true;
+    }
+  }
+  if (!foundArray) tables[tableName] = [obj];
+}
+
+function addEntry(parsed: ParsedTables, key: string, value: unknown): void {
+  const { tables } = parsed;
+  const tableName = toTableName(key);
+
+  if (Array.isArray(value)) {
+    if (value.length > 0) tables[tableName] = value as TableData;
+    return;
+  }
+  if (typeof value !== 'object' || value === null) return;
+
+  const obj = value as Record<string, unknown>;
+  if (typeof obj.total === 'number') parsed.total = obj.total;
+  if (typeof obj.count === 'number') parsed.count = obj.count;
+
+  const rows = findRows(obj);
+  if (rows) tables[tableName] = rows;
+  else if (Object.keys(obj).length > 0) addNestedTables(tables, tableName, obj);
+}
+
+const errorMessage = (e: unknown): string => (e instanceof Error ? e.message : String(e));
+
+/** The string may have text around the JSON: retry on the outermost braces. */
+function recoverFromParseError(rawData: string, e: unknown, parseErrors: string[]): ParsedTables | undefined {
+  const jsonMatch = rawData.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    parseErrors.push(`Failed to parse raw data: ${errorMessage(e)}`);
+    return undefined;
+  }
+  try {
+    const extracted: unknown = JSON.parse(jsonMatch[0]);
+    return parseRawDataToTables(JSON.stringify(extracted));
+  } catch {
+    parseErrors.push(`Failed to parse JSON: ${errorMessage(e)}`);
+    return undefined;
+  }
+}
+
 /**
  * Parses the raw tool result string into tables. Handles
  * `{"READ ORDER RESULT": {"results": [...], "total": 100, "count": 20}}`.
  */
 export function parseRawDataToTables(rawData: string): ParsedTables {
-  const tables: TablesInput = {};
-  const parseErrors: string[] = [];
-  let total: number | undefined;
-  let count: number | undefined;
+  const result: ParsedTables = { tables: {}, parseErrors: [], total: undefined, count: undefined };
 
   try {
     const parsed: unknown = JSON.parse(sanitizeJsonString(rawData));
 
     if (typeof parsed !== 'object' || parsed === null) {
-      parseErrors.push('Parsed data is not an object');
-      return { tables, parseErrors };
+      result.parseErrors.push('Parsed data is not an object');
+      return { tables: result.tables, parseErrors: result.parseErrors };
     }
 
-    for (const [key, value] of Object.entries(parsed)) {
-      const tableName = toTableName(key);
-
-      if (Array.isArray(value)) {
-        if (value.length > 0) tables[tableName] = value as TableData;
-      } else if (typeof value === 'object' && value !== null) {
-        const obj = value as Record<string, unknown>;
-
-        if (typeof obj.total === 'number') total = obj.total;
-        if (typeof obj.count === 'number') count = obj.count;
-
-        if (Array.isArray(obj.results) && obj.results.length > 0) {
-          tables[tableName] = obj.results as TableData;
-        } else if (Array.isArray(obj.data) && obj.data.length > 0) {
-          tables[tableName] = obj.data as TableData;
-        } else if (Array.isArray(obj.items) && obj.items.length > 0) {
-          tables[tableName] = obj.items as TableData;
-        } else if (Object.keys(obj).length > 0) {
-          // A nested array of objects is the table; otherwise the object is a one-row table.
-          let foundArray = false;
-          for (const [nestedKey, nestedValue] of Object.entries(obj)) {
-            if (
-              Array.isArray(nestedValue) &&
-              nestedValue.length > 0 &&
-              typeof nestedValue[0] === 'object'
-            ) {
-              tables[toTableName(nestedKey)] = nestedValue as TableData;
-              foundArray = true;
-            }
-          }
-          if (!foundArray) tables[tableName] = [obj];
-        }
-      }
-    }
+    for (const [key, value] of Object.entries(parsed)) addEntry(result, key, value);
   } catch (e) {
-    // The string may have text around the JSON.
-    const jsonMatch = rawData.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try {
-        const extracted: unknown = JSON.parse(jsonMatch[0]);
-        return parseRawDataToTables(JSON.stringify(extracted));
-      } catch {
-        parseErrors.push(
-          `Failed to parse JSON: ${e instanceof Error ? e.message : String(e)}`
-        );
-      }
-    } else {
-      parseErrors.push(
-        `Failed to parse raw data: ${e instanceof Error ? e.message : String(e)}`
-      );
-    }
+    const recovered = recoverFromParseError(rawData, e, result.parseErrors);
+    if (recovered) return recovered;
   }
 
-  return { tables, parseErrors, total, count };
+  return result;
 }

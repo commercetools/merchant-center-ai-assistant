@@ -77,6 +77,85 @@ const isAbortError = (error: unknown): boolean =>
   error instanceof Error &&
   (error.name === 'AbortError' || error.name === 'TimeoutError');
 
+interface TurnState {
+  steps: number;
+  openText: Set<string>;
+  openReasoning: Set<string>;
+  sawStart: boolean;
+  terminal: boolean;
+  noticeWritten: boolean;
+}
+
+type WriteChunk = (chunk: UIMessageChunk | ChatUIMessageChunk) => void;
+
+const createTurnState = (): TurnState => ({
+  steps: 0,
+  openText: new Set<string>(),
+  openReasoning: new Set<string>(),
+  sawStart: false,
+  terminal: false,
+  noticeWritten: false,
+});
+
+const writeNotice = (state: TurnState, write: WriteChunk): void => {
+  if (state.noticeWritten) return;
+  state.noticeWritten = true;
+  if (!state.sawStart) {
+    write({ type: 'start' });
+    state.sawStart = true;
+  }
+  for (const id of state.openText) write({ type: 'text-end', id });
+  for (const id of state.openReasoning) write({ type: 'reasoning-end', id });
+  state.openText.clear();
+  state.openReasoning.clear();
+  write({ type: 'text-start', id: 'time-limit' });
+  write({
+    type: 'text-delta',
+    id: 'time-limit',
+    delta: TIME_LIMIT_NOTICE,
+  });
+  write({ type: 'text-end', id: 'time-limit' });
+  write({
+    type: TURN_STATUS_PART_TYPE,
+    data: { status: 'time-limit' },
+  });
+};
+
+/** Updates the turn state from one chunk; `onTerminal` runs for `finish`/`abort`. */
+const trackChunk = (
+  state: TurnState,
+  chunk: UIMessageChunk,
+  onTerminal: () => void
+): void => {
+  switch (chunk.type) {
+    case 'start':
+      state.sawStart = true;
+      break;
+    case 'finish-step':
+      state.steps += 1;
+      break;
+    case 'text-start':
+      state.openText.add(chunk.id);
+      break;
+    case 'text-end':
+      state.openText.delete(chunk.id);
+      break;
+    case 'reasoning-start':
+      state.openReasoning.add(chunk.id);
+      break;
+    case 'reasoning-end':
+      state.openReasoning.delete(chunk.id);
+      break;
+    case 'finish':
+    case 'abort':
+      state.terminal = true;
+      onTerminal();
+      break;
+    default:
+      break;
+  }
+};
+
 /**
  * The UI message stream of one chat turn.
  *
@@ -96,7 +175,7 @@ export const createChatStream = (params: CreateChatStreamParams) => {
   const { agent, messages, budget, allTools } = params;
   const keepAliveMs = params.keepAliveMs ?? KEEPALIVE_INTERVAL_MS;
   const log = params.log ?? logger;
-  let steps = 0;
+  const state = createTurnState();
 
   const onChunkError = (error: unknown): string => {
     logUnserializableToolSchemas(allTools, 'orchestrator');
@@ -119,36 +198,6 @@ export const createChatStream = (params: CreateChatStreamParams) => {
       }, keepAliveMs);
       heartbeat.unref();
 
-      const openText = new Set<string>();
-      const openReasoning = new Set<string>();
-      let sawStart = false;
-      let terminal = false;
-      let noticeWritten = false;
-
-      const writeNotice = (): void => {
-        if (noticeWritten) return;
-        noticeWritten = true;
-        if (!sawStart) {
-          write({ type: 'start' });
-          sawStart = true;
-        }
-        for (const id of openText) write({ type: 'text-end', id });
-        for (const id of openReasoning) write({ type: 'reasoning-end', id });
-        openText.clear();
-        openReasoning.clear();
-        write({ type: 'text-start', id: 'time-limit' });
-        write({
-          type: 'text-delta',
-          id: 'time-limit',
-          delta: TIME_LIMIT_NOTICE,
-        });
-        write({ type: 'text-end', id: 'time-limit' });
-        write({
-          type: TURN_STATUS_PART_TYPE,
-          data: { status: 'time-limit' },
-        });
-      };
-
       try {
         const result = await agent.stream({
           messages,
@@ -161,35 +210,11 @@ export const createChatStream = (params: CreateChatStreamParams) => {
           messageMetadata: ({ part }) =>
             part.type === 'finish-step' ? { usage: part.usage } : undefined,
         })) {
-          switch (chunk.type) {
-            case 'start':
-              sawStart = true;
-              break;
-            case 'finish-step':
-              steps += 1;
-              break;
-            case 'text-start':
-              openText.add(chunk.id);
-              break;
-            case 'text-end':
-              openText.delete(chunk.id);
-              break;
-            case 'reasoning-start':
-              openReasoning.add(chunk.id);
-              break;
-            case 'reasoning-end':
-              openReasoning.delete(chunk.id);
-              break;
-            case 'finish':
-            case 'abort':
-              terminal = true;
-              // The notice must come BEFORE the terminal chunk, or the client has already
-              // closed the message.
-              if (budget.timedOut()) writeNotice();
-              break;
-            default:
-              break;
-          }
+          // The notice must come BEFORE the terminal chunk, or the client has already
+          // closed the message.
+          trackChunk(state, chunk, () => {
+            if (budget.timedOut()) writeNotice(state, write);
+          });
           write(chunk);
         }
       } catch (error) {
@@ -199,8 +224,8 @@ export const createChatStream = (params: CreateChatStreamParams) => {
       } finally {
         clearInterval(heartbeat);
         if (budget.timedOut()) {
-          writeNotice();
-          if (!terminal) write({ type: 'finish' });
+          writeNotice(state, write);
+          if (!state.terminal) write({ type: 'finish' });
         }
       }
     },
@@ -219,7 +244,7 @@ export const createChatStream = (params: CreateChatStreamParams) => {
           sessionId: params.sessionId,
           elapsedMs: Date.now() - budget.startedAt,
           phase: budget.phase(),
-          steps,
+          steps: state.steps,
           timeLimit,
         });
         if (timeLimit) {

@@ -57,13 +57,7 @@ function checked(
   return fallback;
 }
 
-export const parseGcp: SectionParser<GcpConfig> = (env, ctx) => {
-  const errors: string[] = [];
-  const warnings: string[] = [];
-
-  if (str(env, 'GOOGLE_VERTEX_API_KEY') !== undefined) {
-    errors.push('GOOGLE_VERTEX_API_KEY: must not be set (it switches Vertex to API-key mode)');
-  }
+function collectIgnoredVariableWarnings(env: NodeJS.ProcessEnv, warnings: string[]): void {
   for (const name of STALE_VARIABLES) {
     if (str(env, name) !== undefined) {
       warnings.push(`${name} is set but ignored: Google access uses GCP_SA_KEY_BASE64 only`);
@@ -72,36 +66,54 @@ export const parseGcp: SectionParser<GcpConfig> = (env, ctx) => {
   if (str(env, 'GCP_LOCATION') !== undefined) {
     warnings.push('GCP_LOCATION is set but ignored: it was renamed GCP_VERTEX_LOCATION');
   }
+}
 
-  let serviceAccount: Secret<ServiceAccountKey> | undefined;
+function parseServiceAccount(
+  env: NodeJS.ProcessEnv,
+  nodeEnv: string | undefined,
+  errors: string[]
+): Secret<ServiceAccountKey> | undefined {
   const encoded = str(env, 'GCP_SA_KEY_BASE64');
   if (encoded === undefined) {
-    if (ctx.nodeEnv === 'production') errors.push('GCP_SA_KEY_BASE64: is required');
-  } else {
-    try {
-      serviceAccount = new Secret(parseServiceAccountKey(encoded));
-    } catch (error) {
-      errors.push(
-        error instanceof ServiceAccountKeyError
-          ? error.message
-          : 'GCP_SA_KEY_BASE64: could not be processed'
-      );
-    }
+    if (nodeEnv === 'production') errors.push('GCP_SA_KEY_BASE64: is required');
+    return undefined;
   }
+  try {
+    return new Secret(parseServiceAccountKey(encoded));
+  } catch (error) {
+    errors.push(
+      error instanceof ServiceAccountKeyError
+        ? error.message
+        : 'GCP_SA_KEY_BASE64: could not be processed'
+    );
+    return undefined;
+  }
+}
+
+function parseVertexLocation(env: NodeJS.ProcessEnv, errors: string[]): string {
+  const raw = str(env, 'GCP_VERTEX_LOCATION');
+  if (raw === undefined) return 'us-central1';
+  if (['global', 'us', 'eu'].includes(raw) || VERTEX_LOCATION.test(raw)) return raw;
+  errors.push('GCP_VERTEX_LOCATION: must be global, us, eu or a region such as us-central1');
+  return 'us-central1';
+}
+
+export const parseGcp: SectionParser<GcpConfig> = (env, ctx) => {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  if (str(env, 'GOOGLE_VERTEX_API_KEY') !== undefined) {
+    errors.push('GOOGLE_VERTEX_API_KEY: must not be set (it switches Vertex to API-key mode)');
+  }
+  collectIgnoredVariableWarnings(env, warnings);
+
+  const serviceAccount = parseServiceAccount(env, ctx.nodeEnv, errors);
 
   const projectId =
     checked(env, 'GCP_PROJECT_ID', PROJECT_ID, undefined, errors) ??
     serviceAccount?.reveal().project_id;
 
-  const vertexRaw = str(env, 'GCP_VERTEX_LOCATION');
-  let vertexLocation = 'us-central1';
-  if (vertexRaw !== undefined) {
-    if (['global', 'us', 'eu'].includes(vertexRaw) || VERTEX_LOCATION.test(vertexRaw)) {
-      vertexLocation = vertexRaw;
-    } else {
-      errors.push('GCP_VERTEX_LOCATION: must be global, us, eu or a region such as us-central1');
-    }
-  }
+  const vertexLocation = parseVertexLocation(env, errors);
 
   const bucketName =
     checked(env, 'GCP_BUCKET_NAME', BUCKET_NAME, undefined, errors) ??

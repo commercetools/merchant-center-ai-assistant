@@ -16,6 +16,77 @@ import type {
 } from './types';
 import type { ContentstackClient } from './client';
 
+const PAGE_SIZE_DEFAULT = 100;
+const SUMMARY_LIMIT = 10;
+
+const appendFlag = (url: URL, name: string, on: boolean): void => {
+  if (on) url.searchParams.append(name, 'true');
+};
+
+const appendValue = (url: URL, name: string, value: string): void => {
+  if (value) url.searchParams.append(name, value);
+};
+
+const appendList = (url: URL, name: string, values: string[]): void => {
+  if (values && values.length > 0) url.searchParams.append(name, values.join(','));
+};
+
+const appendPaging = (url: URL, skip: number, limit: number): void => {
+  if (skip > 0) url.searchParams.append('skip', skip.toString());
+  if (limit !== PAGE_SIZE_DEFAULT) url.searchParams.append('limit', limit.toString());
+};
+
+/** Summary text for a uid/title list: the first 10 numbered, then the full JSON. */
+const formatUidTitleListing = ({
+  noun,
+  items,
+  count,
+  data,
+}: {
+  noun: string;
+  items: Array<{ uid: string; title: string }>;
+  count: number | undefined;
+  data: unknown;
+}): string => {
+  const label = noun.charAt(0).toUpperCase() + noun.slice(1);
+  let text = count ? `Total ${noun}: ${count}\n\n` : '';
+  text += `${label} retrieved: ${items.length}\n\n`;
+  if (items.length === 0) return `${text}No ${noun} found.`;
+
+  const lines = items
+    .slice(0, SUMMARY_LIMIT)
+    .map((item, i) => `${i + 1}. ${item.uid} - ${item.title}\n`)
+    .join('');
+  // For large result sets, show a summary
+  text +=
+    items.length > SUMMARY_LIMIT
+      ? `First ${SUMMARY_LIMIT} ${noun}:\n${lines}\n(${items.length - SUMMARY_LIMIT} more ${noun} not shown)\n\n`
+      : `${label}:\n${lines}\n`;
+  return `${text}Full response data:\n${JSON.stringify(data, null, 2)}`;
+};
+
+const formatEntriesListing = (
+  data: EntriesResponse,
+  count: number | undefined
+): string => {
+  let text = count ? `Total entries: ${count}\n\n` : '';
+  text += `Entries retrieved: ${data.entries.length}\n\n`;
+  if (data.entries.length === 0) {
+    return `${text}No entries found matching the criteria.`;
+  }
+  // For large result sets, show a summary instead of all data
+  if (data.entries.length <= SUMMARY_LIMIT) {
+    return `${text}Entries:\n${JSON.stringify(data.entries, null, 2)}`;
+  }
+  const lines = data.entries
+    .slice(0, SUMMARY_LIMIT)
+    .map((entry, i) => `${i + 1}. ${entry.uid} - ${entry.title || '[No title]'}\n`)
+    .join('');
+  text += `First ${SUMMARY_LIMIT} entries (showing UIDs):\n${lines}`;
+  text += `\n(${data.entries.length - SUMMARY_LIMIT} more entries not shown)\n\n`;
+  return `${text}Full response data:\n${JSON.stringify(data, null, 2)}`;
+};
+
 export const readTools = (c: ContentstackClient): Record<string, Tool> => ({
   get_content_type: {
     description:
@@ -128,30 +199,15 @@ export const readTools = (c: ContentstackClient): Record<string, Tool> => ({
       try {
         const url = new URL(`${c.apiBaseUrl}/content_types`);
 
-        // Add query parameters if needed
-        if (include_global_field_schema) {
-          url.searchParams.append('include_global_field_schema', 'true');
-        }
-
-        if (include_count) {
-          url.searchParams.append('include_count', 'true');
-        }
-
-        if (skip > 0) {
-          url.searchParams.append('skip', skip.toString());
-        }
-
-        if (limit !== 100) {
-          url.searchParams.append('limit', limit.toString());
-        }
-
-        if (include_branch_info) {
-          url.searchParams.append('include_branch_info', 'true');
-        }
-
-        if (include_reference_content_type_uid) {
-          url.searchParams.append('include_reference_content_type_uid', 'true');
-        }
+        appendFlag(url, 'include_global_field_schema', include_global_field_schema);
+        appendFlag(url, 'include_count', include_count);
+        appendPaging(url, skip, limit);
+        appendFlag(url, 'include_branch_info', include_branch_info);
+        appendFlag(
+          url,
+          'include_reference_content_type_uid',
+          include_reference_content_type_uid
+        );
 
         const response = await c.fetch(url.toString(), {
           method: 'GET',
@@ -164,36 +220,12 @@ export const readTools = (c: ContentstackClient): Record<string, Tool> => ({
 
         const data: ContentTypesResponse = await response.json();
 
-        // Format the response
-        let formattedResponse = '';
-
-        if (include_count && data.count) {
-          formattedResponse += `Total content types: ${data.count}\n\n`;
-        }
-
-        formattedResponse += `Content types retrieved: ${data.content_types.length}\n\n`;
-
-        if (data.content_types.length > 0) {
-          // For large result sets, show a summary
-          if (data.content_types.length > 10) {
-            formattedResponse += 'First 10 content types:\n';
-            for (let i = 0; i < 10; i++) {
-              const contentType = data.content_types[i];
-              formattedResponse += `${i + 1}. ${contentType.uid} - ${contentType.title}\n`;
-            }
-            formattedResponse += `\n(${data.content_types.length - 10} more content types not shown)\n\n`;
-          } else {
-            formattedResponse += 'Content types:\n';
-            data.content_types.forEach((contentType, index) => {
-              formattedResponse += `${index + 1}. ${contentType.uid} - ${contentType.title}\n`;
-            });
-            formattedResponse += '\n';
-          }
-
-          formattedResponse += `Full response data:\n${JSON.stringify(data, null, 2)}`;
-        } else {
-          formattedResponse += 'No content types found.';
-        }
+        const formattedResponse = formatUidTitleListing({
+          noun: 'content types',
+          items: data.content_types,
+          count: include_count ? data.count : undefined,
+          data,
+        });
 
         return {
           content: [
@@ -251,18 +283,13 @@ export const readTools = (c: ContentstackClient): Record<string, Tool> => ({
           `${c.apiBaseUrl}/content_types/${content_type_uid}/entries/${entry_uid}`
         );
 
-        // Add query parameters if provided
-        if (locale) {
-          url.searchParams.append('locale', locale);
-        }
-
-        if (include_references && include_references.length > 0) {
-          url.searchParams.append('include[]', include_references.join(','));
-        }
-
-        if (include_reference_content_type_uid) {
-          url.searchParams.append('include_reference_content_type_uid', 'true');
-        }
+        appendValue(url, 'locale', locale);
+        appendList(url, 'include[]', include_references);
+        appendFlag(
+          url,
+          'include_reference_content_type_uid',
+          include_reference_content_type_uid
+        );
 
         const response = await c.fetch(url.toString(), {
           method: 'GET',
@@ -418,70 +445,25 @@ export const readTools = (c: ContentstackClient): Record<string, Tool> => ({
           `${c.apiBaseUrl}/content_types/${content_type_uid}/entries`
         );
 
-        // Add query parameters if provided
-        if (locale) {
-          url.searchParams.append('locale', locale);
-        }
-
-        if (query) {
-          url.searchParams.append('query', query);
-        }
-
-        if (include_count) {
-          url.searchParams.append('include_count', 'true');
-        }
-
-        if (skip > 0) {
-          url.searchParams.append('skip', skip.toString());
-        }
-
-        if (limit !== 100) {
-          url.searchParams.append('limit', limit.toString());
-        }
-
-        if (include_reference && include_reference.length > 0) {
-          url.searchParams.append('include[]', include_reference.join(','));
-        }
-
-        if (include_reference_content_type_uid) {
-          url.searchParams.append('include_reference_content_type_uid', 'true');
-        }
-
-        if (include_schema) {
-          url.searchParams.append('include_schema', 'true');
-        }
-
-        if (include_global_field_schema) {
-          url.searchParams.append('include_global_field_schema', 'true');
-        }
-
-        if (asc) {
-          url.searchParams.append('asc', asc);
-        }
-
-        if (desc) {
-          url.searchParams.append('desc', desc);
-        }
-
-        if (only && only.length > 0) {
-          url.searchParams.append('only[BASE][]', only.join(','));
-        }
-
-        if (except && except.length > 0) {
-          url.searchParams.append('except[BASE][]', except.join(','));
-        }
-
-        if (include_metadata) {
-          url.searchParams.append('include_metadata', 'true');
-        }
-
-        if (include_publish_details) {
-          url.searchParams.append('include_publish_details', 'true');
-        }
-
-        if (include_owner) {
-          url.searchParams.append('include_owner', 'true');
-        }
+        appendValue(url, 'locale', locale);
+        appendValue(url, 'query', query);
+        appendFlag(url, 'include_count', include_count);
+        appendPaging(url, skip, limit);
+        appendList(url, 'include[]', include_reference);
+        appendFlag(
+          url,
+          'include_reference_content_type_uid',
+          include_reference_content_type_uid
+        );
+        appendFlag(url, 'include_schema', include_schema);
+        appendFlag(url, 'include_global_field_schema', include_global_field_schema);
+        appendValue(url, 'asc', asc);
+        appendValue(url, 'desc', desc);
+        appendList(url, 'only[BASE][]', only);
+        appendList(url, 'except[BASE][]', except);
+        appendFlag(url, 'include_metadata', include_metadata);
+        appendFlag(url, 'include_publish_details', include_publish_details);
+        appendFlag(url, 'include_owner', include_owner);
 
         const response = await c.fetch(url.toString(), {
           method: 'GET',
@@ -494,31 +476,10 @@ export const readTools = (c: ContentstackClient): Record<string, Tool> => ({
 
         const data: EntriesResponse = await response.json();
 
-        // Format the response
-        let formattedResponse = '';
-
-        if (include_count && data.count) {
-          formattedResponse += `Total entries: ${data.count}\n\n`;
-        }
-
-        formattedResponse += `Entries retrieved: ${data.entries.length}\n\n`;
-
-        if (data.entries.length > 0) {
-          // For large result sets, show a summary instead of all data
-          if (data.entries.length > 10) {
-            formattedResponse += 'First 10 entries (showing UIDs):\n';
-            for (let i = 0; i < 10; i++) {
-              const entry = data.entries[i];
-              formattedResponse += `${i + 1}. ${entry.uid} - ${entry.title || '[No title]'}\n`;
-            }
-            formattedResponse += `\n(${data.entries.length - 10} more entries not shown)\n\n`;
-            formattedResponse += `Full response data:\n${JSON.stringify(data, null, 2)}`;
-          } else {
-            formattedResponse += `Entries:\n${JSON.stringify(data.entries, null, 2)}`;
-          }
-        } else {
-          formattedResponse += 'No entries found matching the criteria.';
-        }
+        const formattedResponse = formatEntriesListing(
+          data,
+          include_count ? data.count : undefined
+        );
 
         return {
           content: [
@@ -580,22 +541,9 @@ export const readTools = (c: ContentstackClient): Record<string, Tool> => ({
       try {
         const url = new URL(`${c.apiBaseUrl}/global_fields`);
 
-        // Add query parameters if needed
-        if (include_count) {
-          url.searchParams.append('include_count', 'true');
-        }
-
-        if (skip > 0) {
-          url.searchParams.append('skip', skip.toString());
-        }
-
-        if (limit !== 100) {
-          url.searchParams.append('limit', limit.toString());
-        }
-
-        if (include_branch_info) {
-          url.searchParams.append('include_branch_info', 'true');
-        }
+        appendFlag(url, 'include_count', include_count);
+        appendPaging(url, skip, limit);
+        appendFlag(url, 'include_branch_info', include_branch_info);
 
         const response = await c.fetch(url.toString(), {
           method: 'GET',
@@ -608,36 +556,12 @@ export const readTools = (c: ContentstackClient): Record<string, Tool> => ({
 
         const data: GlobalFieldsResponse = await response.json();
 
-        // Format the response
-        let formattedResponse = '';
-
-        if (include_count && data.count) {
-          formattedResponse += `Total global fields: ${data.count}\n\n`;
-        }
-
-        formattedResponse += `Global fields retrieved: ${data.global_fields.length}\n\n`;
-
-        if (data.global_fields.length > 0) {
-          // For large result sets, show a summary
-          if (data.global_fields.length > 10) {
-            formattedResponse += 'First 10 global fields:\n';
-            for (let i = 0; i < 10; i++) {
-              const globalField = data.global_fields[i];
-              formattedResponse += `${i + 1}. ${globalField.uid} - ${globalField.title}\n`;
-            }
-            formattedResponse += `\n(${data.global_fields.length - 10} more global fields not shown)\n\n`;
-          } else {
-            formattedResponse += 'Global fields:\n';
-            data.global_fields.forEach((globalField, index) => {
-              formattedResponse += `${index + 1}. ${globalField.uid} - ${globalField.title}\n`;
-            });
-            formattedResponse += '\n';
-          }
-
-          formattedResponse += `Full response data:\n${JSON.stringify(data, null, 2)}`;
-        } else {
-          formattedResponse += 'No global fields found.';
-        }
+        const formattedResponse = formatUidTitleListing({
+          noun: 'global fields',
+          items: data.global_fields,
+          count: include_count ? data.count : undefined,
+          data,
+        });
 
         return {
           content: [

@@ -185,6 +185,31 @@ const isItemlessArray = (node: Record<string, unknown>): boolean =>
 const hasTupleItems = (node: Record<string, unknown>): boolean =>
   Array.isArray(node.items) || Array.isArray(node.prefixItems);
 
+const tuplePositions = (
+  node: Record<string, unknown>
+): unknown[] | undefined => {
+  if (Array.isArray(node.prefixItems)) return node.prefixItems;
+  return Array.isArray(node.items) ? node.items : undefined;
+};
+
+// Where the "and the rest" schema lives differs by draft: 2020-12 puts it in `items`
+// alongside `prefixItems`, draft-07 in `additionalItems`.
+const tupleRest = (node: Record<string, unknown>): JsonObject | undefined => {
+  const rest = Array.isArray(node.prefixItems)
+    ? node.items
+    : node.additionalItems;
+  return isPlainObject(rest) ? rest : undefined;
+};
+
+const collapsedItemSchema = (candidates: JsonObject[]): unknown => {
+  if (candidates.length === 0) return {};
+
+  const uniform = candidates.every(
+    (candidate) => JSON.stringify(candidate) === JSON.stringify(candidates[0])
+  );
+  return uniform ? candidates[0] : { anyOf: candidates };
+};
+
 /**
  * Rewrite a tuple as a length-bounded array of one element type.
  *
@@ -196,38 +221,17 @@ const hasTupleItems = (node: Record<string, unknown>): boolean =>
  * enforce it, and the alternative is the whole tool set failing.
  */
 const collapseTupleItems = (node: Record<string, unknown>): void => {
-  const positional = Array.isArray(node.prefixItems)
-    ? node.prefixItems
-    : Array.isArray(node.items)
-      ? node.items
-      : undefined;
+  const positional = tuplePositions(node);
   if (!positional) return;
 
-  // Where the "and the rest" schema lives differs by draft: 2020-12 puts it in `items`
-  // alongside `prefixItems`, draft-07 in `additionalItems`.
-  const rest = Array.isArray(node.prefixItems)
-    ? isPlainObject(node.items)
-      ? node.items
-      : undefined
-    : isPlainObject(node.additionalItems)
-      ? node.additionalItems
-      : undefined;
-
+  const rest = tupleRest(node);
   const candidates = [...positional, ...(rest ? [rest] : [])].filter(
     isPlainObject
-  );
-  const uniform = candidates.every(
-    (candidate) => JSON.stringify(candidate) === JSON.stringify(candidates[0])
   );
 
   delete node.prefixItems;
   delete node.additionalItems;
-  node.items =
-    candidates.length === 0
-      ? {}
-      : uniform
-        ? candidates[0]
-        : { anyOf: candidates };
+  node.items = collapsedItemSchema(candidates);
 
   if (node.minItems === undefined) node.minItems = positional.length;
   if (!rest && node.maxItems === undefined) node.maxItems = positional.length;
@@ -262,7 +266,11 @@ const defNameFor = (ref: string, taken: Set<string>): string => {
   const base = (parts.join('_') || 'root').replace(/[^A-Za-z0-9_]/g, '_');
 
   let name = base;
-  for (let suffix = 2; taken.has(name); suffix += 1) name = `${base}_${suffix}`;
+  let suffix = 2;
+  while (taken.has(name)) {
+    name = `${base}_${suffix}`;
+    suffix += 1;
+  }
   taken.add(name);
   return name;
 };
@@ -348,6 +356,52 @@ const cyclicDefNames = (root: JsonObject): Set<string> => {
   return cyclic;
 };
 
+const isCyclicRefProperty = (
+  property: unknown,
+  cyclic: ReadonlySet<string>
+): boolean => {
+  if (!isPlainObject(property)) return false;
+
+  const ref = property.$ref;
+  return (
+    typeof ref === 'string' &&
+    isRootDefinitionRef(ref) &&
+    cyclic.has(defNameOf(ref))
+  );
+};
+
+const dropCyclicRequired = (
+  node: JsonObject,
+  cyclic: ReadonlySet<string>
+): void => {
+  if (!Array.isArray(node.required) || !isPlainObject(node.properties)) return;
+
+  const properties = node.properties;
+  const kept = (node.required as unknown[]).filter(
+    (name) =>
+      !isCyclicRefProperty(
+        typeof name === 'string' ? properties[name] : undefined,
+        cyclic
+      )
+  );
+  if (kept.length === 0) delete node.required;
+  else node.required = kept;
+};
+
+const walkRelaxingRequired = (
+  node: unknown,
+  cyclic: ReadonlySet<string>
+): void => {
+  if (Array.isArray(node)) {
+    node.forEach((item) => walkRelaxingRequired(item, cyclic));
+    return;
+  }
+  if (!isPlainObject(node)) return;
+
+  dropCyclicRequired(node, cyclic);
+  for (const value of Object.values(node)) walkRelaxingRequired(value, cyclic);
+};
+
 /**
  * Drop `required` entries whose value is a reference into a CYCLE.
  *
@@ -372,34 +426,39 @@ const relaxRequiredRefCycles = (root: JsonObject): void => {
   const cyclic = cyclicDefNames(root);
   if (cyclic.size === 0) return;
 
-  const walk = (node: unknown): void => {
-    if (Array.isArray(node)) {
-      node.forEach(walk);
-      return;
-    }
-    if (!isPlainObject(node)) return;
+  walkRelaxingRequired(root, cyclic);
+};
 
-    if (Array.isArray(node.required) && isPlainObject(node.properties)) {
-      const properties = node.properties;
-      const kept = (node.required as unknown[]).filter((name) => {
-        const property =
-          typeof name === 'string' ? properties[name] : undefined;
-        if (!isPlainObject(property)) return true;
-        const ref = property.$ref;
-        return !(
-          typeof ref === 'string' &&
-          isRootDefinitionRef(ref) &&
-          cyclic.has(defNameOf(ref))
-        );
-      });
-      if (kept.length === 0) delete node.required;
-      else node.required = kept;
-    }
+/** Move what one pointer addresses into `$defs` and point every use of it there. */
+const hoistPointer = (
+  out: JsonObject,
+  defs: JsonObject,
+  taken: Set<string>,
+  ref: string
+): void => {
+  const target = resolvePointer(out, ref);
+  // Unresolvable: leave it alone. Inventing a target would hide a broken schema, and
+  // `hasUnresolvableRef` below is what routes this schema to the lossy fallback instead.
+  if (target === undefined) return;
 
-    for (const value of Object.values(node)) walk(value);
-  };
+  const name = defNameFor(ref, taken);
+  const to = `#/$defs/${name}`;
 
-  walk(root);
+  if (ref === '#') {
+    // A whole-document self-reference. The document becomes a reference to itself under
+    // `$defs`, which is the same shape one level down.
+    const body = Object.fromEntries(
+      Object.entries(out).filter(([key]) => key !== '$defs')
+    );
+    defs[name] = body;
+    for (const key of Object.keys(out)) if (key !== '$defs') delete out[key];
+    out.$ref = to;
+  } else {
+    defs[name] = target;
+    setAtPointer(out, ref, { $ref: to });
+  }
+
+  rewriteRef(out, ref, to);
 };
 
 /**
@@ -435,31 +494,7 @@ export function hoistRefsForGemini<T>(root: T): T {
     .filter((ref) => !isRootDefinitionRef(ref))
     .sort((a, b) => pointerTokens(b).length - pointerTokens(a).length);
 
-  for (const ref of pointers) {
-    const target = resolvePointer(out, ref);
-    // Unresolvable: leave it alone. Inventing a target would hide a broken schema, and
-    // `hasUnresolvableRef` below is what routes this schema to the lossy fallback instead.
-    if (target === undefined) continue;
-
-    const name = defNameFor(ref, taken);
-    const to = `#/$defs/${name}`;
-
-    if (ref === '#') {
-      // A whole-document self-reference. The document becomes a reference to itself under
-      // `$defs`, which is the same shape one level down.
-      const body = Object.fromEntries(
-        Object.entries(out).filter(([key]) => key !== '$defs')
-      );
-      defs[name] = body;
-      for (const key of Object.keys(out)) if (key !== '$defs') delete out[key];
-      out.$ref = to;
-    } else {
-      defs[name] = target;
-      setAtPointer(out, ref, { $ref: to });
-    }
-
-    rewriteRef(out, ref, to);
-  }
+  for (const ref of pointers) hoistPointer(out, defs, taken, ref);
 
   if (Object.keys(defs).length === 0) delete out.$defs;
   fixArrays(out);
@@ -483,6 +518,138 @@ export function hasUnresolvableRef(root: unknown): boolean {
   );
 }
 
+const inlineRef = (
+  root: unknown,
+  node: JsonObject,
+  ref: string,
+  expanding: ReadonlySet<string>
+): Visited => {
+  // A `$ref` we are already inside is a cycle; stop here.
+  if (expanding.has(ref)) return DROP;
+
+  const target = resolvePointer(root, ref);
+  if (target === undefined) return DROP;
+
+  const siblings = { ...node };
+  delete siblings.$ref;
+
+  // Boolean schemas: `true` accepts anything (keep the siblings), `false` accepts
+  // nothing (indistinguishable from unrepresentable, for our purposes).
+  if (typeof target === 'boolean') return target ? siblings : DROP;
+  if (!isPlainObject(target)) return DROP;
+
+  // Sibling keywords alongside `$ref` win, matching the 2020-12 behaviour that
+  // `@ai-sdk/google` itself implements.
+  return inlineSchema(
+    root,
+    { ...target, ...siblings },
+    new Set([...expanding, ref])
+  );
+};
+
+const inlineProperties = (
+  root: unknown,
+  value: JsonObject,
+  expanding: ReadonlySet<string>
+): Record<string, unknown> => {
+  const properties: Record<string, unknown> = {};
+  for (const [name, subSchema] of Object.entries(value)) {
+    const visited = inlineSchema(root, subSchema, expanding);
+    if (visited !== DROP) properties[name] = visited;
+  }
+  return properties;
+};
+
+/** The combinator branches that survive; `undefined` when none do. */
+const inlineBranches = (
+  root: unknown,
+  branches: unknown[],
+  expanding: ReadonlySet<string>
+): unknown[] | undefined => {
+  const kept = branches
+    .map((branch) => inlineSchema(root, branch, expanding))
+    .filter((branch) => branch !== DROP);
+  return kept.length === 0 ? undefined : kept;
+};
+
+/** Inline one key of a schema object into `out`. False means the whole node is dropped. */
+const inlineEntry = (
+  root: unknown,
+  out: Record<string, unknown>,
+  key: string,
+  value: unknown,
+  expanding: ReadonlySet<string>
+): boolean => {
+  // Every reference has been inlined, so the definition blocks are dead weight -
+  // and leaving them behind would make the converter walk schemas nothing points at.
+  if (key === '$defs' || key === 'definitions') return true;
+
+  if (key === 'properties' && isPlainObject(value)) {
+    out.properties = inlineProperties(root, value, expanding);
+    return true;
+  }
+
+  if (
+    (key === 'anyOf' || key === 'oneOf' || key === 'allOf') &&
+    Array.isArray(value)
+  ) {
+    const kept = inlineBranches(root, value, expanding);
+    if (!kept) return false;
+    out[key] = kept;
+    return true;
+  }
+
+  const visited = inlineSchema(root, value, expanding);
+  if (visited !== DROP) {
+    out[key] = visited;
+    return true;
+  }
+  // An array whose element type is unrepresentable is not usable, so the array
+  // itself goes rather than becoming an untyped list.
+  if (key === 'items') return false;
+  if (key === 'additionalProperties') out[key] = false;
+  return true;
+};
+
+/** A property listed as required but dropped would make the schema unsatisfiable. */
+const pruneDroppedRequired = (out: Record<string, unknown>): void => {
+  if (!Array.isArray(out.required) || !isPlainObject(out.properties)) return;
+
+  const properties = out.properties;
+  const required = out.required.filter(
+    (name) => typeof name === 'string' && name in properties
+  );
+  if (required.length === 0) delete out.required;
+  else out.required = required;
+};
+
+const inlineSchema = (
+  root: unknown,
+  node: unknown,
+  expanding: ReadonlySet<string>
+): Visited => {
+  if (Array.isArray(node)) {
+    return node.map((item) => inlineSchema(root, item, expanding));
+  }
+  if (!isPlainObject(node)) return node;
+
+  const ref = node.$ref;
+  if (typeof ref === 'string') return inlineRef(root, node, ref, expanding);
+
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(node)) {
+    if (!inlineEntry(root, out, key, value, expanding)) return DROP;
+  }
+
+  // `{}` rather than a concrete element type: the source said "array of anything", and
+  // narrowing it here would silently forbid values the server does accept. A tuple is
+  // collapsed to one element type in the same pass - see fixArrayNode.
+  fixArrayNode(out);
+  pruneDroppedRequired(out);
+
+  return out;
+};
+
 /**
  * Rewrite a JSON Schema into the subset Gemini's function calling accepts.
  *
@@ -504,99 +671,45 @@ export function hasUnresolvableRef(root: unknown): boolean {
 export function normalizeJsonSchemaForGemini<T>(root: T): T {
   if (!isPlainObject(root)) return root;
 
-  const visit = (node: unknown, expanding: ReadonlySet<string>): Visited => {
-    if (Array.isArray(node)) return node.map((item) => visit(item, expanding));
-    if (!isPlainObject(node)) return node;
-
-    const ref = node.$ref;
-    if (typeof ref === 'string') {
-      // A `$ref` we are already inside is a cycle; stop here.
-      if (expanding.has(ref)) return DROP;
-
-      const target = resolvePointer(root, ref);
-      if (target === undefined) return DROP;
-
-      const siblings = { ...node };
-      delete siblings.$ref;
-
-      // Boolean schemas: `true` accepts anything (keep the siblings), `false` accepts
-      // nothing (indistinguishable from unrepresentable, for our purposes).
-      if (typeof target === 'boolean') return target ? siblings : DROP;
-      if (!isPlainObject(target)) return DROP;
-
-      // Sibling keywords alongside `$ref` win, matching the 2020-12 behaviour that
-      // `@ai-sdk/google` itself implements.
-      return visit({ ...target, ...siblings }, new Set([...expanding, ref]));
-    }
-
-    const out: Record<string, unknown> = {};
-
-    for (const [key, value] of Object.entries(node)) {
-      // Every reference has been inlined, so the definition blocks are dead weight -
-      // and leaving them behind would make the converter walk schemas nothing points at.
-      if (key === '$defs' || key === 'definitions') continue;
-
-      if (key === 'properties' && isPlainObject(value)) {
-        const properties: Record<string, unknown> = {};
-        for (const [name, subSchema] of Object.entries(value)) {
-          const visited = visit(subSchema, expanding);
-          if (visited !== DROP) properties[name] = visited;
-        }
-        out.properties = properties;
-        continue;
-      }
-
-      if (key === 'items') {
-        const visited = visit(value, expanding);
-        // An array whose element type is unrepresentable is not usable, so the array
-        // itself goes rather than becoming an untyped list.
-        if (visited === DROP) return DROP;
-        out.items = visited;
-        continue;
-      }
-
-      if (
-        (key === 'anyOf' || key === 'oneOf' || key === 'allOf') &&
-        Array.isArray(value)
-      ) {
-        const kept = value
-          .map((branch) => visit(branch, expanding))
-          .filter((branch) => branch !== DROP);
-        if (kept.length === 0) return DROP;
-        out[key] = kept;
-        continue;
-      }
-
-      if (key === 'additionalProperties' && isPlainObject(value)) {
-        const visited = visit(value, expanding);
-        out.additionalProperties = visited === DROP ? false : visited;
-        continue;
-      }
-
-      const visited = visit(value, expanding);
-      if (visited !== DROP) out[key] = visited;
-    }
-
-    // `{}` rather than a concrete element type: the source said "array of anything", and
-    // narrowing it here would silently forbid values the server does accept. A tuple is
-    // collapsed to one element type in the same pass - see fixArrayNode.
-    fixArrayNode(out);
-
-    // A property listed as required but dropped above would make the schema unsatisfiable.
-    if (Array.isArray(out.required) && isPlainObject(out.properties)) {
-      const properties = out.properties;
-      out.required = (out.required as unknown[]).filter(
-        (name) => typeof name === 'string' && name in properties
-      );
-      if ((out.required as unknown[]).length === 0) delete out.required;
-    }
-
-    return out;
-  };
-
-  const result = visit(root, new Set<string>());
+  const result = inlineSchema(root, root, new Set<string>());
   return (result === DROP ? { type: 'object', properties: {} } : result) as T;
 }
+
+const refNeedsNormalization = (
+  root: unknown,
+  ref: string,
+  expanding: ReadonlySet<string>
+): boolean => {
+  if (expanding.has(ref) || !isRootDefinitionRef(ref)) return true;
+
+  const target = resolvePointer(root, ref);
+  if (target === undefined) return true;
+
+  return needsNormalizationWalk(root, target, new Set([...expanding, ref]));
+};
+
+const needsNormalizationWalk = (
+  root: unknown,
+  node: unknown,
+  expanding: ReadonlySet<string>
+): boolean => {
+  if (Array.isArray(node)) {
+    return node.some((item) => needsNormalizationWalk(root, item, expanding));
+  }
+  if (!isPlainObject(node)) return false;
+
+  if (isItemlessArray(node) || hasTupleItems(node)) return true;
+
+  const ref = node.$ref;
+  if (typeof ref === 'string')
+    return refNeedsNormalization(root, ref, expanding);
+
+  return Object.entries(node).some(([key, value]) =>
+    key === '$defs' || key === 'definitions'
+      ? false
+      : needsNormalizationWalk(root, value, expanding)
+  );
+};
 
 /**
  * Whether a schema contains anything either strategy would rewrite.
@@ -609,29 +722,5 @@ export function normalizeJsonSchemaForGemini<T>(root: T): T {
  */
 export function needsGeminiNormalization(root: unknown): boolean {
   if (!isPlainObject(root)) return false;
-
-  const walk = (node: unknown, expanding: ReadonlySet<string>): boolean => {
-    if (Array.isArray(node)) return node.some((item) => walk(item, expanding));
-    if (!isPlainObject(node)) return false;
-
-    if (isItemlessArray(node) || hasTupleItems(node)) return true;
-
-    const ref = node.$ref;
-    if (typeof ref === 'string') {
-      if (expanding.has(ref)) return true;
-
-      if (!isRootDefinitionRef(ref)) return true;
-
-      const target = resolvePointer(root, ref);
-      if (target === undefined) return true;
-
-      return walk(target, new Set([...expanding, ref]));
-    }
-
-    return Object.entries(node).some(([key, value]) =>
-      key === '$defs' || key === 'definitions' ? false : walk(value, expanding)
-    );
-  };
-
-  return walk(root, new Set<string>());
+  return needsNormalizationWalk(root, root, new Set<string>());
 }

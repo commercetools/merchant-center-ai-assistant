@@ -71,6 +71,74 @@ export interface IdentityToolSetResult {
 
 const LOG_PREFIX = '[mcp-identity]';
 
+type LogLine = (message: string) => string;
+
+/** A cache hit for this exact owner, or `null` (a mismatched entry is discarded). */
+const readOwnedCacheEntry = async (
+  cache: CacheStore,
+  cacheKey: string,
+  userId: string,
+  binding: IdentityBinding,
+  logLine: LogLine
+): Promise<IdentityToolSetResult | null> => {
+  const cached = await cache.get<OwnedToolSet>(
+    CACHE_NS.MCP_IDENTITY_TOOLS,
+    cacheKey
+  );
+  if (!cached) return null;
+
+  if (
+    cached.ownerUserId === userId &&
+    cached.ownerServerKey === binding.serverKey &&
+    cached.ownerRevision === binding.connectedAt
+  ) {
+    return {
+      tools: cached.tools,
+      cached: true,
+      toolNames: Object.keys(cached.tools),
+    };
+  }
+
+  // Defence in depth behind the key: if this fires, key derivation is broken and one
+  // user was about to act as another.
+  logger.error(
+    logLine(
+      'TOOLS_CACHE_OWNER_MISMATCH - DISCARDING; cache-key derivation is broken and this ' +
+        "request was about to run under another user's identity"
+    )
+  );
+  await cache.delete(CACHE_NS.MCP_IDENTITY_TOOLS, cacheKey);
+  return null;
+};
+
+const handleHandshakeFailure = (
+  error: unknown,
+  provider: { hadNoToken: boolean },
+  startedAt: number,
+  logLine: LogLine
+): null => {
+  const name = (error as Error | undefined)?.constructor?.name ?? 'Error';
+  // The SDK's `UnauthorizedError` carries no status; the class name is what tells "the
+  // user must reconnect" from "the server rejected us".
+  if (name === 'UnauthorizedError') {
+    logger.warn(logLine(`TOOLS_REAUTH_REQUIRED ms=${Date.now() - startedAt}`));
+    throw new IdentityReauthRequiredError(
+      provider.hadNoToken ? 'no-token' : 'refresh-failed'
+    );
+  }
+  if (looksLikeNoPermittedTools(error)) {
+    logger.warn(logLine(`TOOLS_NO_PERMITTED ms=${Date.now() - startedAt}`));
+    throw new IdentityNoPermittedToolsError();
+  }
+  logger.error(
+    logLine(
+      `TOOLS_HANDSHAKE_FAILED class=${name} ms=${Date.now() - startedAt} ` +
+        `detail=${describeMcpFailure(error)}`
+    )
+  );
+  return null;
+};
+
 /**
  * Handshake with the identity-mode server as one user and return their tool set.
  *
@@ -95,33 +163,14 @@ export async function getIdentityMcpToolSet(
   const logLine = (message: string) =>
     `${LOG_PREFIX} rid=${rid} srv=${binding.serverKey} ${message}`;
 
-  const cached = await cache.get<OwnedToolSet>(
-    CACHE_NS.MCP_IDENTITY_TOOLS,
-    cacheKey
+  const cached = await readOwnedCacheEntry(
+    cache,
+    cacheKey,
+    userId,
+    binding,
+    logLine
   );
-  if (cached) {
-    if (
-      cached.ownerUserId !== userId ||
-      cached.ownerServerKey !== binding.serverKey ||
-      cached.ownerRevision !== binding.connectedAt
-    ) {
-      // Defence in depth behind the key: if this fires, key derivation is broken and one
-      // user was about to act as another.
-      logger.error(
-        logLine(
-          'TOOLS_CACHE_OWNER_MISMATCH - DISCARDING; cache-key derivation is broken and this ' +
-            "request was about to run under another user's identity"
-        )
-      );
-      await cache.delete(CACHE_NS.MCP_IDENTITY_TOOLS, cacheKey);
-    } else {
-      return {
-        tools: cached.tools,
-        cached: true,
-        toolNames: Object.keys(cached.tools),
-      };
-    }
-  }
+  if (cached) return cached;
 
   const provider = createIdentityMcpAuthProvider({
     config: deps.config,
@@ -175,28 +224,7 @@ export async function getIdentityMcpToolSet(
     }
     return { tools, cached: false, toolNames };
   } catch (error) {
-    const name = (error as Error | undefined)?.constructor?.name ?? 'Error';
-    // The SDK's `UnauthorizedError` carries no status; the class name is what tells "the
-    // user must reconnect" from "the server rejected us".
-    if (name === 'UnauthorizedError') {
-      logger.warn(
-        logLine(`TOOLS_REAUTH_REQUIRED ms=${Date.now() - startedAt}`)
-      );
-      throw new IdentityReauthRequiredError(
-        provider.hadNoToken ? 'no-token' : 'refresh-failed'
-      );
-    }
-    if (looksLikeNoPermittedTools(error)) {
-      logger.warn(logLine(`TOOLS_NO_PERMITTED ms=${Date.now() - startedAt}`));
-      throw new IdentityNoPermittedToolsError();
-    }
-    logger.error(
-      logLine(
-        `TOOLS_HANDSHAKE_FAILED class=${name} ms=${Date.now() - startedAt} ` +
-          `detail=${describeMcpFailure(error)}`
-      )
-    );
-    return null;
+    return handleHandshakeFailure(error, provider, startedAt, logLine);
   }
 }
 

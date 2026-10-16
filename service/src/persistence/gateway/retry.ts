@@ -81,6 +81,12 @@ export function isTransient(info: TransientInfo): boolean {
   return (info.status !== undefined && TRANSIENT_STATUS.has(info.status)) || info.network === true;
 }
 
+function retryDelayMs(info: TransientInfo, attempt: number, baseMs: number, random?: () => number): number {
+  return info.retryAfterSeconds !== undefined
+    ? Math.min(info.retryAfterSeconds * 1000, 30000)
+    : backoffMs(attempt, baseMs, random);
+}
+
 export interface RetryOptions {
   attempts?: number;
   baseMs?: number;
@@ -112,11 +118,7 @@ export async function withTransportRetry<T>(
       if (attempt + 1 >= attempts) {
         throw new UnavailableError('commercetools is temporarily unavailable');
       }
-      const delay =
-        info.retryAfterSeconds !== undefined
-          ? Math.min(info.retryAfterSeconds * 1000, 30000)
-          : backoffMs(attempt, baseMs, o.random);
-      await wait(delay);
+      await wait(retryDelayMs(info, attempt, baseMs, o.random));
     }
   }
 }

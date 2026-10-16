@@ -111,41 +111,54 @@ const resourceMetadataFromChallenge = (
   return match?.[1];
 };
 
-/**
- * Probe one Managed MCP Server's discovery chain.
- *
- * Never throws: every failure becomes a `problems` entry and a verdict, because a probe that
- * dies is strictly less useful than one that reports how far it got.
- */
-export const probeIdentityMcp = async (params: {
-  apiRegion: string;
+interface ProbeContext {
+  result: IdentityDiscoveryResult;
+  problems: string[];
   mcpUrl: string;
-  /** Attempt an unauthenticated DCR POST. Read-only in effect: it registers nothing. */
-  probeRegistration?: boolean;
-  /** Test seam (default: global fetch). */
-  fetchFn?: typeof fetch;
-}): Promise<IdentityDiscoveryResult> => {
-  const { apiRegion, mcpUrl, probeRegistration = true } = params;
-  const probeFetch = (url: string, init: Parameters<typeof fetch>[1] = {}) =>
-    fetchWithTimeout(url, init, params.fetchFn);
-  const problems: string[] = [];
-  const expected = auth2Url(apiRegion);
+  expected: string;
+  log: (message: string) => string;
+  probeFetch: (
+    url: string,
+    init?: Parameters<typeof fetch>[1]
+  ) => Promise<Response>;
+}
 
-  const log = (message: string) => `${LOG_PREFIX} rid=${rid()} ${message}`;
+// -- 1. The unauthenticated challenge ---------------------------------------------------
 
-  const result: IdentityDiscoveryResult = {
-    verdict: 'unexpected',
-    authorizationServers: [],
-    expectedAuthorizationServer: expected,
-    problems,
-  };
+const logChallengeOutcome = async (
+  ctx: ProbeContext,
+  challenge: Response
+): Promise<void> => {
+  const { result, problems, log } = ctx;
 
-  // -- 1. The unauthenticated challenge ---------------------------------------------------
+  if (challenge.status !== 401) {
+    problems.push(
+      `expected 401 from an unauthenticated handshake, got ${challenge.status}`
+    );
+    const body = await challenge.text().catch(() => '');
+    logger.error(
+      log(
+        `PROBE_NOT_401 status=${challenge.status} body="${body.slice(0, 200)}" ` +
+          '- this is a wrong URL, region or server key, NOT an auth problem'
+      )
+    );
+  } else if (!result.wwwAuthenticate) {
+    problems.push('401 carried no WWW-Authenticate challenge');
+    logger.error(
+      log(
+        'PROBE_NO_WWWAUTH status=401 - no discovery is possible from this server'
+      )
+    );
+  } else {
+    logger.info(log(`PROBE_401_OK wwwAuth="${result.wwwAuthenticate}"`));
+  }
+};
 
-  logger.info(log(`PROBE_START url=${mcpUrl}`));
+const probeChallenge = async (ctx: ProbeContext): Promise<void> => {
+  const { result, problems, mcpUrl, log } = ctx;
 
   try {
-    const challenge = await probeFetch(mcpUrl, {
+    const challenge = await ctx.probeFetch(mcpUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -167,27 +180,7 @@ export const probeIdentityMcp = async (params: {
     result.wwwAuthenticate =
       challenge.headers.get('www-authenticate') ?? undefined;
 
-    if (challenge.status !== 401) {
-      problems.push(
-        `expected 401 from an unauthenticated handshake, got ${challenge.status}`
-      );
-      const body = await challenge.text().catch(() => '');
-      logger.error(
-        log(
-          `PROBE_NOT_401 status=${challenge.status} body="${body.slice(0, 200)}" ` +
-            '- this is a wrong URL, region or server key, NOT an auth problem'
-        )
-      );
-    } else if (!result.wwwAuthenticate) {
-      problems.push('401 carried no WWW-Authenticate challenge');
-      logger.error(
-        log(
-          'PROBE_NO_WWWAUTH status=401 - no discovery is possible from this server'
-        )
-      );
-    } else {
-      logger.info(log(`PROBE_401_OK wwwAuth="${result.wwwAuthenticate}"`));
-    }
+    await logChallengeOutcome(ctx, challenge);
 
     result.resourceMetadataUrl = resourceMetadataFromChallenge(
       result.wwwAuthenticate ?? null
@@ -203,79 +196,142 @@ export const probeIdentityMcp = async (params: {
     problems.push(`challenge request failed: ${(error as Error).message}`);
     logger.error(log(`PROBE_REQUEST_FAILED ${(error as Error).message}`));
   }
+};
 
-  // -- 2. Protected-resource metadata -----------------------------------------------------
+// -- 2. Protected-resource metadata -----------------------------------------------------
 
-  if (result.resourceMetadataUrl) {
-    // The SDK refuses a metadata URL off the MCP server's origin, and so do we - a
-    // cross-origin pointer is how a compromised gateway would redirect discovery.
-    const sameOrigin =
-      new URL(result.resourceMetadataUrl).origin === new URL(mcpUrl).origin;
+const readProtectedResourceMetadata = async (
+  ctx: ProbeContext,
+  resourceMetadataUrl: string
+): Promise<void> => {
+  const { result, problems, log } = ctx;
+  const prm = await ctx.probeFetch(resourceMetadataUrl);
+  result.resourceMetadataStatus = prm.status;
 
-    if (!sameOrigin) {
-      problems.push(
-        `resource_metadata is cross-origin: ${result.resourceMetadataUrl}`
-      );
-      logger.error(
-        log(
-          `PRM_CROSS_ORIGIN prm=${new URL(result.resourceMetadataUrl).origin} ` +
-            `expected=${new URL(mcpUrl).origin}`
-        )
-      );
-    } else {
-      try {
-        const prm = await probeFetch(result.resourceMetadataUrl);
-        result.resourceMetadataStatus = prm.status;
-
-        if (!prm.ok) {
-          problems.push(`protected-resource metadata returned ${prm.status}`);
-          logger.error(
-            log(
-              `PRM_HTTP_ERROR url=${result.resourceMetadataUrl} status=${prm.status}`
-            )
-          );
-        } else {
-          const doc = (await prm.json()) as {
-            resource?: string;
-            authorization_servers?: string[];
-            scopes_supported?: string[];
-          };
-
-          result.resource = doc.resource;
-          result.authorizationServers = Array.isArray(doc.authorization_servers)
-            ? doc.authorization_servers
-            : [];
-          result.scopesSupported = doc.scopes_supported;
-
-          // The line that answers the open question.
-          logger.info(
-            log(
-              `PRM_OK resource="${doc.resource ?? 'ABSENT'}" ` +
-                `authorization_servers=[${result.authorizationServers.join(', ')}] ` +
-                `scopes_supported=[${(doc.scopes_supported ?? []).join(', ')}]`
-            )
-          );
-
-          if (result.authorizationServers.length === 0) {
-            problems.push('metadata listed no authorization_servers');
-            logger.error(
-              log(
-                'PRM_NO_AS - the SDK would silently fall back to treating the MCP ' +
-                  'server as its own authorization server'
-              )
-            );
-          }
-        }
-      } catch (error) {
-        problems.push(
-          `protected-resource metadata unreadable: ${(error as Error).message}`
-        );
-        logger.error(log(`PRM_PARSE_ERROR ${(error as Error).message}`));
-      }
-    }
+  if (!prm.ok) {
+    problems.push(`protected-resource metadata returned ${prm.status}`);
+    logger.error(
+      log(`PRM_HTTP_ERROR url=${resourceMetadataUrl} status=${prm.status}`)
+    );
+    return;
   }
 
-  // -- 3. Classify -----------------------------------------------------------------------
+  const doc = (await prm.json()) as {
+    resource?: string;
+    authorization_servers?: string[];
+    scopes_supported?: string[];
+  };
+
+  result.resource = doc.resource;
+  result.authorizationServers = Array.isArray(doc.authorization_servers)
+    ? doc.authorization_servers
+    : [];
+  result.scopesSupported = doc.scopes_supported;
+
+  // The line that answers the open question.
+  logger.info(
+    log(
+      `PRM_OK resource="${doc.resource ?? 'ABSENT'}" ` +
+        `authorization_servers=[${result.authorizationServers.join(', ')}] ` +
+        `scopes_supported=[${(doc.scopes_supported ?? []).join(', ')}]`
+    )
+  );
+
+  if (result.authorizationServers.length === 0) {
+    problems.push('metadata listed no authorization_servers');
+    logger.error(
+      log(
+        'PRM_NO_AS - the SDK would silently fall back to treating the MCP ' +
+          'server as its own authorization server'
+      )
+    );
+  }
+};
+
+const probeProtectedResourceMetadata = async (
+  ctx: ProbeContext
+): Promise<void> => {
+  const { result, problems, mcpUrl, log } = ctx;
+  if (!result.resourceMetadataUrl) return;
+
+  // The SDK refuses a metadata URL off the MCP server's origin, and so do we - a
+  // cross-origin pointer is how a compromised gateway would redirect discovery.
+  const sameOrigin =
+    new URL(result.resourceMetadataUrl).origin === new URL(mcpUrl).origin;
+
+  if (!sameOrigin) {
+    problems.push(
+      `resource_metadata is cross-origin: ${result.resourceMetadataUrl}`
+    );
+    logger.error(
+      log(
+        `PRM_CROSS_ORIGIN prm=${new URL(result.resourceMetadataUrl).origin} ` +
+          `expected=${new URL(mcpUrl).origin}`
+      )
+    );
+    return;
+  }
+
+  try {
+    await readProtectedResourceMetadata(ctx, result.resourceMetadataUrl);
+  } catch (error) {
+    problems.push(
+      `protected-resource metadata unreadable: ${(error as Error).message}`
+    );
+    logger.error(log(`PRM_PARSE_ERROR ${(error as Error).message}`));
+  }
+};
+
+// -- 3. Classify -----------------------------------------------------------------------
+
+const classifyAuthorizationServer = (
+  ctx: ProbeContext,
+  authorizationServer: string,
+  host: string
+): void => {
+  const { result, problems, expected, log } = ctx;
+
+  if (host.startsWith('auth2.')) {
+    result.verdict = 'auth2';
+    logger.info(
+      log(
+        `AS_VERDICT auth2 as=${authorizationServer} expected=${expected} ` +
+          `${authorizationServer === expected ? '(match)' : '(DIFFERENT REGION?)'}`
+      )
+    );
+  } else if (host === 'auth.identity.commercetools.com') {
+    result.verdict = 'upstream-idp';
+    problems.push(
+      'metadata named the upstream user IdP, which has no dynamic registration'
+    );
+    logger.error(
+      log(
+        `AS_VERDICT upstream-idp as=${authorizationServer} - this host answers ` +
+          '404 "Dynamic registration is not enabled." and cannot be used by a backend'
+      )
+    );
+  } else if (host.startsWith('auth.')) {
+    result.verdict = 'client-credentials-as';
+    problems.push(
+      'metadata named the ClientCredentials authorization server, so it appears to be ' +
+        'mode-blind'
+    );
+    logger.error(
+      log(
+        `AS_VERDICT client-credentials-as as=${authorizationServer} - the ` +
+          'metadata does not reflect the configured authentication mode. Identity mode ' +
+          'cannot be reached by discovery; see the plan for the fallback'
+      )
+    );
+  } else {
+    result.verdict = 'unexpected';
+    problems.push(`unrecognised authorization server host: ${host}`);
+    logger.error(log(`AS_VERDICT unexpected as=${authorizationServer}`));
+  }
+};
+
+const classify = (ctx: ProbeContext): void => {
+  const { result, problems, log } = ctx;
 
   result.authorizationServer = result.authorizationServers[0];
 
@@ -287,186 +343,213 @@ export const probeIdentityMcp = async (params: {
           'cannot be driven through the SDK from here'
       )
     );
-  } else {
-    const host = new URL(result.authorizationServer).host;
-
-    if (host.startsWith('auth2.')) {
-      result.verdict = 'auth2';
-      logger.info(
-        log(
-          `AS_VERDICT auth2 as=${result.authorizationServer} expected=${expected} ` +
-            `${result.authorizationServer === expected ? '(match)' : '(DIFFERENT REGION?)'}`
-        )
-      );
-    } else if (host === 'auth.identity.commercetools.com') {
-      result.verdict = 'upstream-idp';
-      problems.push(
-        'metadata named the upstream user IdP, which has no dynamic registration'
-      );
-      logger.error(
-        log(
-          `AS_VERDICT upstream-idp as=${result.authorizationServer} - this host answers ` +
-            '404 "Dynamic registration is not enabled." and cannot be used by a backend'
-        )
-      );
-    } else if (host.startsWith('auth.')) {
-      result.verdict = 'client-credentials-as';
-      problems.push(
-        'metadata named the ClientCredentials authorization server, so it appears to be ' +
-          'mode-blind'
-      );
-      logger.error(
-        log(
-          `AS_VERDICT client-credentials-as as=${result.authorizationServer} - the ` +
-            'metadata does not reflect the configured authentication mode. Identity mode ' +
-            'cannot be reached by discovery; see the plan for the fallback'
-        )
-      );
-    } else {
-      result.verdict = 'unexpected';
-      problems.push(`unrecognised authorization server host: ${host}`);
-      logger.error(
-        log(`AS_VERDICT unexpected as=${result.authorizationServer}`)
-      );
-    }
-
-    if (!isCommercetoolsAuthHost(host)) {
-      problems.push(
-        `authorization server is not a commercetools host: ${host} - refusing`
-      );
-    }
+    return;
   }
 
-  // -- 4. Authorization server metadata ---------------------------------------------------
+  const host = new URL(result.authorizationServer).host;
+  classifyAuthorizationServer(ctx, result.authorizationServer, host);
 
-  if (
-    result.authorizationServer &&
-    isCommercetoolsAuthHost(new URL(result.authorizationServer).host)
-  ) {
-    const metadataUrl = `${result.authorizationServer.replace(
-      /\/+$/,
-      ''
-    )}/.well-known/oauth-authorization-server`;
-
-    try {
-      const response = await probeFetch(metadataUrl);
-      const snapshot: AuthServerMetadataSnapshot = { status: response.status };
-
-      if (response.ok) {
-        const doc = (await response.json()) as Record<string, unknown>;
-        snapshot.issuer = doc.issuer as string;
-        snapshot.registrationEndpoint = doc.registration_endpoint as string;
-        snapshot.authorizationEndpoint = doc.authorization_endpoint as string;
-        snapshot.tokenEndpoint = doc.token_endpoint as string;
-        snapshot.deviceAuthorizationEndpoint =
-          doc.device_authorization_endpoint as string;
-        snapshot.grantTypes = doc.grant_types_supported as string[];
-        snapshot.codeChallengeMethods =
-          doc.code_challenge_methods_supported as string[];
-        snapshot.tokenEndpointAuthMethods =
-          doc.token_endpoint_auth_methods_supported as string[];
-        snapshot.scopesSupported = doc.scopes_supported as string[];
-
-        logger.info(
-          log(
-            `ASMETA_OK issuer=${snapshot.issuer} ` +
-              `registration_endpoint=${snapshot.registrationEndpoint ?? 'ABSENT'} ` +
-              `token_endpoint=${snapshot.tokenEndpoint} ` +
-              `grants=[${(snapshot.grantTypes ?? []).join(', ')}] ` +
-              `pkce=[${(snapshot.codeChallengeMethods ?? []).join(', ')}] ` +
-              `auth_methods=[${(snapshot.tokenEndpointAuthMethods ?? []).join(', ')}] ` +
-              `scopes=[${(snapshot.scopesSupported ?? []).join(', ')}]`
-          )
-        );
-
-        if (!snapshot.registrationEndpoint) {
-          problems.push(
-            'authorization server publishes no registration_endpoint, so the service ' +
-              'cannot obtain a client_id itself'
-          );
-          logger.error(
-            log('ASMETA_NO_REG - dynamic registration is unavailable')
-          );
-        }
-
-        if (!(snapshot.codeChallengeMethods ?? []).includes('S256')) {
-          problems.push(
-            'authorization server does not advertise PKCE S256, which the SDK hardcodes'
-          );
-          logger.error(
-            log(
-              `ASMETA_NO_S256 methods=[${(snapshot.codeChallengeMethods ?? []).join(', ')}]`
-            )
-          );
-        }
-      } else {
-        problems.push(
-          `authorization server metadata returned ${response.status}`
-        );
-        logger.error(
-          log(
-            `ASMETA_MISSING url=${metadataUrl} status=${response.status} - the SDK would ` +
-              'synthesise {as}/authorize and {as}/token instead of failing'
-          )
-        );
-      }
-
-      result.asMetadata = snapshot;
-    } catch (error) {
-      problems.push(
-        `authorization server metadata unreadable: ${(error as Error).message}`
-      );
-      logger.error(log(`ASMETA_FAILED ${(error as Error).message}`));
-    }
+  if (!isCommercetoolsAuthHost(host)) {
+    problems.push(
+      `authorization server is not a commercetools host: ${host} - refusing`
+    );
   }
+};
 
-  // -- 5. Is registration actually live? --------------------------------------------------
+// -- 4. Authorization server metadata ---------------------------------------------------
 
-  if (probeRegistration && result.asMetadata?.registrationEndpoint) {
-    // An intentionally invalid body. A conformant server answers 400
-    // `invalid_client_metadata`, which proves the endpoint is reachable and unauthenticated
-    // WITHOUT registering anything. A 401 would mean it needs credentials we do not have;
-    // a 404 would mean the feature is off despite being advertised.
-    try {
-      const response = await probeFetch(
-        result.asMetadata.registrationEndpoint,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
-        }
-      );
+const snapshotAuthServerMetadata = (
+  ctx: ProbeContext,
+  doc: Record<string, unknown>,
+  snapshot: AuthServerMetadataSnapshot
+): void => {
+  const { problems, log } = ctx;
 
-      const body = await response.text().catch(() => '');
-      result.dcrReachable = response.status === 400;
-      result.dcrDetail = `${response.status} ${body.slice(0, 200)}`;
-
-      if (response.status === 400) {
-        logger.info(
-          log(
-            `DCR_REACHABLE status=400 (validation error, as expected) body="${body.slice(0, 160)}"`
-          )
-        );
-      } else {
-        problems.push(
-          `registration endpoint answered ${response.status} to a validation probe`
-        );
-        logger.error(
-          log(
-            `DCR_UNEXPECTED status=${response.status} body="${body.slice(0, 200)}" - ` +
-              '400 invalid_client_metadata was expected; 401 means it needs credentials, ' +
-              '404 means registration is disabled despite being advertised'
-          )
-        );
-      }
-    } catch (error) {
-      problems.push(`registration probe failed: ${(error as Error).message}`);
-      logger.error(log(`DCR_PROBE_FAILED ${(error as Error).message}`));
-    }
-  }
+  snapshot.issuer = doc.issuer as string;
+  snapshot.registrationEndpoint = doc.registration_endpoint as string;
+  snapshot.authorizationEndpoint = doc.authorization_endpoint as string;
+  snapshot.tokenEndpoint = doc.token_endpoint as string;
+  snapshot.deviceAuthorizationEndpoint =
+    doc.device_authorization_endpoint as string;
+  snapshot.grantTypes = doc.grant_types_supported as string[];
+  snapshot.codeChallengeMethods =
+    doc.code_challenge_methods_supported as string[];
+  snapshot.tokenEndpointAuthMethods =
+    doc.token_endpoint_auth_methods_supported as string[];
+  snapshot.scopesSupported = doc.scopes_supported as string[];
 
   logger.info(
     log(
+      `ASMETA_OK issuer=${snapshot.issuer} ` +
+        `registration_endpoint=${snapshot.registrationEndpoint ?? 'ABSENT'} ` +
+        `token_endpoint=${snapshot.tokenEndpoint} ` +
+        `grants=[${(snapshot.grantTypes ?? []).join(', ')}] ` +
+        `pkce=[${(snapshot.codeChallengeMethods ?? []).join(', ')}] ` +
+        `auth_methods=[${(snapshot.tokenEndpointAuthMethods ?? []).join(', ')}] ` +
+        `scopes=[${(snapshot.scopesSupported ?? []).join(', ')}]`
+    )
+  );
+
+  if (!snapshot.registrationEndpoint) {
+    problems.push(
+      'authorization server publishes no registration_endpoint, so the service ' +
+        'cannot obtain a client_id itself'
+    );
+    logger.error(log('ASMETA_NO_REG - dynamic registration is unavailable'));
+  }
+
+  if (!(snapshot.codeChallengeMethods ?? []).includes('S256')) {
+    problems.push(
+      'authorization server does not advertise PKCE S256, which the SDK hardcodes'
+    );
+    logger.error(
+      log(
+        `ASMETA_NO_S256 methods=[${(snapshot.codeChallengeMethods ?? []).join(', ')}]`
+      )
+    );
+  }
+};
+
+const probeAuthServerMetadata = async (ctx: ProbeContext): Promise<void> => {
+  const { result, problems, log } = ctx;
+
+  if (
+    !result.authorizationServer ||
+    !isCommercetoolsAuthHost(new URL(result.authorizationServer).host)
+  ) {
+    return;
+  }
+
+  const metadataUrl = `${result.authorizationServer.replace(
+    /\/+$/,
+    ''
+  )}/.well-known/oauth-authorization-server`;
+
+  try {
+    const response = await ctx.probeFetch(metadataUrl);
+    const snapshot: AuthServerMetadataSnapshot = { status: response.status };
+
+    if (response.ok) {
+      const doc = (await response.json()) as Record<string, unknown>;
+      snapshotAuthServerMetadata(ctx, doc, snapshot);
+    } else {
+      problems.push(
+        `authorization server metadata returned ${response.status}`
+      );
+      logger.error(
+        log(
+          `ASMETA_MISSING url=${metadataUrl} status=${response.status} - the SDK would ` +
+            'synthesise {as}/authorize and {as}/token instead of failing'
+        )
+      );
+    }
+
+    result.asMetadata = snapshot;
+  } catch (error) {
+    problems.push(
+      `authorization server metadata unreadable: ${(error as Error).message}`
+    );
+    logger.error(log(`ASMETA_FAILED ${(error as Error).message}`));
+  }
+};
+
+// -- 5. Is registration actually live? --------------------------------------------------
+
+const probeRegistrationEndpoint = async (
+  ctx: ProbeContext,
+  registrationEndpoint: string
+): Promise<void> => {
+  const { result, problems, log } = ctx;
+
+  // An intentionally invalid body. A conformant server answers 400
+  // `invalid_client_metadata`, which proves the endpoint is reachable and unauthenticated
+  // WITHOUT registering anything. A 401 would mean it needs credentials we do not have;
+  // a 404 would mean the feature is off despite being advertised.
+  try {
+    const response = await ctx.probeFetch(registrationEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+
+    const body = await response.text().catch(() => '');
+    result.dcrReachable = response.status === 400;
+    result.dcrDetail = `${response.status} ${body.slice(0, 200)}`;
+
+    if (response.status === 400) {
+      logger.info(
+        log(
+          `DCR_REACHABLE status=400 (validation error, as expected) body="${body.slice(0, 160)}"`
+        )
+      );
+    } else {
+      problems.push(
+        `registration endpoint answered ${response.status} to a validation probe`
+      );
+      logger.error(
+        log(
+          `DCR_UNEXPECTED status=${response.status} body="${body.slice(0, 200)}" - ` +
+            '400 invalid_client_metadata was expected; 401 means it needs credentials, ' +
+            '404 means registration is disabled despite being advertised'
+        )
+      );
+    }
+  } catch (error) {
+    problems.push(`registration probe failed: ${(error as Error).message}`);
+    logger.error(log(`DCR_PROBE_FAILED ${(error as Error).message}`));
+  }
+};
+
+/**
+ * Probe one Managed MCP Server's discovery chain.
+ *
+ * Never throws: every failure becomes a `problems` entry and a verdict, because a probe that
+ * dies is strictly less useful than one that reports how far it got.
+ */
+export const probeIdentityMcp = async (params: {
+  apiRegion: string;
+  mcpUrl: string;
+  /** Attempt an unauthenticated DCR POST. Read-only in effect: it registers nothing. */
+  probeRegistration?: boolean;
+  /** Test seam (default: global fetch). */
+  fetchFn?: typeof fetch;
+}): Promise<IdentityDiscoveryResult> => {
+  const { apiRegion, mcpUrl, probeRegistration = true } = params;
+  const problems: string[] = [];
+  const expected = auth2Url(apiRegion);
+
+  const result: IdentityDiscoveryResult = {
+    verdict: 'unexpected',
+    authorizationServers: [],
+    expectedAuthorizationServer: expected,
+    problems,
+  };
+
+  const ctx: ProbeContext = {
+    result,
+    problems,
+    mcpUrl,
+    expected,
+    log: (message) => `${LOG_PREFIX} rid=${rid()} ${message}`,
+    probeFetch: (url, init = {}) => fetchWithTimeout(url, init, params.fetchFn),
+  };
+
+  logger.info(ctx.log(`PROBE_START url=${mcpUrl}`));
+
+  await probeChallenge(ctx);
+  await probeProtectedResourceMetadata(ctx);
+  classify(ctx);
+  await probeAuthServerMetadata(ctx);
+
+  if (probeRegistration && result.asMetadata?.registrationEndpoint) {
+    await probeRegistrationEndpoint(
+      ctx,
+      result.asMetadata.registrationEndpoint
+    );
+  }
+
+  logger.info(
+    ctx.log(
       `PROBE_DONE verdict=${result.verdict} problems=${problems.length}` +
         (problems.length ? ` [${problems.join('; ')}]` : '')
     )

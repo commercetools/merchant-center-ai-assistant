@@ -38,6 +38,17 @@ const isImageToolPart = (part: unknown): part is Json & { output: Json } =>
   isRecord(part.output) &&
   Array.isArray(part.output.parts);
 
+const isFilePart = (p: unknown): boolean => isRecord(p) && p.type === 'file';
+
+const withoutNestedFiles = (part: Json & { output: Json }): UIMessage['parts'][number] =>
+  ({
+    ...part,
+    output: {
+      ...part.output,
+      parts: (part.output.parts as unknown[]).filter((p) => !isFilePart(p)),
+    },
+  }) as UIMessage['parts'][number];
+
 /**
  * Keeps the files nested in the outputs of the newest `keep` image generations and strips them
  * from older ones. Every kept image is downloaded and sent to the model on EVERY later turn,
@@ -57,19 +68,12 @@ export const keepNewestGeneratedImages = (
     for (let j = next.length - 1; j >= 0; j -= 1) {
       const part: unknown = next[j];
       if (!isImageToolPart(part)) continue;
-      const nested = part.output.parts as unknown[];
-      if (!nested.some((p) => isRecord(p) && p.type === 'file')) continue;
+      if (!(part.output.parts as unknown[]).some(isFilePart)) continue;
       if (remaining > 0) {
         remaining -= 1;
         continue;
       }
-      next[j] = {
-        ...part,
-        output: {
-          ...part.output,
-          parts: nested.filter((p) => !(isRecord(p) && p.type === 'file')),
-        },
-      } as UIMessage['parts'][number];
+      next[j] = withoutNestedFiles(part);
       changed = true;
     }
     if (changed) out[i] = { ...out[i], parts: next };

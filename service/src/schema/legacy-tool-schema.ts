@@ -29,6 +29,90 @@ const defOf = (node: unknown): ZodDef | undefined =>
 
 const typeOf = (node: unknown): string | undefined => defOf(node)?.type;
 
+const repairRecordDef = (def: ZodDef): void => {
+  if (def.valueType === undefined) {
+    def.keyType = z.string();
+    def.valueType = z.any();
+  } else if (typeOf(def.keyType) === 'any') {
+    def.keyType = z.string();
+  }
+};
+
+const rewriteTuple = (
+  schema: unknown,
+  def: ZodDef,
+  items: unknown[],
+  cache: Map<unknown, unknown>
+): z.ZodType => {
+  const entries = items.map((entry: unknown) =>
+    normalizeToolSchema(entry, cache)
+  );
+  const rest = def.rest ? normalizeToolSchema(def.rest, cache) : undefined;
+  const candidates = rest ? [...entries, rest] : entries;
+  const uniform = candidates.every(
+    (entry) => typeOf(entry) === typeOf(candidates[0])
+  );
+  const element: z.ZodType =
+    candidates.length === 0
+      ? z.any()
+      : uniform
+        ? (candidates[0] as z.ZodType)
+        : z.union(candidates as unknown as [z.ZodType, z.ZodType]);
+
+  let rewritten = z.array(element).min(entries.length);
+  if (!rest) rewritten = rewritten.max(entries.length);
+  const description = (schema as ZodNodeLike).description;
+  if (description) rewritten = rewritten.describe(description);
+  return rewritten;
+};
+
+const SINGLE_CHILD_KEYS = [
+  'valueType',
+  'keyType',
+  'element',
+  'innerType',
+  'left',
+  'right',
+  'in',
+  'out',
+];
+
+const normalizeShape = (def: ZodDef, cache: Map<unknown, unknown>): void => {
+  const shape = def.shape as Record<string, unknown> | undefined;
+  if (!shape) return;
+  for (const key of Object.keys(shape)) {
+    shape[key] = normalizeToolSchema(shape[key], cache);
+  }
+};
+
+const normalizeLazyGetter = (
+  def: ZodDef,
+  cache: Map<unknown, unknown>
+): void => {
+  if (typeof def.getter !== 'function') return;
+  try {
+    normalizeToolSchema((def.getter as () => unknown)(), cache);
+  } catch {
+    // lazy schema that cannot be resolved standalone; nothing to normalize
+  }
+};
+
+const normalizeChildren = (def: ZodDef, cache: Map<unknown, unknown>): void => {
+  for (const key of SINGLE_CHILD_KEYS) {
+    if (def[key]) def[key] = normalizeToolSchema(def[key], cache);
+  }
+  normalizeShape(def, cache);
+  for (const key of ['options', 'items']) {
+    const entries = def[key];
+    if (Array.isArray(entries)) {
+      def[key] = entries.map((entry: unknown) =>
+        normalizeToolSchema(entry, cache)
+      );
+    }
+  }
+  normalizeLazyGetter(def, cache);
+};
+
 /**
  * @stripe/agent-toolkit targets ai@4 and zod@3 (see its peerDependencies) - as did the
  * retired @commercetools/commerce-agent this shim was first written for - but this service
@@ -65,73 +149,15 @@ export const normalizeToolSchema = <T>(
   if (cache.has(schema)) return cache.get(schema) as T;
   cache.set(schema, schema);
 
-  if (def.type === 'record') {
-    if (def.valueType === undefined) {
-      def.keyType = z.string();
-      def.valueType = z.any();
-    } else if (typeOf(def.keyType) === 'any') {
-      def.keyType = z.string();
-    }
-  }
+  if (def.type === 'record') repairRecordDef(def);
 
   if (def.type === 'tuple' && Array.isArray(def.items)) {
-    const entries = def.items.map((entry: unknown) =>
-      normalizeToolSchema(entry, cache)
-    );
-    const rest = def.rest ? normalizeToolSchema(def.rest, cache) : undefined;
-    const candidates = rest ? [...entries, rest] : entries;
-    const uniform = candidates.every(
-      (entry) => typeOf(entry) === typeOf(candidates[0])
-    );
-    const element: z.ZodType =
-      candidates.length === 0
-        ? z.any()
-        : uniform
-          ? (candidates[0] as z.ZodType)
-          : z.union(candidates as unknown as [z.ZodType, z.ZodType]);
-
-    let rewritten = z.array(element).min(entries.length);
-    if (!rest) rewritten = rewritten.max(entries.length);
-    const description = (schema as ZodNodeLike).description;
-    if (description) rewritten = rewritten.describe(description);
-
+    const rewritten = rewriteTuple(schema, def, def.items, cache);
     cache.set(schema, rewritten);
     return rewritten as unknown as T;
   }
 
-  for (const key of [
-    'valueType',
-    'keyType',
-    'element',
-    'innerType',
-    'left',
-    'right',
-    'in',
-    'out',
-  ]) {
-    if (def[key]) def[key] = normalizeToolSchema(def[key], cache);
-  }
-  const shape = def.shape as Record<string, unknown> | undefined;
-  if (shape) {
-    for (const key of Object.keys(shape)) {
-      shape[key] = normalizeToolSchema(shape[key], cache);
-    }
-  }
-  for (const key of ['options', 'items']) {
-    const entries = def[key];
-    if (Array.isArray(entries)) {
-      def[key] = entries.map((entry: unknown) =>
-        normalizeToolSchema(entry, cache)
-      );
-    }
-  }
-  if (typeof def.getter === 'function') {
-    try {
-      normalizeToolSchema((def.getter as () => unknown)(), cache);
-    } catch {
-      // lazy schema that cannot be resolved standalone; nothing to normalize
-    }
-  }
+  normalizeChildren(def, cache);
 
   return schema;
 };

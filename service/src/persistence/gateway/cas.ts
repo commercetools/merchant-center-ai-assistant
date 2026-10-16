@@ -25,6 +25,14 @@ export interface UpdateResult<V> {
   written: boolean;
 }
 
+function valueOf<V>(current: StoredObject | null): V | null {
+  return current ? (current.value as V) : null;
+}
+
+function isRetryable(e: unknown, attempt: number, attempts: number): boolean {
+  return e instanceof ConflictError && attempt + 1 < attempts;
+}
+
 /**
  * Optimistic read-modify-write: read, mutate, write with the version that was read, and on a
  * conflict re-read and re-apply (jittered exponential backoff, 5 attempts by default).
@@ -42,13 +50,9 @@ export async function updateWithRetry<V>(
   const wait = o.sleep ?? sleep;
   for (let attempt = 0; ; attempt++) {
     const current = await gw.get(container, key);
-    const next = mutate(current ? (current.value as V) : null);
+    const next = mutate(valueOf<V>(current));
     if (next === SKIP) {
-      return {
-        value: current ? (current.value as V) : null,
-        object: current,
-        written: false,
-      };
+      return { value: valueOf<V>(current), object: current, written: false };
     }
     try {
       const object = await gw.put(container, key, next, {
@@ -56,7 +60,7 @@ export async function updateWithRetry<V>(
       });
       return { value: next, object, written: true };
     } catch (e) {
-      if (!(e instanceof ConflictError) || attempt + 1 >= attempts) throw e;
+      if (!isRetryable(e, attempt, attempts)) throw e;
       await wait(backoffMs(attempt, o.baseMs ?? 40, o.random));
     }
   }

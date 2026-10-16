@@ -52,6 +52,32 @@ export const getSessionTools: RequestHandler = asyncHandler(async (req, res) => 
 
 type ParsedGroup = { mcp: string; off: string[] };
 
+const isValidTool = (tool: unknown): tool is { toolName: string; enabled: boolean } =>
+  isObject(tool) &&
+  typeof tool.toolName === 'string' &&
+  tool.toolName !== '' &&
+  tool.toolName.length <= MAX_NAME_CHARS &&
+  typeof tool.enabled === 'boolean';
+
+const isValidGroupShape = (group: unknown): group is { mcp: string; tools: unknown[] } =>
+  isObject(group) &&
+  typeof group.mcp === 'string' &&
+  group.mcp !== '' &&
+  group.mcp.length <= MAX_NAME_CHARS &&
+  Array.isArray(group.tools);
+
+/** Validates one posted group; returns it or an error text. */
+const parseGroup = (group: unknown): ParsedGroup | string => {
+  if (!isValidGroupShape(group)) return 'Each tool group must have mcp name and tools array';
+  if (group.tools.length > MAX_TOOLS_PER_GROUP) return 'Too many tools in a group';
+  const off: string[] = [];
+  for (const tool of group.tools) {
+    if (!isValidTool(tool)) return 'Each tool must have a toolName and a boolean enabled';
+    if (!tool.enabled) off.push(tool.toolName);
+  }
+  return { mcp: group.mcp, off };
+};
+
 /** Validates the posted menu; returns the groups or an error text. */
 const parseGroups = (body: unknown): ParsedGroup[] | string => {
   const tools = isObject(body) ? body.tools : undefined;
@@ -59,30 +85,9 @@ const parseGroups = (body: unknown): ParsedGroup[] | string => {
   if (tools.length > MAX_GROUPS) return 'Too many tool groups';
   const groups: ParsedGroup[] = [];
   for (const group of tools) {
-    if (
-      !isObject(group) ||
-      typeof group.mcp !== 'string' ||
-      group.mcp === '' ||
-      group.mcp.length > MAX_NAME_CHARS ||
-      !Array.isArray(group.tools)
-    ) {
-      return 'Each tool group must have mcp name and tools array';
-    }
-    if (group.tools.length > MAX_TOOLS_PER_GROUP) return 'Too many tools in a group';
-    const off: string[] = [];
-    for (const tool of group.tools) {
-      if (
-        !isObject(tool) ||
-        typeof tool.toolName !== 'string' ||
-        tool.toolName === '' ||
-        tool.toolName.length > MAX_NAME_CHARS ||
-        typeof tool.enabled !== 'boolean'
-      ) {
-        return 'Each tool must have a toolName and a boolean enabled';
-      }
-      if (!tool.enabled) off.push(tool.toolName);
-    }
-    groups.push({ mcp: group.mcp, off });
+    const parsed = parseGroup(group);
+    if (typeof parsed === 'string') return parsed;
+    groups.push(parsed);
   }
   return groups;
 };

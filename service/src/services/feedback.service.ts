@@ -74,6 +74,160 @@ const cutText = (value: string, max: number): string => {
 const iso = (ms: number | undefined): string | undefined =>
   ms === undefined || !Number.isFinite(ms) ? undefined : new Date(ms).toISOString();
 
+type SnapshotResult = ReturnType<typeof buildSnapshot>;
+type OwnedSession = NonNullable<Awaited<ReturnType<SessionStore['get']>>>;
+
+const limitComment = (comment: string, truncations: FeedbackTruncation[]): string => {
+  if (comment.length <= MAX_COMMENT_LENGTH) return comment;
+  truncations.push({
+    messageIndex: NOT_A_MESSAGE,
+    path: 'comment',
+    reason: 'comment',
+    originalBytes: byteLength(comment),
+  });
+  return cutText(comment, MAX_COMMENT_LENGTH);
+};
+
+async function findAccessibleSession(
+  sessions: SessionStore,
+  sessionId: string,
+  user: RequestUser
+): Promise<OwnedSession | undefined> {
+  let session;
+  try {
+    session = await sessions.get(sessionId);
+  } catch (error) {
+    // An id the store refuses to key on cannot name a session.
+    if (error instanceof InvalidIdError) return undefined;
+    throw error;
+  }
+  if (!session || !(isOwner(session, user) || user.isAdmin)) return undefined;
+  return session;
+}
+
+async function clientSnapshotSource(
+  messages: MessageStore,
+  sessionId: string,
+  clientMessages: SnapshotMessage[]
+): Promise<{ source: SnapshotMessage[]; storedMessageCount: number }> {
+  let storedMessageCount = 0;
+  try {
+    storedMessageCount = await messages.count(sessionId);
+  } catch (error) {
+    logger.warn(
+      `Failed to count stored messages for session ${sessionId}; recording 0 (${
+        (error as Error).name
+      })`
+    );
+  }
+  if (storedMessageCount > clientMessages.length) {
+    logger.warn(
+      `Feedback snapshot for session ${sessionId} is shorter than storage: client sent ${clientMessages.length} message(s), server holds ${storedMessageCount}`
+    );
+  }
+  return { source: clientMessages, storedMessageCount };
+}
+
+async function serverSnapshotSource(
+  messages: MessageStore,
+  sessionId: string
+): Promise<{ source: SnapshotMessage[]; storedMessageCount: number }> {
+  // Newest 2000: `list` always answers chronologically, `desc` + limit picks the tail.
+  const stored = await messages.list(sessionId, {
+    order: 'desc',
+    limit: SERVER_MESSAGE_LIMIT,
+  });
+  const source = stored.map((m): SnapshotMessage => ({ ...m }));
+  return { source, storedMessageCount: source.length };
+}
+
+function fitSnapshotToLimit(
+  stripped: SnapshotMessage[],
+  snapshotSource: 'client' | 'server',
+  sessionId: string,
+  truncations: FeedbackTruncation[]
+): { snapshot: SnapshotResult } | { rejection: ServiceResult<FeedbackSubmitResult> } {
+  const snapshot = buildSnapshot(stripped);
+  if (snapshot.snapshotBytes <= MAX_SNAPSHOT_BYTES) return { snapshot };
+  if (snapshotSource === 'client') {
+    logger.warn(
+      `Feedback snapshot for session ${sessionId} rejected: ${snapshot.snapshotBytes} bytes exceeds the ${MAX_SNAPSHOT_BYTES} byte limit`
+    );
+    return {
+      rejection: {
+        status: 413,
+        error: 'Feedback snapshot is too large',
+        message: `Snapshot is ${snapshot.snapshotBytes} bytes, the limit is ${MAX_SNAPSHOT_BYTES} bytes. Submit without the transcript to store the saved conversation instead.`,
+      },
+    };
+  }
+  const fitted = fitNewest(stripped, MAX_SNAPSHOT_BYTES);
+  truncations.push({
+    messageIndex: NOT_A_MESSAGE,
+    path: 'messages',
+    reason: 'snapshot-tail',
+    originalBytes: snapshot.snapshotBytes,
+  });
+  logger.warn(
+    `Feedback snapshot for session ${sessionId} kept the newest ${fitted.messages.length} message(s), dropped ${fitted.droppedCount}`
+  );
+  return { snapshot: buildSnapshot(fitted.messages) };
+}
+
+async function captureSystemPrompt(
+  settings: SettingsStore,
+  truncations: FeedbackTruncation[]
+): Promise<string | undefined> {
+  try {
+    const raw = (await settings.get()).systemPrompt;
+    if (!raw) return undefined;
+    const systemPrompt = truncateToBytes(raw, MAX_SYSTEM_PROMPT_BYTES);
+    if (systemPrompt !== raw) {
+      truncations.push({
+        messageIndex: NOT_A_MESSAGE,
+        path: 'systemPrompt',
+        reason: 'system-prompt',
+        originalBytes: byteLength(raw),
+      });
+    }
+    return systemPrompt;
+  } catch (error) {
+    logger.warn(`Feedback: system prompt unavailable (${(error as Error).name})`);
+    return undefined;
+  }
+}
+
+async function writeFeedback(
+  feedback: FeedbackStore,
+  record: FeedbackRecord,
+  snapshot: SnapshotResult
+): Promise<void> {
+  const { id } = record;
+  const chunks: FeedbackSnapshotChunk[] = snapshot.payloads.map((payload, ordinal) => ({
+    docId: snapshotChunkKey(id, ordinal),
+    index: ordinal,
+    chunk: 0,
+    chunks: snapshot.chunkCount,
+    payload,
+  }));
+  try {
+    await feedback.put(record, chunks);
+  } catch (error) {
+    try {
+      await feedback.delete(id);
+    } catch (cleanupError) {
+      logger.warn(
+        `Feedback ${id}: cleanup after a failed write also failed (${
+          (cleanupError as Error).name
+        })`
+      );
+    }
+    logger.error(`Feedback ${id}: write failed`, error);
+    if (error instanceof PersistenceError) throw error;
+    throw new CustomError(500, 'Failed to submit feedback');
+  }
+}
+
 export class FeedbackService {
   private readonly now: () => number;
   private readonly newId: () => string;
@@ -103,31 +257,11 @@ export class FeedbackService {
 
     // 2. Comment.
     const truncations: FeedbackTruncation[] = [];
-    let comment = typeof body.comment === 'string' ? body.comment.trim() : '';
-    if (comment.length > MAX_COMMENT_LENGTH) {
-      truncations.push({
-        messageIndex: NOT_A_MESSAGE,
-        path: 'comment',
-        reason: 'comment',
-        originalBytes: byteLength(comment),
-      });
-      comment = cutText(comment, MAX_COMMENT_LENGTH);
-    }
+    const comment = limitComment(typeof body.comment === 'string' ? body.comment.trim() : '', truncations);
 
     // 3. Ownership. An unknown id and somebody else's session answer the same 404.
-    let session;
-    try {
-      session = await sessions.get(sessionId);
-    } catch (error) {
-      // An id the store refuses to key on cannot name a session.
-      if (error instanceof InvalidIdError) {
-        return { status: 404, error: 'Session not found' };
-      }
-      throw error;
-    }
-    if (!session || !(isOwner(session, user) || user.isAdmin)) {
-      return { status: 404, error: 'Session not found' };
-    }
+    const session = await findAccessibleSession(sessions, sessionId, user);
+    if (!session) return { status: 404, error: 'Session not found' };
 
     // 4. Snapshot source: the client array or the stored transcript, never a merge.
     const clientMessages: SnapshotMessage[] = Array.isArray(body.messages)
@@ -135,81 +269,20 @@ export class FeedbackService {
       : [];
     const clientMessageCount = clientMessages.length;
     const snapshotSource = clientMessageCount > 0 ? 'client' : 'server';
-
-    let source: SnapshotMessage[];
-    let storedMessageCount = 0;
-    if (snapshotSource === 'client') {
-      source = clientMessages;
-      try {
-        storedMessageCount = await messages.count(sessionId);
-      } catch (error) {
-        logger.warn(
-          `Failed to count stored messages for session ${sessionId}; recording 0 (${
-            (error as Error).name
-          })`
-        );
-      }
-      if (storedMessageCount > clientMessageCount) {
-        logger.warn(
-          `Feedback snapshot for session ${sessionId} is shorter than storage: client sent ${clientMessageCount} message(s), server holds ${storedMessageCount}`
-        );
-      }
-    } else {
-      // Newest 2000: `list` always answers chronologically, `desc` + limit picks the tail.
-      const stored = await messages.list(sessionId, {
-        order: 'desc',
-        limit: SERVER_MESSAGE_LIMIT,
-      });
-      source = stored.map((m): SnapshotMessage => ({ ...m }));
-      storedMessageCount = source.length;
-    }
+    const { source, storedMessageCount } =
+      snapshotSource === 'client'
+        ? await clientSnapshotSource(messages, sessionId, clientMessages)
+        : await serverSnapshotSource(messages, sessionId);
 
     // 5. Strip oversized data URLs, serialise once, apply the 413 policy.
     const stripped = stripInlineDataUrls(source);
     truncations.push(...stripped.truncations);
-    let snapshot = buildSnapshot(stripped.messages);
-    if (snapshot.snapshotBytes > MAX_SNAPSHOT_BYTES) {
-      if (snapshotSource === 'client') {
-        logger.warn(
-          `Feedback snapshot for session ${sessionId} rejected: ${snapshot.snapshotBytes} bytes exceeds the ${MAX_SNAPSHOT_BYTES} byte limit`
-        );
-        return {
-          status: 413,
-          error: 'Feedback snapshot is too large',
-          message: `Snapshot is ${snapshot.snapshotBytes} bytes, the limit is ${MAX_SNAPSHOT_BYTES} bytes. Submit without the transcript to store the saved conversation instead.`,
-        };
-      }
-      const fitted = fitNewest(stripped.messages, MAX_SNAPSHOT_BYTES);
-      truncations.push({
-        messageIndex: NOT_A_MESSAGE,
-        path: 'messages',
-        reason: 'snapshot-tail',
-        originalBytes: snapshot.snapshotBytes,
-      });
-      logger.warn(
-        `Feedback snapshot for session ${sessionId} kept the newest ${fitted.messages.length} message(s), dropped ${fitted.droppedCount}`
-      );
-      snapshot = buildSnapshot(fitted.messages);
-    }
+    const fit = fitSnapshotToLimit(stripped.messages, snapshotSource, sessionId, truncations);
+    if ('rejection' in fit) return fit.rejection;
+    const { snapshot } = fit;
 
     // 6. The system prompt in force, capped (best effort: feedback is worth more than it).
-    let systemPrompt: string | undefined;
-    try {
-      const raw = (await settings.get()).systemPrompt;
-      if (raw) {
-        systemPrompt = truncateToBytes(raw, MAX_SYSTEM_PROMPT_BYTES);
-        if (systemPrompt !== raw) {
-          truncations.push({
-            messageIndex: NOT_A_MESSAGE,
-            path: 'systemPrompt',
-            reason: 'system-prompt',
-            originalBytes: byteLength(raw),
-          });
-        }
-      }
-    } catch (error) {
-      logger.warn(`Feedback: system prompt unavailable (${(error as Error).name})`);
-    }
+    const systemPrompt = await captureSystemPrompt(settings, truncations);
 
     // 7. The record. Optional members are spread conditionally, never set to undefined.
     const createdAt = this.now();
@@ -243,29 +316,7 @@ export class FeedbackService {
     };
 
     // 8. Chunks first, parent last (the store guarantees the order); clean up on failure.
-    const chunks: FeedbackSnapshotChunk[] = snapshot.payloads.map((payload, ordinal) => ({
-      docId: snapshotChunkKey(id, ordinal),
-      index: ordinal,
-      chunk: 0,
-      chunks: snapshot.chunkCount,
-      payload,
-    }));
-    try {
-      await feedback.put(record, chunks);
-    } catch (error) {
-      try {
-        await feedback.delete(id);
-      } catch (cleanupError) {
-        logger.warn(
-          `Feedback ${id}: cleanup after a failed write also failed (${
-            (cleanupError as Error).name
-          })`
-        );
-      }
-      logger.error(`Feedback ${id}: write failed`, error);
-      if (error instanceof PersistenceError) throw error;
-      throw new CustomError(500, 'Failed to submit feedback');
-    }
+    await writeFeedback(feedback, record, snapshot);
 
     // 9. Audit: user ids only.
     auditSubmission({

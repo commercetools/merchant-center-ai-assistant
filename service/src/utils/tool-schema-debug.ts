@@ -33,7 +33,8 @@ export const logUnserializableToolSchemas = (
       const schema = candidate?.inputSchema ?? candidate?.parameters;
       if (!schema) continue;
       // `asSchema(...).jsonSchema` is exactly what the request builder does.
-      void asSchema(schema as Parameters<typeof asSchema>[0]).jsonSchema;
+      // The read itself is the check (a lazy getter throws here), so its value is unused.
+      Reflect.get(asSchema(schema as Parameters<typeof asSchema>[0]), 'jsonSchema');
     } catch (error) {
       broken.push(name);
       logger.error(

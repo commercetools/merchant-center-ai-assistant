@@ -58,6 +58,35 @@ export const truncateToBytes = (value: string, maxBytes: number): string => {
 export const snapshotChunkKey = (feedbackId: string, ordinal: number): string =>
   `${feedbackId}-${String(ordinal).padStart(3, '0')}`;
 
+type OversizedReporter = (path: string, bytes: number) => void;
+
+const stripString = (value: string, path: string, report: OversizedReporter): string => {
+  if (!value.startsWith('data:')) return value;
+  const bytes = byteLength(value);
+  if (bytes <= MAX_INLINE_DATA_URL_BYTES) return value;
+  report(path, bytes);
+  return `[omitted: inline data URL, ${bytes} bytes]`;
+};
+
+const walkValue = (value: unknown, path: string, report: OversizedReporter): unknown => {
+  if (typeof value === 'string') return stripString(value, path, report);
+  if (Array.isArray(value)) {
+    return value.map((item, i) => walkValue(item, `${path}[${i}]`, report));
+  }
+  if (value !== null && typeof value === 'object') {
+    // Object.fromEntries defines own data properties, so a key literally named
+    // `__proto__` survives. A plain `out[key] = ...` would hit the prototype setter and
+    // silently drop it.
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, item]) => [
+        key,
+        walkValue(item, path ? `${path}.${key}` : key, report),
+      ])
+    );
+  }
+  return value;
+};
+
 /**
  * Deep-copy the transcript, replacing any oversized inline `data:` URL with a placeholder and
  * recording each replacement. Input is JSON-derived (a request body).
@@ -68,39 +97,17 @@ export const stripInlineDataUrls = (
   const truncations: FeedbackTruncation[] = [];
   const source = Array.isArray(messages) ? messages : [];
 
-  const sanitized = source.map((message, messageIndex) => {
-    const walk = (value: unknown, path: string): unknown => {
-      if (typeof value === 'string') {
-        if (!value.startsWith('data:')) return value;
-        const bytes = byteLength(value);
-        if (bytes <= MAX_INLINE_DATA_URL_BYTES) return value;
-        truncations.push({
-          messageIndex,
-          ...(typeof message?.id === 'string' ? { messageId: message.id } : {}),
-          path: path || '(message)',
-          reason: 'inline-data-url',
-          originalBytes: bytes,
-        });
-        return `[omitted: inline data URL, ${bytes} bytes]`;
-      }
-      if (Array.isArray(value)) {
-        return value.map((item, i) => walk(item, `${path}[${i}]`));
-      }
-      if (value !== null && typeof value === 'object') {
-        // Object.fromEntries defines own data properties, so a key literally named
-        // `__proto__` survives. A plain `out[key] = ...` would hit the prototype setter and
-        // silently drop it.
-        return Object.fromEntries(
-          Object.entries(value as Record<string, unknown>).map(([key, item]) => [
-            key,
-            walk(item, path ? `${path}.${key}` : key),
-          ])
-        );
-      }
-      return value;
-    };
-    return walk(message, '') as SnapshotMessage;
-  });
+  const sanitized = source.map((message, messageIndex) =>
+    walkValue(message, '', (path, bytes) =>
+      truncations.push({
+        messageIndex,
+        ...(typeof message?.id === 'string' ? { messageId: message.id } : {}),
+        path: path || '(message)',
+        reason: 'inline-data-url',
+        originalBytes: bytes,
+      })
+    ) as SnapshotMessage
+  );
 
   return { messages: sanitized, truncations };
 };

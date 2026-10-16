@@ -288,26 +288,32 @@ export const authorizationRejectsClient = async (
   }
 };
 
+const requireHttpsCallbackUrl = (
+  config: Parameters<typeof callbackUrl>[0]
+): void => {
+  let redirectUri: string;
+  try {
+    redirectUri = callbackUrl(config);
+  } catch (error) {
+    if (error instanceof MissingAudienceError) {
+      throw new CustomError(
+        503,
+        'MC_AUDIENCE is not configured, so the OAuth callback URL is unknown'
+      );
+    }
+    throw error;
+  }
+  if (!redirectUri.startsWith('https://')) {
+    throw new CustomError(503, 'MC_AUDIENCE must be an HTTPS origin');
+  }
+};
+
 export const authorizeIdentityMcp: RequestHandler = asyncHandler(
   async (req, res) => {
     const userId = requireUserId(req);
     const { config, stores, fetchFn } = getIdentityRuntime();
 
-    let redirectUri: string;
-    try {
-      redirectUri = callbackUrl(config);
-    } catch (error) {
-      if (error instanceof MissingAudienceError) {
-        throw new CustomError(
-          503,
-          'MC_AUDIENCE is not configured, so the OAuth callback URL is unknown'
-        );
-      }
-      throw error;
-    }
-    if (!redirectUri.startsWith('https://')) {
-      throw new CustomError(503, 'MC_AUDIENCE must be an HTTPS origin');
-    }
+    requireHttpsCallbackUrl(config);
 
     const binding = await stores.binding.get();
     if (!binding) {

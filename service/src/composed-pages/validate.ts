@@ -7,7 +7,7 @@
 import { parse as parseJs } from '@babel/parser';
 import traverseModule from '@babel/traverse';
 import type { NodePath } from '@babel/traverse';
-import type { Node } from '@babel/types';
+import type { Node, Statement } from '@babel/types';
 import { Kind, visit, parse as parseGraphql } from 'graphql';
 
 /**
@@ -74,51 +74,44 @@ const isSyntaxError = (error: unknown): error is BabelSyntaxError =>
   error !== null &&
   typeof (error as { message?: unknown }).message === 'string';
 
-/**
- * Parses `body` as the body of a function and checks it. `componentName` only sharpens the
- * "do not declare the component yourself" message.
- */
-export function validateComponentBody(
-  body: string,
-  componentName?: string
-): BodyValidation {
-  if (body.trim() === '') return fail('Component body cannot be empty');
+type Flag = (path: NodePath, message: string) => void;
+type ParsedBody = ReturnType<typeof parseJs>;
 
-  let ast;
-  try {
-    ast = parseJs(WRAPPER_PREFIX + body + WRAPPER_SUFFIX, {
-      plugins: ['jsx'],
-      sourceType: 'script',
-    });
-  } catch (error) {
-    if (!isSyntaxError(error))
-      return fail('Component body could not be parsed');
-    const line = error.loc ? error.loc.line - 1 : undefined;
-    const column = error.loc ? error.loc.column : undefined;
-    if (/\b(import|export)\b/.test(error.message)) {
-      return fail(
-        "Do not use import or export statements. Every Nimbus export, React and the router names are already in scope; list them in the 'imports' field instead.",
-        line,
-        column
-      );
-    }
+const failFromParseError = (error: unknown): BodyValidation => {
+  if (!isSyntaxError(error)) return fail('Component body could not be parsed');
+  const line = error.loc ? error.loc.line - 1 : undefined;
+  const column = error.loc ? error.loc.column : undefined;
+  if (/\b(import|export)\b/.test(error.message)) {
     return fail(
-      `Syntax error: ${error.message.replace(/\s*\(\d+:\d+\)\s*$/, '')}`,
+      "Do not use import or export statements. Every Nimbus export, React and the router names are already in scope; list them in the 'imports' field instead.",
       line,
       column
     );
   }
+  return fail(
+    `Syntax error: ${error.message.replace(/\s*\(\d+:\d+\)\s*$/, '')}`,
+    line,
+    column
+  );
+};
 
+/** The statements of the wrapped function, or undefined when the wrapper did not survive. */
+const wrappedStatements = (ast: ParsedBody): Statement[] | undefined => {
   const statement = ast.program.body[0];
   if (
     !statement ||
     statement.type !== 'ExpressionStatement' ||
     statement.expression.type !== 'FunctionExpression'
   ) {
-    return fail('Component body could not be parsed as a function body');
+    return undefined;
   }
-  const statements = statement.expression.body.body;
+  return statement.expression.body.body;
+};
 
+const checkStructure = (
+  statements: Statement[],
+  componentName?: string
+): BodyValidation | undefined => {
   const declared = statements.find(
     (s) =>
       s.type === 'FunctionDeclaration' &&
@@ -138,9 +131,60 @@ export function validateComponentBody(
       'Component body must end with a top-level return (a return inside a hook callback does not count). If you wrapped the code in your own function, remove the wrapper.'
     );
   }
+  return undefined;
+};
 
+/** `obj.fetch` and `{ fetch: 1 }` are property names, not references. */
+const isPropertyName = (node: Node, parent: Node): boolean => {
+  if (
+    (parent.type === 'MemberExpression' ||
+      parent.type === 'OptionalMemberExpression') &&
+    parent.property === node &&
+    !parent.computed
+  ) {
+    return true;
+  }
+  return (
+    (parent.type === 'ObjectProperty' ||
+      parent.type === 'ObjectMethod' ||
+      parent.type === 'ClassMethod' ||
+      parent.type === 'ClassProperty') &&
+    parent.key === node &&
+    !parent.computed
+  );
+};
+
+const checkIdentifier = (
+  path: NodePath<Extract<Node, { type: 'Identifier' }>>,
+  flag: Flag
+): void => {
+  const { node, parent } = path;
+  if (!FORBIDDEN_IDENTIFIERS.includes(node.name)) return;
+  if (isPropertyName(node, parent)) return;
+  flag(
+    path,
+    `"${node.name}" is not available in a composed page (browser globals and dynamic code evaluation are blocked)`
+  );
+};
+
+const checkJsxIdentifier = (
+  path: NodePath<Extract<Node, { type: 'JSXIdentifier' }>>,
+  flag: Flag
+): void => {
+  // `<window.Foo />` would reference the global as well.
+  if (
+    FORBIDDEN_IDENTIFIERS.includes(path.node.name) &&
+    path.parent.type === 'JSXMemberExpression' &&
+    path.parent.object === path.node
+  ) {
+    flag(path, `"${path.node.name}" is not available in a composed page`);
+  }
+};
+
+/** The first forbidden construct in the tree, if any. */
+const findViolation = (ast: ParsedBody): BodyError | undefined => {
   let violation: BodyError | undefined;
-  const flag = (path: NodePath, message: string): void => {
+  const flag: Flag = (path, message) => {
     if (violation) return;
     violation = {
       message,
@@ -151,41 +195,10 @@ export function validateComponentBody(
 
   traverse(ast, {
     Identifier(path: NodePath<Extract<Node, { type: 'Identifier' }>>) {
-      const { node, parent } = path;
-      if (!FORBIDDEN_IDENTIFIERS.includes(node.name)) return;
-      // `obj.fetch` and `{ fetch: 1 }` are property names, not references.
-      if (
-        (parent.type === 'MemberExpression' ||
-          parent.type === 'OptionalMemberExpression') &&
-        parent.property === node &&
-        !parent.computed
-      ) {
-        return;
-      }
-      if (
-        (parent.type === 'ObjectProperty' ||
-          parent.type === 'ObjectMethod' ||
-          parent.type === 'ClassMethod' ||
-          parent.type === 'ClassProperty') &&
-        parent.key === node &&
-        !parent.computed
-      ) {
-        return;
-      }
-      flag(
-        path,
-        `"${node.name}" is not available in a composed page (browser globals and dynamic code evaluation are blocked)`
-      );
+      checkIdentifier(path, flag);
     },
     JSXIdentifier(path: NodePath<Extract<Node, { type: 'JSXIdentifier' }>>) {
-      // `<window.Foo />` would reference the global as well.
-      if (
-        FORBIDDEN_IDENTIFIERS.includes(path.node.name) &&
-        path.parent.type === 'JSXMemberExpression' &&
-        path.parent.object === path.node
-      ) {
-        flag(path, `"${path.node.name}" is not available in a composed page`);
-      }
+      checkJsxIdentifier(path, flag);
     },
     MemberExpression(
       path: NodePath<Extract<Node, { type: 'MemberExpression' }>>
@@ -205,6 +218,38 @@ export function validateComponentBody(
     },
   });
 
+  return violation;
+};
+
+/**
+ * Parses `body` as the body of a function and checks it. `componentName` only sharpens the
+ * "do not declare the component yourself" message.
+ */
+export function validateComponentBody(
+  body: string,
+  componentName?: string
+): BodyValidation {
+  if (body.trim() === '') return fail('Component body cannot be empty');
+
+  let ast;
+  try {
+    ast = parseJs(WRAPPER_PREFIX + body + WRAPPER_SUFFIX, {
+      plugins: ['jsx'],
+      sourceType: 'script',
+    });
+  } catch (error) {
+    return failFromParseError(error);
+  }
+
+  const statements = wrappedStatements(ast);
+  if (!statements) {
+    return fail('Component body could not be parsed as a function body');
+  }
+
+  const structural = checkStructure(statements, componentName);
+  if (structural) return structural;
+
+  const violation = findViolation(ast);
   return violation ? { valid: false, error: violation } : { valid: true };
 }
 

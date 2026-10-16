@@ -103,6 +103,33 @@ function needsRotation(env: Envelope | undefined, keys: KeyRing): boolean {
   return !!env && env.kid !== kidOf(keys.primary);
 }
 
+async function rotateOne<V extends Record<string, unknown>>(
+  gw: ObjectGateway,
+  keys: KeyRing,
+  dryRun: boolean | undefined,
+  result: ReencryptResult,
+  container: string,
+  key: string,
+  pick: (v: V) => Envelope | undefined,
+  swap: (v: V) => V,
+  counter: 'tokens' | 'authStates' | 'settings'
+): Promise<void> {
+  try {
+    const cur = await gw.get(container, key);
+    if (!cur || !isRecord(cur.value) || !needsRotation(pick(cur.value as V), keys)) return;
+    if (dryRun) {
+      result[counter] += 1;
+      return;
+    }
+    const r = await updateWithRetry<V>(gw, container, key, (v) =>
+      v && needsRotation(pick(v), keys) ? swap(v) : SKIP
+    );
+    if (r.written) result[counter] += 1;
+  } catch {
+    result.failed += 1;
+  }
+}
+
 /**
  * Re-encrypts every stored envelope with the primary key. Safe to re-run; counts only,
  * never values. With `dryRun` nothing is written.
@@ -116,28 +143,13 @@ export async function reencryptAll(
   const result: ReencryptResult = { tokens: 0, authStates: 0, settings: 0, failed: 0 };
   const concurrency = o.concurrency ?? 8;
 
-  const rotate = async <V extends Record<string, unknown>>(
+  const rotate = <V extends Record<string, unknown>>(
     container: string,
     key: string,
     pick: (v: V) => Envelope | undefined,
     swap: (v: V) => V,
     counter: 'tokens' | 'authStates' | 'settings'
-  ): Promise<void> => {
-    try {
-      const cur = await gw.get(container, key);
-      if (!cur || !isRecord(cur.value) || !needsRotation(pick(cur.value as V), keys)) return;
-      if (o.dryRun) {
-        result[counter] += 1;
-        return;
-      }
-      const r = await updateWithRetry<V>(gw, container, key, (v) =>
-        v && needsRotation(pick(v), keys) ? swap(v) : SKIP
-      );
-      if (r.written) result[counter] += 1;
-    } catch {
-      result.failed += 1;
-    }
-  };
+  ): Promise<void> => rotateOne<V>(gw, keys, o.dryRun, result, container, key, pick, swap, counter);
 
   for (const key of await allKeys(gw, c.tokens())) {
     await rotate<Record<string, unknown>>(

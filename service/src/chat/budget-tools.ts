@@ -47,6 +47,48 @@ const isAbortLike = (error: unknown): boolean =>
   error instanceof Error &&
   (error.name === 'AbortError' || error.name === 'TimeoutError');
 
+type StoppedPredicate = (error: unknown) => boolean;
+
+async function* softAbortIterable(
+  result: AsyncIterable<unknown>,
+  soft: Promise<typeof STOPPED_BY_TIME_LIMIT>,
+  stoppedBySoftDeadline: StoppedPredicate
+): AsyncGenerator<unknown> {
+  const iterator = result[Symbol.asyncIterator]();
+  try {
+    for (;;) {
+      const next = await Promise.race([iterator.next(), soft]);
+      if ('done' in next) {
+        if (next.done) return;
+        yield next.value;
+        continue;
+      }
+      iterator.return?.();
+      yield STOPPED_BY_TIME_LIMIT;
+      return;
+    }
+  } catch (error) {
+    if (stoppedBySoftDeadline(error)) {
+      yield STOPPED_BY_TIME_LIMIT;
+      return;
+    }
+    throw error;
+  }
+}
+
+const softAbortPromise = async (
+  result: unknown,
+  soft: Promise<typeof STOPPED_BY_TIME_LIMIT>,
+  stoppedBySoftDeadline: StoppedPredicate
+): Promise<unknown> => {
+  try {
+    return await Promise.race([Promise.resolve(result), soft]);
+  } catch (error) {
+    if (stoppedBySoftDeadline(error)) return STOPPED_BY_TIME_LIMIT;
+    throw error;
+  }
+};
+
 /**
  * Wraps every executable tool so that:
  *  - its `execute` receives `AbortSignal.any([sdkSignal, budget.softSignal])`;
@@ -83,39 +125,9 @@ export const withSoftAbort = <T extends ToolSet>(
 
       const result = original(input, { ...options, abortSignal: signal });
 
-      if (isAsyncIterable(result)) {
-        return (async function* () {
-          const iterator = result[Symbol.asyncIterator]();
-          try {
-            for (;;) {
-              const next = await Promise.race([iterator.next(), soft]);
-              if ('done' in next) {
-                if (next.done) return;
-                yield next.value;
-                continue;
-              }
-              void iterator.return?.();
-              yield STOPPED_BY_TIME_LIMIT;
-              return;
-            }
-          } catch (error) {
-            if (stoppedBySoftDeadline(error)) {
-              yield STOPPED_BY_TIME_LIMIT;
-              return;
-            }
-            throw error;
-          }
-        })();
-      }
-
-      return (async () => {
-        try {
-          return await Promise.race([Promise.resolve(result), soft]);
-        } catch (error) {
-          if (stoppedBySoftDeadline(error)) return STOPPED_BY_TIME_LIMIT;
-          throw error;
-        }
-      })();
+      return isAsyncIterable(result)
+        ? softAbortIterable(result, soft, stoppedBySoftDeadline)
+        : softAbortPromise(result, soft, stoppedBySoftDeadline);
     };
 
     wrapped[name] = { ...tool, execute } as unknown as ToolSet[string];

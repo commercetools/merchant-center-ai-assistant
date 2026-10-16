@@ -41,6 +41,26 @@ const textOf = (entries: unknown[]): string =>
     .map((e) => e.text)
     .join(' ');
 
+const sanitizeMessage = (msg: Loose, nonTextPlaceholder: string): SanitizedMessage => {
+  const role = (
+    typeof msg.role === 'string' && msg.role ? msg.role : 'user'
+  ) as MessageRole;
+
+  if (Array.isArray(msg.parts)) {
+    return { role, content: textOf(msg.parts) || nonTextPlaceholder };
+  }
+  if (typeof msg.content === 'string') {
+    return { role, content: msg.content };
+  }
+  if (Array.isArray(msg.content)) {
+    return { role, content: textOf(msg.content) || nonTextPlaceholder };
+  }
+  return { role, content: '[unknown format]' };
+};
+
+const hasContent = (m: SanitizedMessage, nonTextPlaceholder: string): boolean =>
+  !!m.content && m.content !== nonTextPlaceholder && m.content !== '[unknown format]';
+
 /**
  * Reduces messages in any supported shape (AI SDK UIMessage with `parts`, ModelMessage with
  * string or array `content`) to `{ role, content }`.
@@ -66,30 +86,10 @@ export const sanitizeMessages = (
     ? objects.filter((m) => m.role !== 'tool')
     : objects;
 
-  let result = considered.map((msg): SanitizedMessage => {
-    const role = (
-      typeof msg.role === 'string' && msg.role ? msg.role : 'user'
-    ) as MessageRole;
-
-    if (Array.isArray(msg.parts)) {
-      return { role, content: textOf(msg.parts) || nonTextPlaceholder };
-    }
-    if (typeof msg.content === 'string') {
-      return { role, content: msg.content };
-    }
-    if (Array.isArray(msg.content)) {
-      return { role, content: textOf(msg.content) || nonTextPlaceholder };
-    }
-    return { role, content: '[unknown format]' };
-  });
+  let result = considered.map((msg) => sanitizeMessage(msg, nonTextPlaceholder));
 
   if (filterEmpty) {
-    result = result.filter(
-      (m) =>
-        m.content &&
-        m.content !== nonTextPlaceholder &&
-        m.content !== '[unknown format]'
-    );
+    result = result.filter((m) => hasContent(m, nonTextPlaceholder));
   }
 
   if (maxMessages !== undefined && maxMessages > 0) {

@@ -119,7 +119,7 @@ export class NimbusProcessManager implements NimbusBackend {
     this.clearIdle();
     // `onclose` fires when stdio closes, which is not the same as the process having exited;
     // closing the client is what reaps it.
-    void up.client.close().catch(() => undefined);
+    up.client.close().catch(() => undefined);
   }
 
   /** Stops the child on purpose; the next call respawns it. */
