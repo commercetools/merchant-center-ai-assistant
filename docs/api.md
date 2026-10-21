@@ -65,7 +65,7 @@ Merchant Center gateway (`/proxy/forward-to`), not by browsers directly. The rou
 ## Health
 
 `GET /service/status` answers 200 `{ "status": "UP", "service": "ai-assistant", "version": "<package version>", "persistence": "custom-objects", "authConfigured": true, "adminConfigured": false }`.
-`authConfigured` is true when `MC_AUDIENCE` is set; `adminConfigured` is true when `ADMIN_USER_IDS` lists at least one user. It calls no dependency and returns no secret (`service/src/controllers/status.controller.ts`).
+`authConfigured` is true when `CONNECT_SERVICE_URL` is set; `adminConfigured` is true when `ADMIN_USER_IDS` lists at least one user. It calls no dependency and returns no secret (`service/src/controllers/status.controller.ts`).
 `GET /service/status/nimbus` answers 200 with `{ "status": "ok" | "disabled", ... }` and 503 for `degraded` or `error`; it names only the Nimbus MCP version and tool names (`service/src/controllers/nimbus-status.controller.ts`).
 
 ## Session bootstrap
@@ -150,7 +150,7 @@ Success is not enveloped. Message file parts carry the relative path `/files/<se
 - `GET /service/managed-mcp-identity` answers the public binding `{ serverKey, url, majorVersion, authenticationMode, connectedAt, discovery }` or 404 with code `IDENTITY_MCP_NOT_CONFIGURED`.
 - `PUT` takes `{ serverKey, majorVersion? }` (`url`, if sent, must equal the server address of this project). It probes the server and answers 400 unless it advertises commercetools Identity. `DELETE` revokes and deletes every user's tokens, then removes the binding.
 - `GET .../status` answers `{ configured, connected, serverKey?, hasRefreshToken?, accessTokenExpiresAt?, scope? }` and never decrypts a token.
-- `POST .../authorize` answers `{ connected: true }` when a valid token exists, otherwise `{ connected: false, authorizationUrl }` for the popup. It answers 503 while `MC_AUDIENCE` is unset or not HTTPS, and 409 when no server is bound.
+- `POST .../authorize` answers `{ connected: true }` when a valid token exists, otherwise `{ connected: false, authorizationUrl }` for the popup. It answers 503 while `CONNECT_SERVICE_URL` is unset or not HTTPS, and 409 when no server is bound.
 - `POST .../verify` answers `{ connected, cached, toolCount, toolNames }`, or 401 `IDENTITY_REAUTH_REQUIRED`, or 403 `IDENTITY_NO_PERMITTED_TOOLS`, or 409 when nothing is bound.
 - `DELETE .../me` revokes and deletes the caller's tokens and answers `{ connected: false }`.
 - `GET .../callback?code=&state=` is called by the browser from the authorization server. It claims the state first, exchanges the code and answers a small HTML page with a strict content security policy that posts the outcome to the opener and closes the window.

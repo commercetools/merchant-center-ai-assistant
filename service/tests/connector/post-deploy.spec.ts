@@ -61,7 +61,7 @@ function deps(
 
 describe('post-deploy run()', () => {
   it('post-deploy: all green exits 0', async () => {
-    const { deps: d, lines } = deps({ MC_AUDIENCE: ORIGIN, CONNECT_SERVICE_URL: SERVICE_URL });
+    const { deps: d, lines } = deps({ CONNECT_SERVICE_URL: SERVICE_URL });
     expect(await run(d)).toBe(0);
     expect(lines[lines.length - 1]).toBe('post-deploy: OK');
     expect(lines.every((l) => l.startsWith('post-deploy:'))).toBe(true);
@@ -101,18 +101,17 @@ describe('post-deploy run()', () => {
     expect(lines.some((l) => l.startsWith('post-deploy: FAILED probe:'))).toBe(true);
   });
 
-  it('post-deploy: audience mismatch fails', async () => {
-    const { deps: d, lines } = deps({ MC_AUDIENCE: 'https://other.example', CONNECT_SERVICE_URL: SERVICE_URL });
-    expect(await run(d)).toBe(1);
-    const failure = lines.find((l) => l.startsWith('post-deploy: FAILED audience'));
-    expect(failure).toContain('https://other.example');
-    expect(failure).toContain(ORIGIN);
-  });
-
-  it('post-deploy: audience unset logs hint', async () => {
+  it('post-deploy: logs the service origin and never fails on it', async () => {
     const { deps: d, lines } = deps({ CONNECT_SERVICE_URL: SERVICE_URL });
     expect(await run(d)).toBe(0);
-    expect(lines).toContain(`post-deploy: MC_AUDIENCE is not set. Set it to ${ORIGIN} (redeploy: finalize)`);
+    expect(lines).toContain(`post-deploy: service origin ${ORIGIN}`);
+    expect(lines.join('\n')).not.toContain('FAILED audience');
+  });
+
+  it('post-deploy: an unset service url is reported, not fatal', async () => {
+    const { deps: d, lines } = deps({});
+    expect(await run(d)).toBe(0);
+    expect(lines).toContain('post-deploy: CONNECT_SERVICE_URL is not set; the service origin is unknown');
   });
 
   it('post-deploy: a missing environment variable fails naming it', async () => {
@@ -232,7 +231,7 @@ describe('post-deploy run()', () => {
       { checkVertex: async () => ({ ok: false as const, status: 403, hint: 'x' }) },
       { runProbe: async () => ({ ok: false as const, reason: 'x' }) },
     ]) {
-      const { deps: d, lines } = deps({ MC_AUDIENCE: 'https://other.example', CONNECT_SERVICE_URL: SERVICE_URL }, overrides);
+      const { deps: d, lines } = deps({ CONNECT_SERVICE_URL: SERVICE_URL }, overrides);
       await run(d);
       const text = lines.join('\n');
       for (const secret of secrets) expect(text).not.toContain(secret);

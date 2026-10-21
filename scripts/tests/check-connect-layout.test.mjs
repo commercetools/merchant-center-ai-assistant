@@ -18,12 +18,10 @@ const k = (key, extra = {}) => ({ key, description: `desc ${key}`, ...extra });
 const URL_DEFAULT = 'https://not-configured.invalid/service';
 
 function canonical() {
-  const mc = (idKey, entryKey, withUrl = true) => ({
+  const mc = (idKey, entryKey) => ({
     standardConfiguration: [
       k(idKey, { required: true }),
       ...(entryKey ? [k(entryKey, { required: true })] : []),
-      k('CLOUD_IDENTIFIER', { default: 'gcp-us' }),
-      ...(withUrl ? [k('CHAT_SERVICE_ENDPOINT_URL', { required: false, default: URL_DEFAULT })] : []),
     ],
   });
   return {
@@ -39,9 +37,7 @@ function canonical() {
         configuration: {
           standardConfiguration: [
             k('CTP_REGION', { required: true }),
-            k('MC_CLOUD_IDENTIFIER', { required: false }),
             k('MC_APP_ENTRY_POINT_URI_PATH', { default: 'ai-assistant' }),
-            k('MC_AUDIENCE', { required: false }),
             k('GCP_PROJECT_ID', { required: false }),
             k('GCP_VERTEX_LOCATION', { default: 'us-central1' }),
             k('GEMINI_MODEL_NAME', { default: 'model-a' }),
@@ -67,6 +63,7 @@ function canonical() {
             k('CHAT_DIGEST_BEFORE_CLOSE', { default: 'false' }),
             k('LOG_LEVEL', { default: 'info' }),
             k('ADMIN_USER_IDS', { required: false }),
+            k('MCP_BINDING_OPEN_TO_ALL', { default: 'false' }),
             k('CONTENTSTACK_BRANCH', { required: false }),
             k('CONTENTSTACK_REGION', { default: 'na' }),
             k('STRIPE_CONNECTED_ACCOUNT_ID', { required: false }),
@@ -83,10 +80,18 @@ function canonical() {
         },
       },
       { name: 'mc-app', applicationType: 'merchant-center-custom-application', configuration: mc('CUSTOM_APPLICATION_ID', 'ENTRY_POINT_URI_PATH') },
-      { name: 'composed-apps', applicationType: 'merchant-center-custom-application', configuration: mc('CUSTOM_APPLICATION_ID', 'ENTRY_POINT_URI_PATH', false) },
+      { name: 'composed-apps', applicationType: 'merchant-center-custom-application', configuration: mc('CUSTOM_APPLICATION_ID', 'ENTRY_POINT_URI_PATH') },
       { name: 'mc-view-app', applicationType: 'merchant-center-custom-view', configuration: mc('CUSTOM_VIEW_ID') },
     ],
-    inheritAs: { apiClient: { scopes: ['view_key_value_documents', 'manage_key_value_documents'] } },
+    inheritAs: {
+      configuration: {
+        standardConfiguration: [
+          k('CLOUD_IDENTIFIER', { default: 'gcp-us' }),
+          k('CHAT_SERVICE_ENDPOINT_URL', { required: false, default: URL_DEFAULT }),
+        ],
+      },
+      apiClient: { scopes: ['view_key_value_documents', 'manage_key_value_documents'] },
+    },
   };
 }
 
@@ -191,6 +196,24 @@ test('mcscopes: the Pages app needs no mcp scopes', () => {
   const text = `const config = { oAuthScopes: { view: ['view_key_value_documents'], manage: ['manage_orders'] } };`;
   assert.deepEqual(checkMcScopes([{ file: 'composed-apps/custom-application-config.mjs', text }]), []);
   assert.ok(checkMcScopes([{ file: 'mc-app/custom-application-config.mjs', text }]).length > 0);
+});
+
+test('global: CLOUD_IDENTIFIER and CHAT_SERVICE_ENDPOINT_URL live only under inheritAs.configuration', () => {
+  const missing = canonical();
+  missing.inheritAs.configuration.standardConfiguration.pop();
+  assert.ok(checkConfigKeys(missing).some((e) => e.includes('inheritAs.configuration') && e.includes('CHAT_SERVICE_ENDPOINT_URL')));
+
+  const wrongDefault = canonical();
+  wrongDefault.inheritAs.configuration.standardConfiguration[0].default = 'gcp-eu';
+  assert.ok(checkConfigKeys(wrongDefault).some((e) => e.includes('CLOUD_IDENTIFIER') && e.includes('default')));
+
+  const perApp = canonical();
+  perApp.deployAs[1].configuration.standardConfiguration.push(k('CLOUD_IDENTIFIER', { default: 'gcp-us' }));
+  assert.ok(checkConfigKeys(perApp).some((e) => e.includes('mc-app') && e.includes('CLOUD_IDENTIFIER')));
+
+  const secured = canonical();
+  secured.inheritAs.configuration.securedConfiguration = [k('SOME_SECRET', { required: false })];
+  assert.ok(checkConfigKeys(secured).some((e) => e.includes('inheritAs.configuration') && e.includes('SOME_SECRET')));
 });
 
 test('config: the Pages app must not declare CHAT_SERVICE_ENDPOINT_URL', () => {

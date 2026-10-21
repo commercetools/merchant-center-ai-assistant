@@ -298,7 +298,7 @@ const requireHttpsCallbackUrl = (
     if (error instanceof MissingAudienceError) {
       throw new CustomError(
         503,
-        'MC_AUDIENCE is not configured, so the OAuth callback URL is unknown'
+        'CONNECT_SERVICE_URL is not configured, so the OAuth callback URL is unknown'
       );
     }
     throw error;
@@ -306,7 +306,7 @@ const requireHttpsCallbackUrl = (
   // Plain http is allowed only under MC_AUTH_DISABLED (local development), which
   // config validation rejects in production.
   if (!redirectUri.startsWith('https://') && !config.auth.authDisabled) {
-    throw new CustomError(503, 'MC_AUDIENCE must be an HTTPS origin');
+    throw new CustomError(503, 'CONNECT_SERVICE_URL must be an HTTPS URL');
   }
 };
 

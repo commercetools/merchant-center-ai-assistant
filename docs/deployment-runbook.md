@@ -60,10 +60,10 @@ A Connect request to the service times out after 5 minutes, and a deployment can
 
 ### Why there are two phases
 
-The public URL of the service exists only after the first deployment, and Connect hands it to the lifecycle scripts only. Two values depend on it: `MC_AUDIENCE` (the service origin, used to verify the Merchant Center gateway token) and `CHAT_SERVICE_ENDPOINT_URL` (the origin plus `/service`, baked into the three frontends). So:
+The public URL of the service exists only after the first deployment. The service reads it itself as `CONNECT_SERVICE_URL` (its origin is the audience that verifies the Merchant Center gateway token). The frontends cannot, so `CHAT_SERVICE_ENDPOINT_URL` (the origin plus `/service`) is baked into them. So:
 
-1. `deploy` creates the deployment without them. The service is healthy but rejects every Merchant Center request (it fails closed until `MC_AUDIENCE` is set).
-2. `finalize` reads the service URL, redeploys with `MC_AUDIENCE=<origin>` and `CHAT_SERVICE_ENDPOINT_URL=<origin>/service`, waits for `Deployed`, checks `GET <origin>/service/status` and prints the three application URLs.
+1. `deploy` creates the deployment without the endpoint URL. If Connect does not provide `CONNECT_SERVICE_URL` to the running service, it is healthy but rejects every Merchant Center request (it fails closed); the `auth configuration` line of its log shows `audience: not configured`.
+2. `finalize` reads the service URL, redeploys with `CHAT_SERVICE_ENDPOINT_URL=<origin>/service`, waits for `Deployed`, checks `GET <origin>/service/status` and prints the three application URLs.
 3. `[MANUAL M9]` You paste those URLs into the Merchant Center registrations.
 
 A redeploy is a partial merge: values you do not pass keep their current value, so `finalize` and `configure` never re-send secrets.
@@ -103,7 +103,7 @@ Run `update-code --tag <previous tag>`. If a new version fails to build, the pre
 
 | Condition | Behaviour |
 |---|---|
-| `MC_AUDIENCE` not set | the service rejects every Merchant Center request (fail closed) until `finalize` has run |
+| `CONNECT_SERVICE_URL` not available to the service | the service rejects every Merchant Center request (fail closed); `finalize` does not fix it |
 | project key in the gateway token differs from the deployment's project | 403 |
 | `ADMIN_USER_IDS` empty | nobody is an administrator |
 | a provider's keys are partial or absent | that provider is disabled, everything else works |
@@ -125,9 +125,9 @@ Deployment inputs (`scripts/connect/.env.connect.example`) and what they become:
 | Google settings (table above) | `service` (standard) | optional |
 | `CONTENTSTACK_API_KEY`, `CONTENTSTACK_MANAGEMENT_TOKEN`, `ALGOLIA_MCP_URL`, `STRIPE_SECRET_KEY` | `service` (secured) | optional |
 | `CONTENTSTACK_BRANCH`, `CONTENTSTACK_REGION`, `STRIPE_CONNECTED_ACCOUNT_ID` | `service` (standard) | optional |
-| `CONNECT_REGION` | `service.CTP_REGION` and the `CLOUD_IDENTIFIER` of each frontend | the cloud identifier is derived (`us-central1.gcp` gives `gcp-us`, `europe-west1.gcp` gives `gcp-eu`, `australia-southeast1.gcp` gives `gcp-au`, `us-east-2.aws` gives `aws-us`, `eu-central-1.aws` gives `aws-eu`) so they cannot disagree |
+| `CONNECT_REGION` | `service.CTP_REGION` and the shared `CLOUD_IDENTIFIER` (one global item for all applications) | the cloud identifier is derived (`us-central1.gcp` gives `gcp-us`, `europe-west1.gcp` gives `gcp-eu`, `australia-southeast1.gcp` gives `gcp-au`, `us-east-2.aws` gives `aws-us`, `eu-central-1.aws` gives `aws-eu`) so they cannot disagree |
 | application ids and entry point paths | `mc-app`, `composed-apps`, `mc-view-app` | from the registrations |
-| `MC_AUDIENCE`, `CHAT_SERVICE_ENDPOINT_URL` | set by `finalize` | origin only for the first; origin plus `/service` for the second |
+| `CHAT_SERVICE_ENDPOINT_URL` | set by `finalize` | origin plus `/service` |
 
 Secret values are passed as `--configuration` arguments to the CLI, so they are visible in the local process list while the command runs. Use a personal workstation, never a shared machine. Everything the script prints has secured values replaced by `***`.
 
@@ -137,7 +137,7 @@ Secret values are passed as `--configuration` arguments to the CLI, so they are 
 |---|---|
 | deployment status `Failed` | `node scripts/connect/connect.mjs logs`; a failed status needs a new deployment or support |
 | `post-deploy: FAILED <check>` | read the reason on that line: `sa-key` (fix `GCP_SA_KEY_BASE64`), `vertex` (the hint names the role or model), `probe` (the reason ends with `(HTTP <status>)`, for example 403 when the API client lacks `manage_key_value_documents`, or with `(commercetools unavailable)` when the platform answered 5xx or timed out after the built-in retries; in the second case run the deployment again once the platform recovers), `audience` (see below) |
-| the service answers 401 | `MC_AUDIENCE` is unset or differs from the service origin: run `finalize` again; `post-deploy: MC_AUDIENCE is not set. Set it to <origin>` shows the value |
+| the service answers 401 | the service has no audience: the `auth configuration` line of its log shows `audience: not configured`, so `CONNECT_SERVICE_URL` does not reach the running service (U5); `post-deploy: service origin <origin>` shows what the lifecycle script sees |
 | first request is slow or `finalize` retries | sandbox and preview scale to zero (cold start); the smoke check retries up to 10 times |
 | a redeploy shows old behaviour | use `update-code` (stage, publish, redeploy with `--updateConnector`); a plain `configure` does not move to new code |
 | a provider shows "Not configured" in Settings | read the `post-deploy: providers` line for the missing key names, then run `configure` |
@@ -154,7 +154,7 @@ These platform behaviours could not be confirmed without a real Connect deployme
 | U2 | Does a configuration redeploy re-bake `CHAT_SERVICE_ENDPOINT_URL` into the Merchant Center bundles? | open |
 | U3 | Is `PORT` injected, or must the service use 8080? | open |
 | U4 | Does `redeploy --updateConnector` apply changed `inheritAs` scopes? | open |
-| U5 | Is `MC_AUDIENCE` visible to the lifecycle scripts, and is the full service configuration readable there? | open |
+| U5 | Does Connect provide `CONNECT_SERVICE_URL` to the running service, not only to the lifecycle scripts, and with which path? The service depends on it for its audience | open |
 | U6 | Does `npm ci` in `postDeploy` omit development dependencies? | open |
 | U7 | How long do the sandbox deployment and redeploy take? | open |
 | U8 | Is the creating project added to `privateProjects` of a private staged connector automatically? | open |

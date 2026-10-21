@@ -144,7 +144,7 @@ describe('authentication on every G route', () => {
     ['GET', '/service/session/x/tools'],
     ['GET', '/service/files/x/y.png'],
   ])('%s %s without a session answers 401', async (method, path) => {
-    const app = createApp(freshConfig({ MC_AUDIENCE: 'https://mc.example.test' }));
+    const app = createApp(freshConfig({ CONNECT_SERVICE_URL: 'https://mc.example.test' }));
     const res = await request(app)[method.toLowerCase() as 'get'](path);
     expect(res.status).toBe(401);
     expect(res.body.success).toBe(false);

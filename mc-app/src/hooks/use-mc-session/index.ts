@@ -58,7 +58,7 @@ export const useMcSession = () => {
         throw new Error('chatServiceEndpointUrl is not configured');
       }
 
-      // The service verifies the gateway token against `MC_AUDIENCE` + this exact path, so
+      // The service verifies the gateway token against `origin(CONNECT_SERVICE_URL)` + this exact path, so
       // the two must agree; `forwardToFetch` sends `audiencePolicy: 'forward-url-full-path'`.
       // No query string at all: the service's feature-flag middleware reads every
       // non-reserved query parameter as a filter.

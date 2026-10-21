@@ -6,7 +6,7 @@
 
 import type { GcpAnalyticsReport } from '../analytics/self-check';
 import type { ReadinessReport } from '../gcp/readiness';
-import { checkAudience } from './checks/audience';
+import { checkServiceOrigin } from './checks/service-origin';
 import {
   ProbeResult,
   createLifecycleApiRoot,
@@ -165,10 +165,8 @@ export async function run(deps: PostDeployDeps): Promise<number> {
   // 5. provider report (informational)
   reportProviders(env.providerEnv).lines.forEach((line) => log(line));
 
-  // 6. audience consistency and the service origin
-  const audience = checkAudience({ mcAudience: env.mcAudience, serviceUrl: env.serviceUrl });
-  audience.lines.forEach((line) => log(line));
-  if (!audience.ok) fail('audience', audience.failure ?? 'MC_AUDIENCE is inconsistent');
+  // 6. the service origin (the audience of the Merchant Center token is derived from it)
+  checkServiceOrigin({ serviceUrl: env.serviceUrl }).lines.forEach((line) => log(line));
 
   if (failures.length > 0) {
     log(`post-deploy: FAILED ${failures.join(', ')}`);

@@ -48,7 +48,7 @@ Commands:
   publish               publish the staged connector (needed before sandbox/production)
   preview               create a short-lived preview deployment from the staged connector
   deploy                phase 1: create the deployment (all four applications, no service URL yet)
-  finalize              phase 2: read the service URL, redeploy with MC_AUDIENCE and the endpoint URLs, smoke check
+  finalize              phase 2: read the service URL, redeploy with the endpoint URL for the Merchant Center apps, smoke check
   configure KEY=VALUE   configuration-only redeploy for allow-listed keys (provider keys, Google settings, ADMIN_USER_IDS)
   update-code --tag vX  stage the new tag, publish, redeploy with --updateConnector
   status                print deployment status, version and application URLs
@@ -338,16 +338,6 @@ export async function main(argv, processEnv = process.env, overrides = {}) {
     out('finalize: waiting for the configuration redeploy');
     const second = await waiter(getFn, { since: snapshot(first) });
 
-    const configured = audienceOf(second);
-    if (configured === undefined) {
-      err('warning: MC_AUDIENCE could not be read back from the deployment description (shape unverified); relying on the smoke check');
-    } else if (configured !== origin) {
-      err(`MC_AUDIENCE is ${configured} but the service origin is ${origin}`);
-      return 1;
-    } else {
-      out(`finalize: MC_AUDIENCE = ${configured}`);
-    }
-
     const log = runCli(
       cli.logs({ key: e.DEPLOYMENT_KEY, application: 'service', startDate: logDate(startedAt - 60_000) }),
       { capture: true }
@@ -466,25 +456,6 @@ export async function main(argv, processEnv = process.env, overrides = {}) {
     runCli(cli.deleteDeployment({ key: deploymentKeyOf(e, flags) }));
     return 0;
   }
-}
-
-/**
- * MC_AUDIENCE as the deployment description reports it for the `service` application.
- * The response shape of the configuration is unverified (rehearsal), so this tolerates an
- * array of {key,value} items or a plain object and returns undefined when it finds nothing.
- */
-export function audienceOf(deployment) {
-  const app = (deployment?.applications ?? []).find((a) => a?.applicationName === 'service');
-  const candidates = [app?.standardConfiguration, app?.configuration?.standardConfiguration, deployment?.configuration?.service];
-  for (const c of candidates) {
-    if (Array.isArray(c)) {
-      const item = c.find((i) => i?.key === 'MC_AUDIENCE');
-      if (typeof item?.value === 'string') return item.value;
-    } else if (c && typeof c === 'object' && typeof c.MC_AUDIENCE === 'string') {
-      return c.MC_AUDIENCE;
-    }
-  }
-  return undefined;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

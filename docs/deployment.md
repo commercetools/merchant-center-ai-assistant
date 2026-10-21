@@ -26,8 +26,8 @@ The order matters, because the service URL does not exist until the first deploy
 1. **Register first with a placeholder.** In the Merchant Center (Settings, Developer settings) register the Custom Application "AI Assistant", the Custom Application "AI Assistant Pages" and the Custom View "AI Assistant" with a placeholder URL.
    Note each id and choose a unique entry point URI path for each application. The OAuth scopes you register must match the ones in each application's configuration file ([README.md](../README.md#required-scopes)).
 2. **Stage and publish** the connector from your repository tag. A sandbox deployment requires a published connector.
-3. **Phase 1: deploy.** The deployment is created with the secrets, the registration ids, the region and any optional settings. The service starts but rejects every Merchant Center request, because `MC_AUDIENCE` is not yet known.
-4. **Phase 2: finalize.** The helper reads the service URL, redeploys with `MC_AUDIENCE` (the service origin, no path) and `CHAT_SERVICE_ENDPOINT_URL` (origin plus `/service`) and checks `GET /service/status`. It prints the three application URLs.
+3. **Phase 1: deploy.** The deployment is created with the secrets, the registration ids, the region and any optional settings. The service starts and takes its audience from `CONNECT_SERVICE_URL`; the frontends still have a placeholder endpoint.
+4. **Phase 2: finalize.** The helper reads the service URL, redeploys with `CHAT_SERVICE_ENDPOINT_URL` (origin plus `/service`) and checks `GET /service/status`. It prints the three application URLs.
 5. **Register last with the real URLs.** Update the three registrations with the printed URLs.
 6. **Bootstrap the first administrator.** Open the chat application, read the "Your user ID" line under Settings, About, and set `ADMIN_USER_IDS` with the helper's `configure` command ([permissions.md](./permissions.md#becoming-the-first-administrator)).
 7. **Optional providers.** Set provider keys with `configure`; each change is a configuration redeploy.
@@ -35,10 +35,10 @@ The order matters, because the service URL does not exist until the first deploy
 
 ```mermaid
 flowchart TD
-  R["Register apps<br/>(placeholder URL)"] --> S["stage + publish"] --> D["deploy<br/>(phase 1)"] --> F["finalize<br/>(phase 2: MC_AUDIENCE,<br/>CHAT_SERVICE_ENDPOINT_URL)"] --> U["Update registrations<br/>with real URLs"] --> A["Set ADMIN_USER_IDS"]
+  R["Register apps<br/>(placeholder URL)"] --> S["stage + publish"] --> D["deploy<br/>(phase 1)"] --> F["finalize<br/>(phase 2:<br/>CHAT_SERVICE_ENDPOINT_URL)"] --> U["Update registrations<br/>with real URLs"] --> A["Set ADMIN_USER_IDS"]
 ```
 
-Why two phases: Connect gives the public service URL only to the lifecycle scripts, never to the running service, and the frontends read it at build time (whether a configuration redeploy rebuilds them is still an open item, see the end of this page). `MC_AUDIENCE` is the origin only because the token verifier appends the request path.
+Why two phases: the frontends need the public service URL, which exists only after the first deployment, and they read it at build time (whether a configuration redeploy rebuilds them is still an open item, see the end of this page). The service itself needs no second step: it takes its audience from `CONNECT_SERVICE_URL`, the origin only because the token verifier appends the request path. That relies on Connect providing `CONNECT_SERVICE_URL` to the running service, which its documentation only states for the lifecycle scripts (see U5 in the runbook); check the `auth configuration` line in the service log after the first deployment.
 
 ## Regions
 

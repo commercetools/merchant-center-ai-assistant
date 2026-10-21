@@ -62,7 +62,7 @@ The `commercetools` source gives each user the tools of a commercetools Managed 
 1. An administrator binds a server with `PUT /service/managed-mcp-identity`. The service probes the server's OAuth metadata and stores the binding in the settings object (`service/src/identity-mcp/discovery.ts`).
 2. Each user connects once. `POST /service/managed-mcp-identity/authorize` registers an OAuth client dynamically if there is none, creates a PKCE attempt (the verifier is encrypted, the key is the hash of the state) and returns the authorization URL.
 3. The app opens it in a popup. The authorization server redirects to `GET /service/managed-mcp-identity/callback`, which has no gateway token and authenticates through the single-use state it claims first
-   (`service/src/identity-mcp/controller.ts`). The callback URL is `MC_AUDIENCE` plus `/service/managed-mcp-identity/callback`, which is why `MC_AUDIENCE` must be an HTTPS origin.
+   (`service/src/identity-mcp/controller.ts`). The callback URL is the origin of `CONNECT_SERVICE_URL` plus `/service/managed-mcp-identity/callback`, which is why it must be an HTTPS URL (plain http only for local development).
 4. Tokens are stored encrypted per user. A refresh that loses a race with another instance is resolved by compare-and-delete on the stored revision (`service/src/identity-mcp/auth-provider.ts`).
 5. If the user has no valid token the source offers a placeholder tool and a prompt fragment that tell the model to ask the user to connect (`NOT_CONNECTED_TOOL`); the app shows a "Connect my account" gate (`mc-app/src/components/managed-mcp/identity-connect-gate.tsx`).
 

@@ -52,7 +52,7 @@ describe('identity route table', () => {
 
   it('through the real app: /status needs a session, /callback does not', async () => {
     const app = createApp(
-      freshConfig({ MC_AUDIENCE: 'https://svc.example.test' })
+      freshConfig({ CONNECT_SERVICE_URL: 'https://svc.example.test' })
     );
     const status = await request(app).get(
       '/service/managed-mcp-identity/status'

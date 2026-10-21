@@ -13,7 +13,7 @@ import { requireAdmin } from '../../src/middleware/require-admin.middleware';
 import { AUDIENCE_ORIGIN } from './mc-jwt';
 
 export const authEnv = (extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv => ({
-  MC_AUDIENCE: AUDIENCE_ORIGIN,
+  CONNECT_SERVICE_URL: AUDIENCE_ORIGIN,
   ...extra,
 });
 

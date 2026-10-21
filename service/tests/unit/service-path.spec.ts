@@ -30,7 +30,7 @@ describe('SERVICE_BASE_PATH', () => {
   });
 
   it('prefixes the identity callback url', () => {
-    const cfg = freshConfig({ MC_AUDIENCE: 'https://svc.example.test' });
+    const cfg = freshConfig({ CONNECT_SERVICE_URL: 'https://svc.example.test' });
     expect(callbackUrl(cfg)).toBe(
       `https://svc.example.test${SERVICE_BASE_PATH}/managed-mcp-identity/callback`
     );

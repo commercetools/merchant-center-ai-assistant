@@ -13,8 +13,8 @@ This document describes the security model of the connector as implemented. Repo
 
 ## Authentication and trust
 
-- Every route except the status routes and the OAuth callback requires the signed token that the Merchant Center gateway adds. The token is verified against the configured audience (`MC_AUDIENCE` plus the request path) and the issuer of the configured cloud; the project key must equal the deployment's project, otherwise 403.
-  Until `MC_AUDIENCE` is set every authenticated route answers 401 (`service/src/middleware/mc-session.middleware.ts`).
+- Every route except the status routes and the OAuth callback requires the signed token that the Merchant Center gateway adds. The token is verified against the configured audience (the origin of `CONNECT_SERVICE_URL` plus the request path) and the issuer of the configured cloud; the project key must equal the deployment's project, otherwise 403.
+  Until `CONNECT_SERVICE_URL` is available every authenticated route answers 401 (`service/src/middleware/mc-session.middleware.ts`).
 - The service trusts only the user ID and project key of the verified token. It never trusts an e-mail address, label, user ID or admin flag that the browser sends (header, body or query), and none is used for authorization, keys or filters. See [permissions.md](./permissions.md#what-is-not-trusted).
 - The service has no CORS handling: traffic is server-to-server from the gateway.
 - The OAuth callback of the Managed MCP identity flow carries no gateway token. It authenticates through a single-use `state` that is claimed first (a replay loses before any code exchange), and it answers a page with a strict content security policy.

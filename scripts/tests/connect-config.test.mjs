@@ -44,23 +44,23 @@ test('phase1: maps env to application keys', () => {
   assert.ok(args.includes('service.CTP_REGION=us-central1.gcp'));
   assert.ok(args.includes('mc-app.CUSTOM_APPLICATION_ID=app-1'));
   assert.ok(args.includes('mc-app.ENTRY_POINT_URI_PATH=ai-assistant'));
-  assert.ok(args.includes('mc-app.CLOUD_IDENTIFIER=gcp-us'));
   assert.ok(args.includes('composed-apps.CUSTOM_APPLICATION_ID=app-2'));
   assert.ok(args.includes('composed-apps.ENTRY_POINT_URI_PATH=ai-assistant-pages'));
   assert.ok(args.includes('mc-view-app.CUSTOM_VIEW_ID=view-1'));
-  assert.ok(args.includes('mc-view-app.CLOUD_IDENTIFIER=gcp-us'));
+  assert.ok(args.includes('CLOUD_IDENTIFIER=gcp-us'), 'one global item, no application prefix');
+  assert.ok(!args.some((a) => /^[a-z-]+\.CLOUD_IDENTIFIER=/.test(a)), 'no per-application copies');
   assert.ok(!args.some((a) => a.startsWith('mc-view-app.ENTRY_POINT_URI_PATH')), 'views have no entry point path');
 });
 
 test('phase1: derives the cloud identifier from the region', () => {
   const args = phase1Args(env({ CONNECT_REGION: 'europe-west1.gcp' }));
-  assert.ok(args.includes('mc-app.CLOUD_IDENTIFIER=gcp-eu'));
+  assert.ok(args.includes('CLOUD_IDENTIFIER=gcp-eu'));
   assert.throws(() => phase1Args(env({ CONNECT_REGION: 'mars-1.gcp' })), /unknown Connect region/);
 });
 
-test('phase1: omits MC_AUDIENCE and CHAT_SERVICE_ENDPOINT_URL', () => {
+test('phase1: omits CHAT_SERVICE_ENDPOINT_URL and never sets an audience', () => {
   const joined = phase1Args(env()).join('\n');
-  assert.ok(!joined.includes('MC_AUDIENCE'));
+  assert.ok(!joined.includes('AUDIENCE'));
   assert.ok(!joined.includes('CHAT_SERVICE_ENDPOINT_URL'));
 });
 
@@ -107,18 +107,27 @@ test('phase1: every passed key is declared by connect.yaml for that application'
     ),
     ...phase2Args({ origin: 'https://s.example' }),
   ];
+  const globalKeys = new Set(
+    [
+      ...(doc.inheritAs?.configuration?.standardConfiguration ?? []),
+      ...(doc.inheritAs?.configuration?.securedConfiguration ?? []),
+    ].map((i) => i.key)
+  );
   for (const item of all) {
-    const [app, key] = item.slice(0, item.indexOf('=')).split('.');
+    const name = item.slice(0, item.indexOf('='));
+    if (!name.includes('.')) {
+      assert.ok(globalKeys.has(name), `${name} is not declared under inheritAs.configuration in connect.yaml`);
+      continue;
+    }
+    const [app, key] = name.split('.');
     assert.ok(declared.get(app)?.has(key), `${app}.${key} is not declared in connect.yaml`);
   }
 });
 
-test('phase2: exactly three keys', () => {
+test('phase2: exactly one item, the endpoint, and it is global', () => {
   const args = phase2Args({ origin: 'https://service-abc.us-central1.gcp.commercetools.app' });
   assert.deepEqual(args, [
-    'service.MC_AUDIENCE=https://service-abc.us-central1.gcp.commercetools.app',
-    'mc-app.CHAT_SERVICE_ENDPOINT_URL=https://service-abc.us-central1.gcp.commercetools.app/service',
-    'mc-view-app.CHAT_SERVICE_ENDPOINT_URL=https://service-abc.us-central1.gcp.commercetools.app/service',
+    'CHAT_SERVICE_ENDPOINT_URL=https://service-abc.us-central1.gcp.commercetools.app/service',
   ]);
 });
 
@@ -128,6 +137,10 @@ test('mask: hides secured values', () => {
   assert.ok(masked.includes('service.ENCRYPTION_KEY=***'));
   assert.ok(!masked.join('\n').includes('c2E9PQ'));
   assert.ok(masked.includes('mc-app.CUSTOM_APPLICATION_ID=app-1'), 'standard values stay readable');
+});
+
+test('mask: hides a global secured item as well', () => {
+  assert.deepEqual(maskArgs(['STRIPE_SECRET_KEY=sk_x', 'CLOUD_IDENTIFIER=gcp-us']), ['STRIPE_SECRET_KEY=***', 'CLOUD_IDENTIFIER=gcp-us']);
 });
 
 test('mask: hides provider secrets', () => {

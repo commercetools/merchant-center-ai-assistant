@@ -134,7 +134,7 @@ const forwardToGatewayFetch: typeof fetch = async (input, init = {}) => {
       {
         forwardToConfig: {
           uri,
-          // The router verifies `MC_AUDIENCE + request path`, so the path of `uri` is
+          // The router verifies `origin(CONNECT_SERVICE_URL) + request path`, so the path of `uri` is
           // part of the audience. Must match the router's `audiencePolicy`.
           audiencePolicy: 'forward-url-full-path',
           headers: relayed,

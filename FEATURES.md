@@ -14,7 +14,7 @@ What is not implemented is listed in [docs/operations.md](./docs/operations.md) 
 
 ## Authentication and permissions
 
-- Merchant Center gateway token verification (Bearer only, audience `MC_AUDIENCE` plus path, issuer from the region), project guard, fail closed without `MC_AUDIENCE`: `service/src/middleware/mc-session.middleware.ts`, `service/src/auth/project-guard.ts`.
+- Merchant Center gateway token verification (Bearer only, audience the origin of `CONNECT_SERVICE_URL` plus path, issuer from the region), project guard, fail closed without `CONNECT_SERVICE_URL`: `service/src/middleware/mc-session.middleware.ts`, `service/src/auth/project-guard.ts`.
 - Administrator allowlist `ADMIN_USER_IDS` (at most 50 verified user IDs, empty means nobody), decided per request; `isAdmin` and `userId` returned by `POST /service/auth/session`: `service/src/auth/admin.ts`, `service/src/controllers/mc-auth.controller.ts`.
 - Administrator-only routes answer 403 `ADMIN_REQUIRED`, with audit lines: `service/src/middleware/require-admin.middleware.ts`, `service/src/middleware/require-admin-audited.middleware.ts`.
 - Session ownership by user ID (another user's session is a 404): `service/src/middleware/load-session.middleware.ts`, `service/src/auth/ownership.ts`.

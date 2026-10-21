@@ -9,34 +9,40 @@ import { freshConfig } from '../helpers/env';
 
 beforeEach(() => resetConfigurationForTests());
 
-describe('auth section: MC_AUDIENCE', () => {
+describe('auth section: audience from CONNECT_SERVICE_URL', () => {
   it('is optional at boot', () => {
     expect(freshConfig().auth.mcAudience).toBeUndefined();
   });
 
-  it('stores the origin', () => {
-    expect(freshConfig({ MC_AUDIENCE: 'https://svc.example.test/' }).auth.mcAudience).toBe(
-      'https://svc.example.test'
-    );
+  it('stores the origin, with or without a path such as /service', () => {
+    for (const url of [
+      'https://svc.example.test',
+      'https://svc.example.test/',
+      'https://svc.example.test/service',
+    ]) {
+      expect(freshConfig({ CONNECT_SERVICE_URL: url }).auth.mcAudience).toBe('https://svc.example.test');
+    }
   });
 
-  it.each([
-    'https://x.example/service',
-    'https://x.example?a=1',
-    'https://x.example/#f',
-    'not a url',
-    'ftp://x.example',
-  ])('rejects %s', (value) => {
-    expect(() => freshConfig({ MC_AUDIENCE: value })).toThrow(/MC_AUDIENCE/);
+  it('ignores a value that is not a URL and stays closed', () => {
+    expect(freshConfig({ CONNECT_SERVICE_URL: 'not a url' }).auth.mcAudience).toBeUndefined();
+  });
+
+  it('rejects a non-http(s) scheme', () => {
+    expect(() => freshConfig({ CONNECT_SERVICE_URL: 'ftp://x.example' })).toThrow(/CONNECT_SERVICE_URL/);
   });
 
   it('allows http outside production only', () => {
-    expect(freshConfig({ MC_AUDIENCE: 'http://localhost:8080' }).auth.mcAudience).toBe(
+    expect(freshConfig({ CONNECT_SERVICE_URL: 'http://localhost:8080/service' }).auth.mcAudience).toBe(
       'http://localhost:8080'
     );
     expect(() =>
-      freshConfig({ NODE_ENV: 'production', MC_AUDIENCE: 'http://x.example' })
-    ).toThrow(/MC_AUDIENCE/);
+      freshConfig({ NODE_ENV: 'production', CONNECT_SERVICE_URL: 'http://x.example' })
+    ).toThrow(/CONNECT_SERVICE_URL/);
+  });
+
+  it('no longer reads MC_AUDIENCE', () => {
+    expect(freshConfig({ MC_AUDIENCE: 'https://svc.example.test' }).auth.mcAudience).toBeUndefined();
   });
 });
 
@@ -48,14 +54,8 @@ describe('auth section: issuer', () => {
     );
   });
 
-  it('can be overridden', () => {
-    expect(freshConfig({ MC_CLOUD_IDENTIFIER: 'aws-eu' }).auth.issuerCloudIdentifier).toBe(
-      'aws-eu'
-    );
-  });
-
-  it('rejects an unknown override', () => {
-    expect(() => freshConfig({ MC_CLOUD_IDENTIFIER: 'mars' })).toThrow(/MC_CLOUD_IDENTIFIER/);
+  it('ignores a MC_CLOUD_IDENTIFIER left over from older deployments', () => {
+    expect(freshConfig({ MC_CLOUD_IDENTIFIER: 'aws-eu' }).auth.issuerCloudIdentifier).toBe('gcp-us');
   });
 });
 

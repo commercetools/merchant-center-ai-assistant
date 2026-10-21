@@ -38,9 +38,7 @@ const PLACEHOLDER_URL = 'https://not-configured.invalid/service';
 // key -> expectation. `default` = exact default value; `optional` = required must be false.
 const SERVICE_STANDARD = {
   CTP_REGION: { required: true },
-  MC_CLOUD_IDENTIFIER: { optional: true },
   MC_APP_ENTRY_POINT_URI_PATH: { default: 'ai-assistant' },
-  MC_AUDIENCE: { optional: true },
   GCP_PROJECT_ID: { optional: true },
   GCP_VERTEX_LOCATION: { default: 'us-central1' },
   GEMINI_MODEL_NAME: { hasDefault: true },
@@ -66,6 +64,7 @@ const SERVICE_STANDARD = {
   CHAT_DIGEST_BEFORE_CLOSE: { default: 'false' },
   LOG_LEVEL: { default: 'info' },
   ADMIN_USER_IDS: { optional: true },
+  MCP_BINDING_OPEN_TO_ALL: { default: 'false' },
   CONTENTSTACK_BRANCH: { optional: true },
   CONTENTSTACK_REGION: { default: 'na' },
   STRIPE_CONNECTED_ACCOUNT_ID: { optional: true },
@@ -81,22 +80,25 @@ const SERVICE_SECURED = {
   STRIPE_SECRET_KEY: { optional: true },
 };
 
+// Per-application keys only. CLOUD_IDENTIFIER and CHAT_SERVICE_ENDPOINT_URL are shared by the
+// Merchant Center applications and live once under inheritAs.configuration (GLOBAL_STANDARD).
 const MC_STANDARD = {
   CUSTOM_APPLICATION_ID: { required: true },
   ENTRY_POINT_URI_PATH: { required: true },
-  CLOUD_IDENTIFIER: { default: 'gcp-us' },
-  CHAT_SERVICE_ENDPOINT_URL: { optional: true, default: PLACEHOLDER_URL },
 };
 
-// The Pages app reads composed pages straight from commercetools and makes no service calls.
 const COMPOSED_STANDARD = {
   CUSTOM_APPLICATION_ID: { required: true },
   ENTRY_POINT_URI_PATH: { required: true },
-  CLOUD_IDENTIFIER: { default: 'gcp-us' },
 };
 
 const VIEW_STANDARD = {
   CUSTOM_VIEW_ID: { required: true },
+};
+
+// inheritAs.configuration reaches every application, so it holds only what is the same for all
+// of them and is not secret.
+const GLOBAL_STANDARD = {
   CLOUD_IDENTIFIER: { default: 'gcp-us' },
   CHAT_SERVICE_ENDPOINT_URL: { optional: true, default: PLACEHOLDER_URL },
 };
@@ -227,6 +229,9 @@ export function checkConfigKeys(doc) {
   if (composed) checkSection('composed-apps', 'standardConfiguration', keysOf(composed, 'standardConfiguration'), COMPOSED_STANDARD, errors);
   const view = entry(doc, 'mc-view-app');
   if (view) checkSection('mc-view-app', 'standardConfiguration', keysOf(view, 'standardConfiguration'), VIEW_STANDARD, errors);
+  const inherited = doc?.inheritAs?.configuration;
+  checkSection('inheritAs.configuration', 'standardConfiguration', list(inherited?.standardConfiguration), GLOBAL_STANDARD, errors);
+  checkSection('inheritAs.configuration', 'securedConfiguration', list(inherited?.securedConfiguration), {}, errors);
   // Dedupe (a misplaced key is reported by both the placement and the table pass).
   return [...new Set(errors)];
 }

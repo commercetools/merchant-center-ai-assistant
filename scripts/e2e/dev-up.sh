@@ -12,7 +12,7 @@
 # Needs: service/.env.local (manual step M3), `cd service && npm run build`, cloudflared (or set
 # E2E_TUNNEL_URL to a tunnel you started yourself), and for the app the values of its .env file.
 # Writes .e2e-service.pid, .e2e-app.pid, .e2e-tunnel.pid, .e2e-service.log and e2e/.env.e2e (git-ignored).
-# The tunnel URL changes on every start: MC_AUDIENCE and the app's CHAT_SERVICE_ENDPOINT_URL are
+# The tunnel URL changes on every start: the service's CONNECT_SERVICE_URL and the app's CHAT_SERVICE_ENDPOINT_URL are
 # rewritten and the app restarted. This script has not been exercised against a real tunnel yet.
 set -euo pipefail
 
@@ -51,14 +51,14 @@ if [ -z "$TUNNEL_URL" ]; then
 fi
 echo "service origin: $TUNNEL_URL"
 
-# 2. service: MC_AUDIENCE is the origin only (see docs/deployment-runbook.md, section 2)
+# 2. service: CONNECT_SERVICE_URL is the tunnel origin; the service derives its audience from it
 if [ -f .e2e-service.pid ] && kill -0 "$(cat .e2e-service.pid)" 2>/dev/null; then
   kill "$(cat .e2e-service.pid)" || true
   sleep 1
 fi
 (
   cd service
-  MC_AUDIENCE="$TUNNEL_URL" PORT="$PORT" node --env-file=.env.local build/index.js >"$ROOT/.e2e-service.log" 2>&1 &
+  CONNECT_SERVICE_URL="$TUNNEL_URL" PORT="$PORT" node --env-file=.env.local build/index.js >"$ROOT/.e2e-service.log" 2>&1 &
   echo $! > "$ROOT/.e2e-service.pid"
 )
 for _ in $(seq 1 60); do

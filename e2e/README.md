@@ -51,7 +51,7 @@ URLs change between environments; each card says which it supports.
 
 | | Local | Sandbox |
 |---|---|---|
-| Service | `bash scripts/e2e/dev-up.sh` starts a tunnel (the Merchant Center gateway cannot reach `localhost`), writes the tunnel origin into the audience variable `MC_AUDIENCE`, starts the service on port 8080 | the sandbox deployment of a published connector (`commercetools connect deployment get`), URL from the deployment |
+| Service | `bash scripts/e2e/dev-up.sh` starts a tunnel (the Merchant Center gateway cannot reach `localhost`), passes the tunnel origin to the service as `CONNECT_SERVICE_URL`, starts the service on port 8080 | the sandbox deployment of a published connector (`commercetools connect deployment get`), URL from the deployment |
 | Apps | `mc-scripts start` in `mc-app`, `composed-apps`, `mc-view-app` (see "Ports" below) | the deployed application URLs registered in Merchant Center |
 | Restarts, two instances, reduced budget | possible (`dev-up.sh`, `two-instance.mjs`) | `connect deployment redeploy`, `scripts/connect/connect.mjs configure` |
 | Cold start, long turn, deploy checks | not possible | `E2E-V-09`, `E2E-H-04`, `E2E-U-*` |

@@ -120,7 +120,7 @@ function serviceItems(env, names) {
   return names.filter((n) => present(env[n])).map((n) => `service.${n}=${env[n]}`);
 }
 
-/** Phase 1: everything except MC_AUDIENCE and CHAT_SERVICE_ENDPOINT_URL (unknown until deployed). */
+/** Phase 1: everything except CHAT_SERVICE_ENDPOINT_URL (unknown until deployed). */
 export function phase1Args(env) {
   const cloud = cloudIdentifierFor(env.CONNECT_REGION);
   return [
@@ -134,24 +134,22 @@ export function phase1Args(env) {
     ...serviceItems(env, PROVIDER_KEYS),
     `mc-app.CUSTOM_APPLICATION_ID=${env.MC_APP_CUSTOM_APPLICATION_ID}`,
     `mc-app.ENTRY_POINT_URI_PATH=${env.MC_APP_ENTRY_POINT_URI_PATH}`,
-    `mc-app.CLOUD_IDENTIFIER=${cloud}`,
     `composed-apps.CUSTOM_APPLICATION_ID=${env.COMPOSED_APPS_CUSTOM_APPLICATION_ID}`,
     `composed-apps.ENTRY_POINT_URI_PATH=${env.COMPOSED_APPS_ENTRY_POINT_URI_PATH}`,
-    `composed-apps.CLOUD_IDENTIFIER=${cloud}`,
     // views have no entry point path (B PF5)
     `mc-view-app.CUSTOM_VIEW_ID=${env.MC_VIEW_CUSTOM_VIEW_ID}`,
-    `mc-view-app.CLOUD_IDENTIFIER=${cloud}`,
+    // inheritAs.configuration: one global item (no application prefix) reaches every application
+    `CLOUD_IDENTIFIER=${cloud}`,
   ];
 }
 
-/** Phase 2: exactly three items (the Pages app makes no service calls), no secured value. `origin` has no path. */
+/**
+ * Phase 2: exactly one item, no secured value. `origin` has no path. The endpoint is a global
+ * item (inheritAs.configuration). The service needs nothing here: it takes its own audience
+ * from CONNECT_SERVICE_URL.
+ */
 export function phase2Args({ origin }) {
-  const endpoint = `${origin}/service`;
-  return [
-    `service.MC_AUDIENCE=${origin}`,
-    `mc-app.CHAT_SERVICE_ENDPOINT_URL=${endpoint}`,
-    `mc-view-app.CHAT_SERVICE_ENDPOINT_URL=${endpoint}`,
-  ];
+  return [`CHAT_SERVICE_ENDPOINT_URL=${origin}/service`];
 }
 
 /** Splits `KEY=VALUE` on the FIRST `=` (values such as Base64 contain `=`). */
@@ -183,11 +181,11 @@ export function configureArgs(pairs) {
 
 const MASKED = new Set(SECURED_KEYS);
 
-/** Replaces the value of every secured `app.KEY=value` item with ***. Other items pass through. */
+/** Replaces the value of every secured `app.KEY=value` or global `KEY=value` item with ***. Other items pass through. */
 export function maskArgs(args) {
   return args.map((arg) => {
-    const m = /^([a-z][a-z-]*)\.([A-Z][A-Z0-9_]*)=/.exec(arg);
-    if (m && MASKED.has(m[2])) return `${m[1]}.${m[2]}=***`;
+    const m = /^(?:([a-z][a-z-]*)\.)?([A-Z][A-Z0-9_]*)=/.exec(arg);
+    if (m && MASKED.has(m[2])) return `${m[1] ? `${m[1]}.` : ''}${m[2]}=***`;
     return arg;
   });
 }

@@ -47,9 +47,11 @@ The service is mounted at `/service` (`service/src/app.ts`, `service/src/routes/
 | Application | Type | Folder | Configuration it needs | Talks to the service |
 | --- | --- | --- | --- | --- |
 | `service` | `service`, endpoint `/service` | `service/` | see [configuration.md](./configuration.md) | - |
-| `mc-app` | Custom Application "AI Assistant" | `mc-app/` | `CUSTOM_APPLICATION_ID`, `ENTRY_POINT_URI_PATH`, `CLOUD_IDENTIFIER`, `CHAT_SERVICE_ENDPOINT_URL` | yes |
-| `composed-apps` | Custom Application "AI Assistant Pages" | `composed-apps/` | `CUSTOM_APPLICATION_ID`, `ENTRY_POINT_URI_PATH`, `CLOUD_IDENTIFIER` | no (a pure Merchant Center GraphQL client; `composed-apps/README.md`) |
-| `mc-view-app` | Custom View, `CustomPanel`, 65 locators | `mc-view-app/` | `CUSTOM_VIEW_ID`, `CLOUD_IDENTIFIER`, `CHAT_SERVICE_ENDPOINT_URL` | yes, with the query parameter `customView` |
+| `mc-app` | Custom Application "AI Assistant" | `mc-app/` | `CUSTOM_APPLICATION_ID`, `ENTRY_POINT_URI_PATH` | yes |
+| `composed-apps` | Custom Application "AI Assistant Pages" | `composed-apps/` | `CUSTOM_APPLICATION_ID`, `ENTRY_POINT_URI_PATH` | no (a pure Merchant Center GraphQL client; `composed-apps/README.md`) |
+| `mc-view-app` | Custom View, `CustomPanel`, 65 locators | `mc-view-app/` | `CUSTOM_VIEW_ID` | yes, with the query parameter `customView` |
+
+`CLOUD_IDENTIFIER` and `CHAT_SERVICE_ENDPOINT_URL` are shared by all applications through `inheritAs.configuration` in `connect.yaml`, so each is set once per deployment, without an application prefix.
 
 The three frontends use the same `@commercetools-frontend/*` version (checked by `scripts/check-versions.mjs`). They cannot share a
 build, so a few small files are copies that `scripts/check-duplicates.mjs` keeps identical (for example `utils/forward-to.ts`
@@ -84,14 +86,14 @@ envelopes produced by `service/src/crypto/envelope.ts`.
 1. The app calls the service with `forwardToFetch` (`mc-app/src/utils/forward-to.ts`). The Merchant Center gateway signs a token
    that carries the user ID and the project key, and forwards the request.
 2. `service/src/middleware/mc-session.middleware.ts` accepts only `Authorization: Bearer <token>` and verifies it with `createSessionAuthVerifier`
-   (audience policy `forward-url-full-path`: the audience is `MC_AUDIENCE` plus the request path, issuer from the cloud identifier derived from `CTP_REGION`).
+   (audience policy `forward-url-full-path`: the audience is the origin of `CONNECT_SERVICE_URL` plus the request path, issuer from the cloud identifier derived from `CTP_REGION`).
 3. The project key in the token must equal `CTP_PROJECT_KEY` (`service/src/auth/project-guard.ts`), otherwise 403.
 4. `isAdmin` is true only when the token's user ID is in `ADMIN_USER_IDS` (`service/src/auth/admin.ts`). The result is attached to `req.user`
    and returned by `POST /service/auth/session` together with `userId`; there is no e-mail address in the token and none is returned.
 5. Ownership is by user ID: a session of another user answers 404 (`service/src/middleware/load-session.middleware.ts`). Administrators read other
    users' data only through the backoffice routes and the image route.
 
-Until `MC_AUDIENCE` is set the service answers 401 to every authenticated route. The local development bypass (`MC_AUTH_DISABLED`) is refused when
+Until `CONNECT_SERVICE_URL` is available to the service it answers 401 to every authenticated route. The local development bypass (`MC_AUTH_DISABLED`) is refused when
 `NODE_ENV` is `production`, which is also the default when it is unset (`service/src/config/sections/auth.ts`).
 
 ## Stateless design
@@ -164,16 +166,16 @@ sequenceDiagram
   participant C as Connect
   participant M as Merchant Center
   O->>M: register apps with a placeholder URL
-  O->>C: deploy (phase 1, without MC_AUDIENCE)
+  O->>C: deploy (phase 1, without CHAT_SERVICE_ENDPOINT_URL)
   C-->>O: service URL (after deployment)
-  O->>C: finalize (phase 2: MC_AUDIENCE, CHAT_SERVICE_ENDPOINT_URL)
+  O->>C: finalize (phase 2: CHAT_SERVICE_ENDPOINT_URL)
   C-->>O: application URLs
   O->>M: update registrations with the real URLs
 ```
 
-`MC_AUDIENCE` is the service origin only (no path) because the verifier appends the request path. The lifecycle scripts
-(`service/src/connector/post-deploy.ts`) verify the configuration and report problems; they do not register anything.
-The platform facts behind this are stated in the header of `connect.yaml`. Commands are in [deployment-runbook.md](./deployment-runbook.md).
+The service takes the audience of the Merchant Center token from the origin of `CONNECT_SERVICE_URL` (no path, because the verifier appends the request path). That depends on Connect providing the variable to the running service; its documentation only names it for the lifecycle scripts, so this is an open item (U5 in the runbook). The lifecycle scripts
+(`service/src/connector/post-deploy.ts`) verify the configuration and report problems, including the service origin they see; they do not register anything.
+Commands are in [deployment-runbook.md](./deployment-runbook.md).
 
 ## Testing layers
 

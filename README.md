@@ -112,6 +112,7 @@ cd service
 npm ci
 cp .env.example .env.local
 # edit .env.local: NODE_ENV=development, PERSISTENCE_DRIVER=memory, MC_AUTH_DISABLED=true,
+# CONNECT_SERVICE_URL=http://localhost:8080/service (local only; Connect provides it when deployed),
 # CTP_PROJECT_KEY=<your project key>, CTP_REGION=us-central1.gcp,
 # ENCRYPTION_KEY=$(openssl rand -base64 32)
 npm run start:dev
@@ -129,7 +130,7 @@ Deployment uses the Connect CLI through `node scripts/connect/connect.mjs`. Firs
 
 1. Register the two Custom Applications and the Custom View in the Merchant Center with a placeholder URL.
 2. `stage`, then `publish` the connector from your repository and tag.
-3. `deploy` (phase 1), then `finalize` (phase 2: it sets `MC_AUDIENCE` and `CHAT_SERVICE_ENDPOINT_URL` from the service URL).
+3. `deploy` (phase 1), then `finalize` (phase 2: it sets `CHAT_SERVICE_ENDPOINT_URL` for the Merchant Center apps from the service URL).
 4. Put the printed application URLs into the Merchant Center registrations.
 5. Read your user ID in the app and set `ADMIN_USER_IDS` with `configure`.
 
@@ -150,9 +151,7 @@ The table is generated from `connect.yaml`; the notes are in [docs/configuration
 | Key | Kind | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `CTP_REGION` | standard | yes |  | commercetools API region of the project in API-host spelling (us-central1.gcp, europe-west1.gcp, australia-southeast1.gcp, eu-central-1.aws or us-east-2.aws). Connect does not inject it |
-| `MC_CLOUD_IDENTIFIER` | standard | no |  | Optional override of the Merchant Center API gateway cloud identifier (for example gcp-us) that issues the session token. Empty means it is derived from CTP_REGION |
 | `MC_APP_ENTRY_POINT_URI_PATH` | standard | no | `ai-assistant` | Entry point URI path of the chat Custom Application (used for logging and checks only) |
-| `MC_AUDIENCE` | standard | no |  | Public origin of this service (https://host, no path). Unknown until the first deployment; set it with a redeploy (see the deployment runbook). While empty the service rejects all Merchant Center traffic |
 | `GCP_PROJECT_ID` | standard | no |  | Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional; when empty the project_id inside the service-account key is used |
 | `GCP_VERTEX_LOCATION` | standard | no | `us-central1` | Vertex AI location (Gemini text and image models) |
 | `GEMINI_MODEL_NAME` | standard | no | `gemini-3.8-flash` | Main Gemini model id |
@@ -196,8 +195,6 @@ The table is generated from `connect.yaml`; the notes are in [docs/configuration
 | --- | --- | --- | --- | --- |
 | `CUSTOM_APPLICATION_ID` | standard | yes |  | The Custom Application ID returned when registering the application in the Merchant Center |
 | `ENTRY_POINT_URI_PATH` | standard | yes |  | Entry point URI path of the Custom Application (unique per cloud region) |
-| `CLOUD_IDENTIFIER` | standard | no | `gcp-us` | Merchant Center API cloud identifier (for example gcp-us) |
-| `CHAT_SERVICE_ENDPOINT_URL` | standard | no | `https://not-configured.invalid/service` | Full URL of the service including /service; set on redeploy after the first deployment |
 
 **`composed-apps`** (merchant-center-custom-application)
 
@@ -205,13 +202,17 @@ The table is generated from `connect.yaml`; the notes are in [docs/configuration
 | --- | --- | --- | --- | --- |
 | `CUSTOM_APPLICATION_ID` | standard | yes |  | The Custom Application ID returned when registering the Pages application in the Merchant Center |
 | `ENTRY_POINT_URI_PATH` | standard | yes |  | Entry point URI path of the Pages Custom Application (unique per cloud region, different from the chat application) |
-| `CLOUD_IDENTIFIER` | standard | no | `gcp-us` | Merchant Center API cloud identifier (for example gcp-us) |
 
 **`mc-view-app`** (merchant-center-custom-view)
 
 | Key | Kind | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `CUSTOM_VIEW_ID` | standard | yes |  | The Custom View ID returned when registering the view in the Merchant Center |
+
+**Shared by all applications** (`inheritAs.configuration` in `connect.yaml`, set once per deployment without an application prefix)
+
+| Key | Kind | Required | Default | Description |
+| --- | --- | --- | --- | --- |
 | `CLOUD_IDENTIFIER` | standard | no | `gcp-us` | Merchant Center API cloud identifier (for example gcp-us) |
 | `CHAT_SERVICE_ENDPOINT_URL` | standard | no | `https://not-configured.invalid/service` | Full URL of the service including /service; set on redeploy after the first deployment |
 
@@ -326,7 +327,7 @@ What happens when a dependency is unavailable. "Closed" means the request is rej
 | Dependency | When unavailable | Stance | Time limit |
 | --- | --- | --- | --- |
 | Merchant Center token verification | Any token that cannot be verified, including an unreachable key set, gets 401 | closed | set by the verification library |
-| `MC_AUDIENCE` not set | Every authenticated route answers 401 until it is set | closed | none |
+| `CONNECT_SERVICE_URL` not available to the service | Every authenticated route answers 401 until it is | closed | none |
 | Project key in the token differs from the deployment | 403 | closed | none |
 | `ADMIN_USER_IDS` empty | Nobody is an administrator; administrator routes answer 403 `ADMIN_REQUIRED` | closed | none |
 | commercetools Custom Objects | Session, settings and feedback routes answer 503; a chat turn does not start; `/service/status` stays `UP` | closed | 15 s per request, up to 3 tries |

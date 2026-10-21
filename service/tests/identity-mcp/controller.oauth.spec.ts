@@ -64,8 +64,8 @@ describe('POST /authorize', () => {
     );
   });
 
-  it('503 when MC_AUDIENCE is not configured', async () => {
-    const { app, rig } = setup({ env: { MC_AUDIENCE: '' } });
+  it('503 when CONNECT_SERVICE_URL is not configured', async () => {
+    const { app, rig } = setup({ env: { CONNECT_SERVICE_URL: '' } });
     await rig.stores.binding.set(bindingFixture());
     const res = await request(app).post(`${BASE}/authorize`).set(ME);
     expect(res.status).toBe(503);
@@ -74,7 +74,7 @@ describe('POST /authorize', () => {
 
   it('503 and no stored attempt when the callback would be plain http', async () => {
     const { app, rig } = setup({
-      env: { MC_AUDIENCE: 'http://localhost:3000' },
+      env: { CONNECT_SERVICE_URL: 'http://localhost:3000' },
     });
     // The session middleware keeps the dev bypass; only the controller sees auth as enabled.
     setIdentityRuntimeForTests({
@@ -89,7 +89,7 @@ describe('POST /authorize', () => {
 
   it('allows a plain http callback under MC_AUTH_DISABLED (local development)', async () => {
     const { app, rig } = setup({
-      env: { MC_AUDIENCE: 'http://localhost:3000' },
+      env: { CONNECT_SERVICE_URL: 'http://localhost:3000' },
     });
     await rig.stores.binding.set(bindingFixture());
     const { res, url } = await authorize(app);

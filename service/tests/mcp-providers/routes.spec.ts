@@ -140,7 +140,7 @@ describe('GET /service/mcp/providers', () => {
   it('is rejected without a verified session', async () => {
     resetConfigurationForTests();
     const real = createApp(
-      freshConfig({ MC_AUDIENCE: 'https://svc.example.test' })
+      freshConfig({ CONNECT_SERVICE_URL: 'https://svc.example.test' })
     );
     const res = await request(real).get('/service/mcp/providers');
     expect([401, 403]).toContain(res.status);

@@ -46,7 +46,7 @@ export function makeRig(
     wrap?: (gw: MemoryObjectGateway) => ObjectGateway;
   } = {}
 ): Rig {
-  const config = freshConfig({ MC_AUDIENCE: AUDIENCE, ...o.env });
+  const config = freshConfig({ CONNECT_SERVICE_URL: AUDIENCE, ...o.env });
   const mem = new MemoryObjectGateway();
   const persistence = createPersistence(config, {
     gateway: o.wrap ? o.wrap(mem) : mem,

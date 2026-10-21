@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, it } from '@jest/globals';
-import { checkAudience } from '../../src/connector/checks/audience';
+import { checkServiceOrigin } from '../../src/connector/checks/service-origin';
 import { reportProviders } from '../../src/connector/checks/providers';
 
 describe('reportProviders', () => {
@@ -68,36 +68,20 @@ describe('reportProviders', () => {
   });
 });
 
-describe('checkAudience', () => {
+describe('checkServiceOrigin', () => {
   const SERVICE = 'https://service-abc.us-central1.gcp.commercetools.app/service';
 
-  it('audience: matching origins pass and the origin is logged', () => {
-    const result = checkAudience({
-      mcAudience: 'https://service-abc.us-central1.gcp.commercetools.app',
-      serviceUrl: SERVICE,
-    });
-    expect(result.ok).toBe(true);
-    expect(result.lines).toContain(
-      'post-deploy: service origin https://service-abc.us-central1.gcp.commercetools.app'
-    );
+  it('reports the origin of a usable https URL', () => {
+    const result = checkServiceOrigin({ serviceUrl: SERVICE });
+    expect(result.serviceOrigin).toBe('https://service-abc.us-central1.gcp.commercetools.app');
+    expect(result.lines).toEqual([
+      'post-deploy: service origin https://service-abc.us-central1.gcp.commercetools.app',
+    ]);
   });
 
-  it('audience: mismatch fails and states both origins', () => {
-    const result = checkAudience({ mcAudience: 'https://other.example', serviceUrl: SERVICE });
-    expect(result.ok).toBe(false);
-    expect(result.failure).toContain('https://other.example');
-    expect(result.failure).toContain('https://service-abc.us-central1.gcp.commercetools.app');
-  });
-
-  it('audience: unset logs the exact value to configure', () => {
-    const result = checkAudience({ serviceUrl: SERVICE });
-    expect(result.ok).toBe(true);
-    expect(result.lines).toContain(
-      'post-deploy: MC_AUDIENCE is not set. Set it to https://service-abc.us-central1.gcp.commercetools.app (redeploy: finalize)'
-    );
-  });
-
-  it('audience: an invalid value fails', () => {
-    expect(checkAudience({ mcAudience: 'not a url', serviceUrl: SERVICE }).ok).toBe(false);
+  it('says so when the URL is missing or unusable, without throwing', () => {
+    expect(checkServiceOrigin({}).lines[0]).toContain('not set');
+    expect(checkServiceOrigin({ serviceUrl: 'http://x.example' }).lines[0]).toContain('not a valid https URL');
+    expect(checkServiceOrigin({ serviceUrl: 'not a url' }).serviceOrigin).toBeUndefined();
   });
 });

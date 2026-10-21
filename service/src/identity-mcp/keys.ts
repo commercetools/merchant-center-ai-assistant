@@ -9,11 +9,11 @@ import { SERVICE_BASE_PATH } from '../constants/service-path';
 import { IDENTITY_USER_ID_PATTERN } from './constants';
 import type { IdentityBinding } from './types';
 
-/** Thrown when `MC_AUDIENCE` is not configured (it is optional at boot). */
+/** Thrown when `CONNECT_SERVICE_URL` is not configured (it is optional at boot). */
 export class MissingAudienceError extends Error {
   constructor() {
     super(
-      'MC_AUDIENCE is not configured, so the OAuth callback URL is unknown'
+      'CONNECT_SERVICE_URL is not configured, so the OAuth callback URL is unknown'
     );
     this.name = 'MissingAudienceError';
   }
@@ -42,7 +42,7 @@ export const identityToolsCacheKey = (
 export const identityToolsPrefixForUser = (userId: string): string =>
   `ctmcpid:${userId}:`;
 
-/** `origin(MC_AUDIENCE) + /service/managed-mcp-identity/callback`. */
+/** `origin(CONNECT_SERVICE_URL) + /service/managed-mcp-identity/callback`. */
 export const callbackUrl = (cfg: Pick<AppConfig, 'auth'>): string => {
   const audience = cfg.auth.mcAudience;
   if (!audience) throw new MissingAudienceError();

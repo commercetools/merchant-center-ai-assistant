@@ -113,7 +113,7 @@ describe('rejection matrix', () => {
     expect(handler).not.toHaveBeenCalled();
   });
 
-  it('401 with a different message when MC_AUDIENCE is not configured', async () => {
+  it('401 with a different message when CONNECT_SERVICE_URL is not configured', async () => {
     freshConfig();
     const token = await signToken({ key, aud: PROBE });
     const res = await post(probeApp(handler), token);

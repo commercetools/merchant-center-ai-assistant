@@ -6,12 +6,12 @@
 
 import { parseAdminUserIds } from '../../auth/admin';
 import { bool, str } from '../parse';
-import { McCloudIdentifier, cloudIdentifierToApiRegion } from '../region';
+import { McCloudIdentifier } from '../region';
 import { SectionParser } from '../types';
 import type { CtpConfig } from './ctp';
 
 export interface AuthConfig {
-  /** Origin of this service. Optional at boot: requests fail closed (401) without it. */
+  /** Origin of this service, from CONNECT_SERVICE_URL. Optional at boot: requests fail closed (401) without it. */
   mcAudience?: string;
   /** Local development bypass; refused in production. */
   authDisabled: boolean;
@@ -55,17 +55,29 @@ function parseAudience(
     url.password !== ''
   ) {
     errors.push(
-      'MC_AUDIENCE: must be an origin only (https://host, no path, query or fragment)'
+      'CONNECT_SERVICE_URL: must be an https URL (http only outside production)'
     );
     return undefined;
   }
   return url.origin;
 }
 
+function originOf(raw: string | undefined): string | undefined {
+  if (raw === undefined) return undefined;
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return undefined;
+  }
+}
+
 export const parseAuth: SectionParser<AuthConfig> = (env, ctx) => {
   const errors: string[] = [];
 
-  const mcAudience = parseAudience(str(env, 'MC_AUDIENCE'), ctx.nodeEnv, errors);
+  // The audience of the Merchant Center token is the origin of the service's own public URL,
+  // CONNECT_SERVICE_URL (it may end in /service). Locally you set it yourself, see .env.example.
+  // A value that is not a URL is ignored and the service stays closed (401) without it.
+  const mcAudience = parseAudience(originOf(str(env, 'CONNECT_SERVICE_URL')), ctx.nodeEnv, errors);
 
   const authDisabled = bool(env, 'MC_AUTH_DISABLED', false, errors);
   if (authDisabled && ctx.nodeEnv === 'production') {
@@ -73,15 +85,8 @@ export const parseAuth: SectionParser<AuthConfig> = (env, ctx) => {
   }
 
   const ctp = ctx.partial.ctp as CtpConfig | undefined;
-  let issuerCloudIdentifier = ctp?.mcCloudIdentifier;
-  const override = str(env, 'MC_CLOUD_IDENTIFIER');
-  if (override !== undefined) {
-    if (cloudIdentifierToApiRegion(override)) {
-      issuerCloudIdentifier = override as McCloudIdentifier;
-    } else {
-      errors.push('MC_CLOUD_IDENTIFIER: must be one of gcp-us, gcp-eu, gcp-au, aws-eu, aws-us');
-    }
-  }
+  // The Merchant Center cloud follows the project's region (CTP_REGION).
+  const issuerCloudIdentifier = ctp?.mcCloudIdentifier;
 
   const entryPointUriPath = str(env, 'MC_APP_ENTRY_POINT_URI_PATH') ?? 'ai-assistant';
   if (!ENTRY_PATH.test(entryPointUriPath)) {

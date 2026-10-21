@@ -65,7 +65,7 @@ describe('development bypass', () => {
   });
 
   it('ignores x-dev-admin and x-dev-user-id when the bypass is off', async () => {
-    freshConfig({ MC_AUDIENCE: 'https://svc.example.test' });
+    freshConfig({ CONNECT_SERVICE_URL: 'https://svc.example.test' });
     const res = await request(probeApp(echo))
       .post('/service/admin-probe')
       .set('x-dev-admin', 'true')

@@ -13,7 +13,7 @@ and a schema (version 5.0) with JSX components and GraphQL data sources. The bro
 the JSX with Babel and executes it.
 
 The app is a pure Merchant Center GraphQL client. It never calls the AI service, does not need
-`CHAT_SERVICE_ENDPOINT_URL` and renders whether or not the service is deployed.
+`CHAT_SERVICE_ENDPOINT_URL` and renders whether or not the service is deployed. Connect passes it the shared key like every application, and it ignores it.
 
 ## Prerequisites
 

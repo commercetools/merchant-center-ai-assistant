@@ -31,7 +31,7 @@ describe('GET /service/status', () => {
 
   it('reports the audience once configured', async () => {
     const res = await request(
-      createApp(freshConfig({ MC_AUDIENCE: 'https://svc.example.test' }))
+      createApp(freshConfig({ CONNECT_SERVICE_URL: 'https://svc.example.test' }))
     ).get('/service/status');
     expect(res.body.authConfigured).toBe(true);
   });

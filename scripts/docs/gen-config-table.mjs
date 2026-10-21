@@ -44,7 +44,11 @@ export function readConnectYaml(text) {
     return { name: app.name, type: app.applicationType, endpoint: app.endpoint, keys };
   });
   const scopes = doc.inheritAs?.apiClient?.scopes ?? [];
-  return { applications, scopes };
+  const shared = [];
+  const global = doc.inheritAs?.configuration ?? {};
+  for (const key of global.standardConfiguration ?? []) shared.push({ ...key, secured: false });
+  for (const key of global.securedConfiguration ?? []) shared.push({ ...key, secured: true });
+  return { applications, scopes, shared };
 }
 
 /** Quoted strings of the array that follows `name:` inside the text (comments removed). */
@@ -73,21 +77,29 @@ export function readOAuthScopes(text) {
   return { view: arrayOf(block, 'view'), manage: arrayOf(block, 'manage') };
 }
 
-/** The configuration tables, one per application. */
+function renderKeyTable(out, keys) {
+  out.push('| Key | Kind | Required | Default | Description |', '| --- | --- | --- | --- | --- |');
+  for (const k of keys) {
+    const kind = k.secured ? 'secured' : 'standard';
+    const required = k.required === true ? 'yes' : 'no';
+    // Secured keys never show a value.
+    const def = !k.secured && k.default !== undefined && k.default !== '' ? `\`${cell(k.default)}\`` : '';
+    out.push(`| \`${k.key}\` | ${kind} | ${required} | ${def} | ${cell(k.description)} |`);
+  }
+  out.push('');
+}
+
+/** The configuration tables, one per application, then the keys shared by all of them. */
 export function renderConfig(connect) {
   const out = [];
   for (const app of connect.applications) {
     const where = app.endpoint ? `${app.type}, endpoint \`${app.endpoint}\`` : app.type;
     out.push(`**\`${app.name}\`** (${where})`, '');
-    out.push('| Key | Kind | Required | Default | Description |', '| --- | --- | --- | --- | --- |');
-    for (const k of app.keys) {
-      const kind = k.secured ? 'secured' : 'standard';
-      const required = k.required === true ? 'yes' : 'no';
-      // Secured keys never show a value.
-      const def = !k.secured && k.default !== undefined && k.default !== '' ? `\`${cell(k.default)}\`` : '';
-      out.push(`| \`${k.key}\` | ${kind} | ${required} | ${def} | ${cell(k.description)} |`);
-    }
-    out.push('');
+    renderKeyTable(out, app.keys);
+  }
+  if (connect.shared?.length) {
+    out.push('**Shared by all applications** (`inheritAs.configuration` in `connect.yaml`, set once per deployment without an application prefix)', '');
+    renderKeyTable(out, connect.shared);
   }
   return out.join('\n').trimEnd();
 }

@@ -5,7 +5,7 @@ How to observe, run and recover the connector. Deployment steps are in [deployme
 ## Health
 
 - `GET /service/status` (alias `/service/health`) answers `{ "status": "UP", "service": "ai-assistant", "version": "...", "persistence": "custom-objects", "authConfigured": <bool>, "adminConfigured": <bool> }`.
-  It is liveness only: it calls no dependency, needs no token and exposes no secret (`service/src/controllers/status.controller.ts`). `authConfigured: false` means `MC_AUDIENCE` is not set and every authenticated request will be rejected.
+  It is liveness only: it calls no dependency, needs no token and exposes no secret (`service/src/controllers/status.controller.ts`). `authConfigured: false` means `CONNECT_SERVICE_URL` is not available to the service and every authenticated request will be rejected.
 - `GET /service/status/nimbus` checks the embedded Nimbus child: 200 for `ok` or `disabled`, 503 otherwise. Its result is cached for 30 seconds (5 seconds after a failure), so it is cheap to poll.
 - A deployment can show `Deployed` while the lifecycle script reported a problem: read the `post-deploy:` lines (below).
 
@@ -20,7 +20,7 @@ How to observe, run and recover the connector. Deployment steps are in [deployme
 | --- | --- |
 | `Invalid environment configuration: <keys>` | The service refused to start; fix the listed keys |
 | `ADMIN_USER_IDS is empty: no administrator` | Nobody is an administrator |
-| `MC session verification failed` (at most once per minute, with `reason` and `expectedAudience`) | Tokens are rejected; usually `MC_AUDIENCE` or the region is wrong |
+| `MC session verification failed` (at most once per minute, with `reason` and `expectedAudience`) | Tokens are rejected; usually the service URL (`CONNECT_SERVICE_URL`) or the region is wrong |
 | `providers enabled: ...` and a warning per partially configured provider | Which third-party sources are on |
 | `audit.admin_action`, `audit.feedback_submitted` | Administrator actions and feedback submissions, with the user ID |
 | `post-deploy: ...`, `pre-undeploy: ...` | Lifecycle checks; `post-deploy: FAILED <check>` is a real problem |
@@ -63,7 +63,7 @@ after a failed check so one log shows every problem (`service/src/connector/post
 | Dependency | When unavailable | Stance | Time limit | Code |
 | --- | --- | --- | --- | --- |
 | Merchant Center token verification (gateway keys) | Any token that cannot be verified, including an unreachable key set, answers 401 on authenticated routes; `/service/status` is unaffected | closed | set by the verification library, not by the service | `service/src/middleware/mc-session.middleware.ts` |
-| `MC_AUDIENCE` | While empty every authenticated route answers 401 `Service is not configured for authentication` | closed | none | `service/src/middleware/mc-session.middleware.ts` |
+| `CONNECT_SERVICE_URL` | While empty every authenticated route answers 401 `Service is not configured for authentication` | closed | none | `service/src/middleware/mc-session.middleware.ts` |
 | Project key | A token for another project answers 403 | closed | none | `service/src/auth/project-guard.ts` |
 | `ADMIN_USER_IDS` | Empty or unset: nobody is an administrator, startup warning, `adminConfigured: false`; administrator routes answer 403 `ADMIN_REQUIRED` | closed | none | `service/src/auth/admin.ts` |
 | commercetools Custom Objects | Session, message, settings, feedback and backoffice routes answer 503; a chat turn does not start (the session cannot be loaded); `/service/status` stays `UP` | closed | 15 s per request, up to 3 tries | `service/src/persistence/gateway/custom-object.gateway.ts`, `service/src/middleware/error.middleware.ts` |

@@ -158,7 +158,7 @@ describe('callbackUrl', () => {
     ).toBe(expected);
   });
 
-  it('throws a typed error when MC_AUDIENCE is not configured', () => {
+  it('throws a typed error when CONNECT_SERVICE_URL is not configured', () => {
     expect(() => urlFor()).toThrow(MissingAudienceError);
   });
 });

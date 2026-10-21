@@ -27,9 +27,8 @@ describe('readLifecycleEnv', () => {
     }
   });
 
-  it('env: optional audience', () => {
+  it('env: optional service url', () => {
     const env = readLifecycleEnv(lifecycleEnv());
-    expect(env.mcAudience).toBeUndefined();
     expect(env.serviceUrl).toBeUndefined();
     expect(env.vertexLocation).toBe('us-central1');
     expect(env.bigqueryDatasetId).toBe('aiassistant');
@@ -40,14 +39,12 @@ describe('readLifecycleEnv', () => {
   it('env: reads the lifecycle-only service url, overrides and provider keys', () => {
     const env = readLifecycleEnv(
       lifecycleEnv({
-        MC_AUDIENCE: 'https://s.example',
         CONNECT_SERVICE_URL: 'https://s.example/service',
         GCP_VERTEX_LOCATION: 'europe-west4',
         STRIPE_SECRET_KEY: 'sk_test_x',
         CONTENTSTACK_REGION: '   ',
       })
     );
-    expect(env.mcAudience).toBe('https://s.example');
     expect(env.serviceUrl).toBe('https://s.example/service');
     expect(env.vertexLocation).toBe('europe-west4');
     expect(env.providerEnv).toEqual({ STRIPE_SECRET_KEY: 'sk_test_x' });

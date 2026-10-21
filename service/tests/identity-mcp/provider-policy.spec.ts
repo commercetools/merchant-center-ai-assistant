@@ -242,7 +242,7 @@ describe('client registration lifecycle', () => {
 
   it('a different deployment URL discards the stored client', async () => {
     const { provider } = await withClient({
-      MC_AUDIENCE: 'https://other-deployment.example',
+      CONNECT_SERVICE_URL: 'https://other-deployment.example',
     });
     expect(await provider.clientInformation()).toBeUndefined();
   });

@@ -10,15 +10,9 @@ deployAs:
         - key: CTP_REGION
           description: commercetools API region of the project in API-host spelling (us-central1.gcp, europe-west1.gcp, australia-southeast1.gcp, eu-central-1.aws or us-east-2.aws). Connect does not inject it
           required: true
-        - key: MC_CLOUD_IDENTIFIER
-          description: Optional override of the Merchant Center API gateway cloud identifier (for example gcp-us) that issues the session token. Empty means it is derived from CTP_REGION
-          required: false
         - key: MC_APP_ENTRY_POINT_URI_PATH
           description: Entry point URI path of the chat Custom Application (used for logging and checks only)
           default: 'ai-assistant'
-        - key: MC_AUDIENCE
-          description: Public origin of this service (https://host, no path). Unknown until the first deployment; set it with a redeploy (see the deployment runbook). While empty the service rejects all Merchant Center traffic
-          required: false
         - key: GCP_PROJECT_ID
           description: Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional; when empty the project_id inside the service-account key is used
           required: false
@@ -138,13 +132,6 @@ deployAs:
         - key: ENTRY_POINT_URI_PATH
           description: Entry point URI path of the Custom Application (unique per cloud region)
           required: true
-        - key: CLOUD_IDENTIFIER
-          description: Merchant Center API cloud identifier (for example gcp-us)
-          default: 'gcp-us'
-        - key: CHAT_SERVICE_ENDPOINT_URL
-          description: Full URL of the service including /service; set on redeploy after the first deployment
-          required: false
-          default: 'https://not-configured.invalid/service'
   - name: composed-apps
     applicationType: merchant-center-custom-application
     configuration:
@@ -155,9 +142,6 @@ deployAs:
         - key: ENTRY_POINT_URI_PATH
           description: Entry point URI path of the Pages Custom Application (unique per cloud region, different from the chat application)
           required: true
-        - key: CLOUD_IDENTIFIER
-          description: Merchant Center API cloud identifier (for example gcp-us)
-          default: 'gcp-us'
   - name: mc-view-app
     applicationType: merchant-center-custom-view
     configuration:
@@ -165,14 +149,18 @@ deployAs:
         - key: CUSTOM_VIEW_ID
           description: The Custom View ID returned when registering the view in the Merchant Center
           required: true
-        - key: CLOUD_IDENTIFIER
-          description: Merchant Center API cloud identifier (for example gcp-us)
-          default: 'gcp-us'
-        - key: CHAT_SERVICE_ENDPOINT_URL
-          description: Full URL of the service including /service; set on redeploy after the first deployment
-          required: false
-          default: 'https://not-configured.invalid/service'
 inheritAs:
+  # Shared by every application, set once per deployment (a global value, no application prefix).
+  # The service ignores both; the Merchant Center applications read them in their config files.
+  configuration:
+    standardConfiguration:
+      - key: CLOUD_IDENTIFIER
+        description: Merchant Center API cloud identifier (for example gcp-us)
+        default: 'gcp-us'
+      - key: CHAT_SERVICE_ENDPOINT_URL
+        description: Full URL of the service including /service; set on redeploy after the first deployment
+        required: false
+        default: 'https://not-configured.invalid/service'
   apiClient:
     scopes:
       - view_key_value_documents

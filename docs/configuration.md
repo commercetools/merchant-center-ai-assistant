@@ -8,7 +8,7 @@ and from the configuration files of the Merchant Center applications by `node sc
 - Connect creates one API client from `inheritAs.apiClient.scopes` and injects `CTP_API_URL`, `CTP_AUTH_URL`, `CTP_CLIENT_ID`, `CTP_CLIENT_SECRET`, `CTP_PROJECT_KEY` and `CTP_SCOPE` into the `service`. They are never declared in `connect.yaml`.
   `CTP_REGION` is not injected; it is a declared, required key.
 - Connect injects `APPLICATION_URL` into the three Merchant Center applications. `CONNECT_SERVICE_URL` (the public URL of the service) exists only inside the `postDeploy` and `preUndeploy` scripts, not in the running service.
-  That is why `MC_AUDIENCE` and `CHAT_SERVICE_ENDPOINT_URL` are set by a second deployment step ([deployment.md](./deployment.md)).
+  That is why `CHAT_SERVICE_ENDPOINT_URL` is set by a second deployment step ([deployment.md](./deployment.md)).
 - The service reads its configuration once at start (`service/src/config/index.ts`). An invalid value makes it exit with `Invalid environment configuration:` and the list of keys; values are never printed.
 - Standard configuration is stored as plain text by Connect; secured configuration is encrypted and is never shown again. Third-party provider credentials are Connect configuration only: there is no screen or API to enter them.
 
@@ -22,9 +22,7 @@ and from the configuration files of the Merchant Center applications by `node sc
 | Key | Kind | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `CTP_REGION` | standard | yes |  | commercetools API region of the project in API-host spelling (us-central1.gcp, europe-west1.gcp, australia-southeast1.gcp, eu-central-1.aws or us-east-2.aws). Connect does not inject it |
-| `MC_CLOUD_IDENTIFIER` | standard | no |  | Optional override of the Merchant Center API gateway cloud identifier (for example gcp-us) that issues the session token. Empty means it is derived from CTP_REGION |
 | `MC_APP_ENTRY_POINT_URI_PATH` | standard | no | `ai-assistant` | Entry point URI path of the chat Custom Application (used for logging and checks only) |
-| `MC_AUDIENCE` | standard | no |  | Public origin of this service (https://host, no path). Unknown until the first deployment; set it with a redeploy (see the deployment runbook). While empty the service rejects all Merchant Center traffic |
 | `GCP_PROJECT_ID` | standard | no |  | Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional; when empty the project_id inside the service-account key is used |
 | `GCP_VERTEX_LOCATION` | standard | no | `us-central1` | Vertex AI location (Gemini text and image models) |
 | `GEMINI_MODEL_NAME` | standard | no | `gemini-3.8-flash` | Main Gemini model id |
@@ -68,8 +66,6 @@ and from the configuration files of the Merchant Center applications by `node sc
 | --- | --- | --- | --- | --- |
 | `CUSTOM_APPLICATION_ID` | standard | yes |  | The Custom Application ID returned when registering the application in the Merchant Center |
 | `ENTRY_POINT_URI_PATH` | standard | yes |  | Entry point URI path of the Custom Application (unique per cloud region) |
-| `CLOUD_IDENTIFIER` | standard | no | `gcp-us` | Merchant Center API cloud identifier (for example gcp-us) |
-| `CHAT_SERVICE_ENDPOINT_URL` | standard | no | `https://not-configured.invalid/service` | Full URL of the service including /service; set on redeploy after the first deployment |
 
 **`composed-apps`** (merchant-center-custom-application)
 
@@ -77,13 +73,17 @@ and from the configuration files of the Merchant Center applications by `node sc
 | --- | --- | --- | --- | --- |
 | `CUSTOM_APPLICATION_ID` | standard | yes |  | The Custom Application ID returned when registering the Pages application in the Merchant Center |
 | `ENTRY_POINT_URI_PATH` | standard | yes |  | Entry point URI path of the Pages Custom Application (unique per cloud region, different from the chat application) |
-| `CLOUD_IDENTIFIER` | standard | no | `gcp-us` | Merchant Center API cloud identifier (for example gcp-us) |
 
 **`mc-view-app`** (merchant-center-custom-view)
 
 | Key | Kind | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `CUSTOM_VIEW_ID` | standard | yes |  | The Custom View ID returned when registering the view in the Merchant Center |
+
+**Shared by all applications** (`inheritAs.configuration` in `connect.yaml`, set once per deployment without an application prefix)
+
+| Key | Kind | Required | Default | Description |
+| --- | --- | --- | --- | --- |
 | `CLOUD_IDENTIFIER` | standard | no | `gcp-us` | Merchant Center API cloud identifier (for example gcp-us) |
 | `CHAT_SERVICE_ENDPOINT_URL` | standard | no | `https://not-configured.invalid/service` | Full URL of the service including /service; set on redeploy after the first deployment |
 
@@ -186,8 +186,8 @@ model writes its closing answer. See [architecture.md](./architecture.md#request
 | `CUSTOM_APPLICATION_ID` | `mc-app`, `composed-apps` | Connect configuration | Id returned when you register the Custom Application |
 | `CUSTOM_VIEW_ID` | `mc-view-app` | Connect configuration | Id returned when you register the Custom View |
 | `ENTRY_POINT_URI_PATH` | `mc-app`, `composed-apps` | Connect configuration | URL segment of the app; unique per cloud region, different for the two apps |
-| `CLOUD_IDENTIFIER` | all three | Connect configuration | Merchant Center API cloud (`gcp-us`, `gcp-eu`, `gcp-au`, `aws-us`, `aws-eu`) |
-| `CHAT_SERVICE_ENDPOINT_URL` | `mc-app`, `mc-view-app` | Connect configuration | Service origin plus `/service`; set by the second deployment step |
+| `CLOUD_IDENTIFIER` | all applications (shared, `inheritAs.configuration`) | Connect configuration | Merchant Center API cloud (`gcp-us`, `gcp-eu`, `gcp-au`, `aws-us`, `aws-eu`) |
+| `CHAT_SERVICE_ENDPOINT_URL` | shared by all applications, used by `mc-app` and `mc-view-app` | Connect configuration | Service origin plus `/service`; set by the second deployment step |
 | `APPLICATION_URL` | all three | injected by Connect | Public URL of the deployed application |
 | `INITIAL_PROJECT_KEY`, `HOST_URI_PATH` | local `yarn start` only | your `.env` | Project and host page of the development server (the latter for the Custom View only) |
 

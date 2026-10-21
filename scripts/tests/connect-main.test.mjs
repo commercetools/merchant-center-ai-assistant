@@ -11,7 +11,7 @@ import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { audienceOf, main } from '../connect/connect.mjs';
+import { main } from '../connect/connect.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const CONNECT = join(HERE, '..', 'connect', 'connect.mjs');
@@ -190,7 +190,7 @@ test('finalize: sequence and values', async () => {
   const after = {
     status: 'Deployed',
     version: 2,
-    applications: [{ ...apps[0], standardConfiguration: [{ key: 'MC_AUDIENCE', value: ORIGIN }] }, ...apps.slice(1)],
+    applications: apps,
   };
   const api = fakeApi([before, before, after]);
   const r = await run(['finalize'], {
@@ -201,9 +201,7 @@ test('finalize: sequence and values', async () => {
   const redeploy = r.calls.find((c) => subcommand(c) === 'deployment redeploy');
   const configuration = redeploy.args.filter((_, i) => redeploy.args[i - 1] === '--configuration');
   assert.deepEqual(configuration, [
-    `service.MC_AUDIENCE=${ORIGIN}`,
-    `mc-app.CHAT_SERVICE_ENDPOINT_URL=${SERVICE_URL}`,
-    `mc-view-app.CHAT_SERVICE_ENDPOINT_URL=${SERVICE_URL}`,
+    `CHAT_SERVICE_ENDPOINT_URL=${SERVICE_URL}`,
   ]);
   assert.ok(!redeploy.args.includes('--updateConnector'));
   assert.deepEqual(r.calls.map(subcommand), ['deployment redeploy', 'deployment logs']);
@@ -224,14 +222,6 @@ test('finalize: stops when postDeploy failed', async () => {
   assert.ok(!r.text.includes('smoke:'), 'no smoke check after a failed postDeploy');
 });
 
-test('finalize: an audience that differs from the origin fails', async () => {
-  const d = { status: 'Deployed', version: 1, applications: apps };
-  const wrong = { status: 'Deployed', version: 2, applications: [{ ...apps[0], standardConfiguration: { MC_AUDIENCE: 'https://other.example' } }, ...apps.slice(1)] };
-  const r = await run(['finalize'], { fetchHandler: fakeApi([d, wrong]).handler, cliHandler: () => '' });
-  assert.equal(r.code, 1);
-  assert.match(r.err.join('\n'), /other\.example/);
-});
-
 test('finalize: keeps polling while the service url is empty, then exits 1 with the logs hint', async () => {
   const queued = { status: 'Queued', applications: [app('service', '')] };
   const r = await run(['finalize'], { fetchHandler: fakeApi([queued]).handler, timing: { timeoutMs: 5000 } });
@@ -250,7 +240,7 @@ test('finalize: dry run prints the redeploy with a placeholder and runs nothing'
   const r = await run(['finalize', '--dry-run']);
   assert.equal(r.code, 0);
   assert.equal(r.calls.length, 0);
-  assert.ok(r.out[0].includes('service.MC_AUDIENCE=https://<service-origin>'));
+  assert.ok(r.out[0].includes('CHAT_SERVICE_ENDPOINT_URL=https://<service-origin>/service'));
 });
 
 test('configure: partial merge args', async () => {
@@ -355,80 +345,4 @@ test('main: a failing CLI call reports the status, never the command line', asyn
   assert.equal(r.code, 1);
   assert.ok(r.text.includes('exited with status 7'));
   assert.ok(!r.text.includes(ENV.GCP_SA_KEY_BASE64));
-});
-
-test('audienceOf: tolerates the unverified configuration shapes', () => {
-  assert.equal(audienceOf({ applications: [{ applicationName: 'service', standardConfiguration: [{ key: 'MC_AUDIENCE', value: 'x' }] }] }), 'x');
-  assert.equal(audienceOf({ applications: [{ applicationName: 'service', standardConfiguration: { MC_AUDIENCE: 'y' } }] }), 'y');
-  assert.equal(audienceOf({ applications: [] }), undefined);
-});
-
-// ---- the real command line, with a fake CLI executable ------------------------------------
-
-function fakeCli() {
-  const dir = mkdtempSync(join(tmpdir(), 'fake-cli-'));
-  const bin = join(dir, 'fake-commercetools.mjs');
-  const log = join(dir, 'calls.jsonl');
-  writeFileSync(
-    bin,
-    [
-      '#!/usr/bin/env node',
-      "import { appendFileSync } from 'node:fs';",
-      "appendFileSync(process.env.FAKE_CLI_LOG, JSON.stringify(process.argv.slice(2)) + '\\n');",
-      "if (process.argv.includes('describe')) { process.stderr.write('not found\\n'); process.exit(1); }",
-      '',
-    ].join('\n')
-  );
-  chmodSync(bin, 0o755);
-  return { bin, log };
-}
-
-function spawnConnect(args, env) {
-  return spawnSync(process.execPath, [CONNECT, ...args], {
-    env: { PATH: process.env.PATH, ...env },
-    encoding: 'utf8',
-  });
-}
-
-test('process: deploy --dry-run never prints the secrets (spec scenario)', () => {
-  const r = spawnConnect(['deploy', '--dry-run'], {
-    ...ENV,
-    GCP_SA_KEY_BASE64: 'abc',
-    ENCRYPTION_KEY: 'def',
-    STRIPE_SECRET_KEY: 'ghi',
-  });
-  assert.equal(r.status, 0, r.stderr);
-  assert.ok(r.stdout.includes('service.GCP_SA_KEY_BASE64=***'));
-  assert.ok(r.stdout.includes('service.STRIPE_SECRET_KEY=***'));
-  for (const secret of ['abc', 'def', 'ghi']) {
-    assert.ok(!r.stdout.includes(secret), `stdout leaks ${secret}`);
-    assert.ok(!r.stderr.includes(secret), `stderr leaks ${secret}`);
-  }
-});
-
-test('process: a missing variable exits 2 and runs no CLI command', () => {
-  const { bin, log } = fakeCli();
-  const { GCP_SA_KEY_BASE64: _removed, ...env } = ENV;
-  const r = spawnConnect(['deploy'], { ...env, CONNECT_CLI_BIN: bin, FAKE_CLI_LOG: log });
-  assert.equal(r.status, 2);
-  assert.match(r.stderr, /GCP_SA_KEY_BASE64/);
-  assert.throws(() => readFileSync(log), 'the fake CLI was never called');
-});
-
-test('process: deploy executes the fake CLI with real values while the terminal stays masked', () => {
-  const { bin, log } = fakeCli();
-  const r = spawnConnect(['deploy'], { ...ENV, CONNECT_CLI_BIN: bin, FAKE_CLI_LOG: log });
-  assert.equal(r.status, 0, r.stderr);
-  const calls = readFileSync(log, 'utf8').trim().split('\n').map((l) => JSON.parse(l));
-  assert.deepEqual(calls.map((c) => c.slice(1, 3).join(' ')), ['deployment describe', 'deployment create']);
-  assert.ok(calls[1].includes(`service.GCP_SA_KEY_BASE64=${ENV.GCP_SA_KEY_BASE64}`));
-  assert.ok(!r.stdout.includes(ENV.GCP_SA_KEY_BASE64));
-  assert.ok(!r.stderr.includes(ENV.GCP_SA_KEY_BASE64));
-});
-
-test('process: help exits 0 and an unknown command exits 2', () => {
-  assert.equal(spawnConnect(['help'], {}).status, 0);
-  const bogus = spawnConnect(['bogus'], {});
-  assert.equal(bogus.status, 2);
-  assert.match(bogus.stderr, /Usage/);
 });

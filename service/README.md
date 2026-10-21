@@ -57,7 +57,7 @@ Other scripts: `npm run persistence:reencrypt` (after rotating `ENCRYPTION_KEY`,
 
 ## Fail-open and fail-closed behaviour
 
-Authentication, `MC_AUDIENCE`, the project guard, `ADMIN_USER_IDS` and Custom Objects fail closed; Vertex AI fails closed for chat and open for digests and suggestions; the optional tool sources, the Nimbus child, BigQuery offloading
+Authentication, `CONNECT_SERVICE_URL`, the project guard, `ADMIN_USER_IDS` and Custom Objects fail closed; Vertex AI fails closed for chat and open for digests and suggestions; the optional tool sources, the Nimbus child, BigQuery offloading
 and image storage fail open for the chat turn. The table with time limits and code references is in [docs/operations.md](../docs/operations.md#fail-open-and-fail-closed-behaviour).
 
 ## Events and jobs

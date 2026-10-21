@@ -83,7 +83,7 @@ describe('change L composition', () => {
   });
 
   it('GET /service/files/... is mounted behind the session check (401 without a token)', async () => {
-    const app = createApp(freshConfig({ MC_AUDIENCE: 'https://mc.example.test' }));
+    const app = createApp(freshConfig({ CONNECT_SERVICE_URL: 'https://mc.example.test' }));
     const res = await request(app).get(
       '/service/files/3f2b8c1e-aaaa-4bbb-8ccc-1234567890ab/1700000000000-ab12cd34.png'
     );

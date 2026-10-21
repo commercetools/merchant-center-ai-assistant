@@ -37,9 +37,7 @@ export interface LifecycleEnv {
   bucketName?: string;
   bucketLocation: string;
   liteModel: string;
-  /** MC_AUDIENCE: set by the second deployment phase. */
-  mcAudience?: string;
-  /** CONNECT_SERVICE_URL: injected by Connect into the lifecycle scripts only. */
+  /** CONNECT_SERVICE_URL: injected by Connect into the lifecycle scripts. */
   serviceUrl?: string;
   providerEnv: ProviderEnv;
 }
@@ -94,7 +92,6 @@ export function readLifecycleEnv(env: NodeJS.ProcessEnv = process.env): Lifecycl
     bucketName: str(env, 'GCP_BUCKET_NAME'),
     bucketLocation: str(env, 'GCP_BUCKET_LOCATION') ?? 'us-central1',
     liteModel: str(env, 'GEMINI_LITE_MODEL_NAME') ?? 'gemini-3.5-flash-lite',
-    mcAudience: str(env, 'MC_AUDIENCE'),
     serviceUrl: str(env, 'CONNECT_SERVICE_URL'),
     providerEnv,
   };

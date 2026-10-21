@@ -40,7 +40,7 @@ export function makeIdentityApp(
 ): IdentityApp {
   const config = freshConfig({
     MC_AUTH_DISABLED: 'true',
-    MC_AUDIENCE: AUDIENCE,
+    CONNECT_SERVICE_URL: AUDIENCE,
     ...env,
   });
   const mem = new MemoryObjectGateway();
