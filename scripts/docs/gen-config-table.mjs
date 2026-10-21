@@ -127,10 +127,20 @@ export function renderScopes(connect, oauth, reasons) {
       }
     }
   }
+  // Scopes with the same access, users and reason share one row, so a shared generic reason is
+  // stated once and not once per scope.
+  const grouped = new Map();
   for (const [scope, row] of rows) {
     const why = reasons.oauth?.[scope] ?? reasons.oauthDefault;
     if (!why) throw new Error(`docs/scope-reasons.json has no reason for the OAuth scope ${scope}`);
-    out.push(`| \`${scope}\` | ${row.access} | ${row.apps.map((a) => `\`${a}\``).join(', ')} | ${cell(why)} |`);
+    const key = `${row.access}\u0000${row.apps.join(',')}\u0000${why}`;
+    const group = grouped.get(key) ?? { access: row.access, apps: row.apps, why, scopes: [] };
+    group.scopes.push(scope);
+    grouped.set(key, group);
+  }
+  for (const group of grouped.values()) {
+    const names = group.scopes.map((scope) => `\`${scope}\``).join(', ');
+    out.push(`| ${names} | ${group.access} | ${group.apps.map((a) => `\`${a}\``).join(', ')} | ${cell(group.why)} |`);
   }
   return out.join('\n');
 }

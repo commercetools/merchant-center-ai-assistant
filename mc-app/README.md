@@ -17,7 +17,7 @@ The Merchant Center Custom Application named "AI Assistant": the chat surface, t
 ## Register it first
 
 Register the Custom Application in the Merchant Center (Settings, Developer settings, Custom Applications) with a placeholder URL such as `https://placeholder.invalid`, note its application id and choose a unique entry point URI path.
-Deploy, then update the registration with the URL that the deployment prints ([deployment guide](../docs/deployment.md#order-of-operations)). The OAuth scopes you register must equal `oAuthScopes` in `custom-application-config.mjs`.
+Deploy, then update the registration with the URL that the deployment prints ([deployment guide](../docs/connect-deployment.md#order-of-operations)). The OAuth scopes you register must equal `oAuthScopes` in `custom-application-config.mjs`.
 
 ## Configuration
 
@@ -48,7 +48,7 @@ yarn start                  # needs a Merchant Center login
 yarn typecheck && yarn lint && yarn test && yarn build
 ```
 
-`yarn build` needs the variables of `.env.example` exported or in `.env`. The gateway cannot reach `localhost`, so a local development server talks to a deployed sandbox service.
+`yarn build` needs the variables of `.env.example` exported or in `.env`. The gateway only reaches public https URLs, so a local development server talks to a deployed sandbox service, or to a local service over `http` when that service runs with `MC_AUTH_DISABLED=true` ([development.md](../docs/development.md#run-a-frontend)).
 `postinstall` generates the Nimbus type definitions and the Nimbus surface manifest (`yarn check:nimbus-surface` verifies that it is up to date; the service keeps a byte copy, checked by `npm run check:nimbus-surface` in `service/`).
 Files that must stay identical across the frontends are checked from the repository root with `node scripts/check-duplicates.mjs`.
 

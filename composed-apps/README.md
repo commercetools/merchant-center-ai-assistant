@@ -17,7 +17,7 @@ The app is a pure Merchant Center GraphQL client. It never calls the AI service,
 
 ## Prerequisites
 
-Register a Custom Application in the Merchant Center (see the [deployment guide](../docs/deployment.md#order-of-operations)) and note its application
+Register a Custom Application in the Merchant Center (see the [deployment guide](../docs/connect-deployment.md#order-of-operations)) and note its application
 id. Its entry point URI path must differ from the chat application's.
 
 ## Configuration

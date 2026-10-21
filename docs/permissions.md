@@ -39,7 +39,7 @@ It is read-only text from the session bootstrap, shown to everyone because an op
 
 ## Becoming the first administrator
 
-1. Deploy the connector without `ADMIN_USER_IDS` and finish the second deployment step ([deployment.md](./deployment.md)).
+1. Deploy the connector without `ADMIN_USER_IDS` and finish the second deployment step ([deployment.md](./connect-deployment.md)).
 2. Open the chat application and read your user ID (Settings, About).
 3. Set it: `node scripts/connect/connect.mjs configure ADMIN_USER_IDS=<your id>`. For several administrators pass one argument with commas, for example `ADMIN_USER_IDS=user-id-a,user-id-b`.
 4. Wait until the instances have restarted and refresh the application. The administrator screens appear.

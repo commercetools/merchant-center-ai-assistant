@@ -8,13 +8,13 @@ deployAs:
     configuration:
       standardConfiguration:
         - key: CTP_REGION
-          description: commercetools API region of the project in API-host spelling (us-central1.gcp, europe-west1.gcp, australia-southeast1.gcp, eu-central-1.aws or us-east-2.aws). Connect does not inject it
+          description: commercetools API region of the project in API-host spelling (us-central1.gcp, europe-west1.gcp, australia-southeast1.gcp, eu-central-1.aws or us-east-2.aws). Connect does not inject it. No default, required
           required: true
         - key: MC_APP_ENTRY_POINT_URI_PATH
           description: Entry point URI path of the chat Custom Application (used for logging and checks only)
           default: 'ai-assistant'
         - key: GCP_PROJECT_ID
-          description: Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional; when empty the project_id inside the service-account key is used
+          description: Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional. Default is the project_id inside the service-account key
           required: false
         - key: GCP_VERTEX_LOCATION
           description: Vertex AI location (Gemini text and image models)
@@ -38,7 +38,7 @@ deployAs:
           description: BigQuery location of the dataset (immutable once the dataset exists)
           default: 'us-central1'
         - key: GCP_BUCKET_NAME
-          description: Cloud Storage bucket for generated images. Optional; when empty the name is <gcp project id>-ai-assistant-images
+          description: Cloud Storage bucket for generated images. Optional. Default is <gcp project id>-ai-assistant-images
           required: false
         - key: GCP_BUCKET_LOCATION
           description: Location used when the bucket has to be created (us-central1, or a multi-region such as US)
@@ -83,68 +83,68 @@ deployAs:
           description: Logger level (error, warn, info, debug)
           default: 'info'
         - key: ADMIN_USER_IDS
-          description: Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator
+          description: Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator. Default is empty, so nobody is an administrator
           required: false
         - key: MCP_BINDING_OPEN_TO_ALL
           description: Feature flag. When true every verified Merchant Center user, not only an administrator from ADMIN_USER_IDS, may create, change and delete the shared Managed MCP (identity) binding. Nothing else loses its administrator gate (true or false)
           default: 'false'
         - key: CONTENTSTACK_BRANCH
-          description: Optional Contentstack branch name sent with every Content Management API call
+          description: Optional Contentstack branch name sent with every Content Management API call. Default is empty, so no branch header is sent
           required: false
         - key: CONTENTSTACK_REGION
           description: Contentstack region of the stack (na, eu, au, azure-na, azure-eu, gcp-na, gcp-eu)
           default: 'na'
         - key: STRIPE_CONNECTED_ACCOUNT_ID
-          description: Optional Stripe connected account id (acct_...) the Stripe tools act on behalf of
+          description: Optional Stripe connected account id (acct_...) the Stripe tools act on behalf of. Default is empty, so the Stripe tools act on the account of the key
           required: false
       securedConfiguration:
         - key: GCP_SA_KEY_BASE64
-          description: Base64 of the complete Google service-account JSON key (single line, no wrapping)
+          description: Base64 of the complete Google service-account JSON key (single line, no wrapping). No default, required
           required: true
         - key: ENCRYPTION_KEY
-          description: Base64 of a 32-byte AES-256-GCM key that protects stored identity tokens; changing it makes stored tokens unreadable (see change E for rotation)
+          description: Base64 of a 32-byte AES-256-GCM key that protects stored identity tokens; changing it makes stored tokens unreadable (see change E for rotation). No default, required
           required: true
         - key: ENCRYPTION_KEY_PREVIOUS
-          description: Optional comma-separated retired ENCRYPTION_KEY values (base64, 32 bytes each) used only to decrypt data written before a key rotation
+          description: Optional comma-separated retired ENCRYPTION_KEY values (base64, 32 bytes each) used only to decrypt data written before a key rotation. Default is unset
           required: false
         - key: CONTENTSTACK_API_KEY
-          description: Optional Contentstack stack API key. Contentstack is enabled only when this and CONTENTSTACK_MANAGEMENT_TOKEN are both set
+          description: Optional Contentstack stack API key. Contentstack is enabled only when this and CONTENTSTACK_MANAGEMENT_TOKEN are both set. Default is unset
           required: false
         - key: CONTENTSTACK_MANAGEMENT_TOKEN
-          description: Optional Contentstack Management Token (scope it to what the assistant may change)
+          description: Optional Contentstack Management Token (scope it to what the assistant may change). Default is unset
           required: false
         - key: ALGOLIA_MCP_URL
-          description: Optional https URL of the Algolia MCP server. Secured because it may embed a key; Algolia is enabled when it is set
+          description: Optional https URL of the Algolia MCP server. Secured because it may embed a key; Algolia is enabled when it is set. Default is unset
           required: false
         - key: STRIPE_SECRET_KEY
-          description: Optional Stripe secret or restricted key (sk_/rk_). Prefer a restricted key limited to the tools you want the assistant to use
+          description: Optional Stripe secret or restricted key (sk_/rk_). Prefer a restricted key limited to the tools you want the assistant to use. Default is unset
           required: false
   - name: mc-app
     applicationType: merchant-center-custom-application
     configuration:
       standardConfiguration:
         - key: CUSTOM_APPLICATION_ID
-          description: The Custom Application ID returned when registering the application in the Merchant Center
+          description: The Custom Application ID returned when registering the application in the Merchant Center. No default, required
           required: true
         - key: ENTRY_POINT_URI_PATH
-          description: Entry point URI path of the Custom Application (unique per cloud region)
+          description: Entry point URI path of the Custom Application (unique per cloud region). No default, required
           required: true
   - name: composed-apps
     applicationType: merchant-center-custom-application
     configuration:
       standardConfiguration:
         - key: CUSTOM_APPLICATION_ID
-          description: The Custom Application ID returned when registering the Pages application in the Merchant Center
+          description: The Custom Application ID returned when registering the Pages application in the Merchant Center. No default, required
           required: true
         - key: ENTRY_POINT_URI_PATH
-          description: Entry point URI path of the Pages Custom Application (unique per cloud region, different from the chat application)
+          description: Entry point URI path of the Pages Custom Application (unique per cloud region, different from the chat application). No default, required
           required: true
   - name: mc-view-app
     applicationType: merchant-center-custom-view
     configuration:
       standardConfiguration:
         - key: CUSTOM_VIEW_ID
-          description: The Custom View ID returned when registering the view in the Merchant Center
+          description: The Custom View ID returned when registering the view in the Merchant Center. No default, required
           required: true
 inheritAs:
   # Shared by every application, set once per deployment (a global value, no application prefix).

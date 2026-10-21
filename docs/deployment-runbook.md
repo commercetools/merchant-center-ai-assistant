@@ -4,6 +4,8 @@ This runbook installs, updates, rolls back and removes the AI Assistant connecto
 
 Steps that only a person with the right access can do are marked `[MANUAL <id>]` and describe themselves, so this file can be followed without any other document.
 
+The order of the steps and the reason for two deployment runs are in [connect-deployment.md](./connect-deployment.md); the Google Cloud and tool setup is in [setup.md](./setup.md).
+
 Quick reference (five commands for a first install, after the prerequisites):
 
 ```
@@ -60,7 +62,7 @@ A Connect request to the service times out after 5 minutes, and a deployment can
 
 ### Why there are two phases
 
-The public URL of the service exists only after the first deployment. The service reads it itself as `CONNECT_SERVICE_URL` (its origin is the audience that verifies the Merchant Center gateway token). The frontends cannot, so `CHAT_SERVICE_ENDPOINT_URL` (the origin plus `/service`) is baked into them. So:
+The deployment runs twice because the Merchant Center applications need the real `CHAT_SERVICE_ENDPOINT_URL`, which exists only after the first deployment. The reasons and the whole path with a diagram are in [connect-deployment.md](./connect-deployment.md). In commands:
 
 1. `deploy` creates the deployment without the endpoint URL. If Connect does not provide `CONNECT_SERVICE_URL` to the running service, it is healthy but rejects every Merchant Center request (it fails closed); the `auth configuration` line of its log shows `audience: not configured`.
 2. `finalize` reads the service URL, redeploys with `CHAT_SERVICE_ENDPOINT_URL=<origin>/service`, waits for `Deployed`, checks `GET <origin>/service/status` and prints the three application URLs.

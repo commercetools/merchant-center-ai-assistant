@@ -2,7 +2,7 @@
 
 This guide is for people who use the AI Assistant inside the Merchant Center. It describes what the screens
 do and what the assistant can and cannot do. For the technical side see [how-it-works.md](./how-it-works.md);
-for deployment see [deployment.md](./deployment.md). The labels below are the ones in the application source
+for deployment see [deployment.md](./connect-deployment.md). The labels below are the ones in the application source
 (`mc-app/src/components/`); there are no screenshots, so a label can differ slightly after an update.
 
 ## Before you start

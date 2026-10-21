@@ -22,7 +22,7 @@ dependencies. The root [README](./README.md) explains the layout and [docs/archi
 
 - Every source file carries the SPDX header. Check with `node scripts/spdx-check.mjs`.
 - Package names are `ai-assistant-<suffix>` (for example `ai-assistant-service`) and every `package.json` is `private`.
-- No `.github/workflows` and no other CI, container or infrastructure-as-code files: deployment is a set of Connect CLI commands ([docs/deployment.md](./docs/deployment.md)). That is by design.
+- No `.github/workflows` and no other CI, container or infrastructure-as-code files: deployment is a set of Connect CLI commands ([docs/connect-deployment.md](./docs/connect-deployment.md)). That is by design.
 - Never commit `.env*` files except `.env.example`, and keep secret-looking values empty there. Never put secrets, customer names, real project keys or internal host names in a commit, an issue or a document.
 - Write documentation in neutral, factual language. Every statement should be true of the code; cite the path.
 - Check the repository rules with `node scripts/check-repo-rules.mjs`.

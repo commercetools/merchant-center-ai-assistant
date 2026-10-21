@@ -70,4 +70,4 @@ Tool sources are plug-ins. The contract, what the registry does for you and an e
 
 ## More
 
-[Troubleshooting](../docs/troubleshooting.md), [security](../docs/security.md), [deployment](../docs/deployment.md), [CONTRIBUTING](../CONTRIBUTING.md).
+[Troubleshooting](../docs/troubleshooting.md), [security](../docs/security.md), [deployment](../docs/connect-deployment.md), [CONTRIBUTING](../CONTRIBUTING.md).

@@ -5,13 +5,23 @@
 # AI Assistant for the Merchant Center
 
 An AI chat assistant for the commercetools Merchant Center, packaged as a commercetools Connect
-connector. It is installed once per commercetools project.
+connector. It is installed once per commercetools project. Version 0.1.0, unsupported.
 
-- Status: version 0.1.0, unsupported (see [SUPPORT.md](./SUPPORT.md)).
-- The folders `plans/` and `openspec/` hold the design documentation of the project. They imply no support.
-- Documentation: this README is the connector README; the details are in [docs/](./docs) and in the
-  README of each application folder. Start with [docs/using-the-assistant.md](./docs/using-the-assistant.md)
-  if you use the assistant, or [docs/adding-a-store.md](./docs/adding-a-store.md) if you extend the service.
+This README is the connector README: what it is, its configuration, scopes and failure behaviour.
+Everything else is in the guides below.
+
+| I want to | Read |
+| --- | --- |
+| Use the assistant | [docs/using-the-assistant.md](./docs/using-the-assistant.md) |
+| Set up Google Cloud, Gemini, the service account, the bucket and other accounts | [docs/setup.md](./docs/setup.md) |
+| Deploy the connector with Connect | [docs/connect-deployment.md](./docs/connect-deployment.md), commands in [docs/deployment-runbook.md](./docs/deployment-runbook.md) |
+| Run, test and change the code | [docs/development.md](./docs/development.md) |
+| Look up a configuration key | [docs/configuration.md](./docs/configuration.md) |
+| Understand how it works | [docs/architecture.md](./docs/architecture.md), [docs/how-it-works.md](./docs/how-it-works.md), [FEATURES.md](./FEATURES.md) |
+| Add a data store or a tool source | [docs/adding-a-store.md](./docs/adding-a-store.md) |
+| Operate it or fix a problem | [docs/operations.md](./docs/operations.md), [docs/troubleshooting.md](./docs/troubleshooting.md) |
+| Review security, permissions and privacy | [docs/security.md](./docs/security.md), [docs/permissions.md](./docs/permissions.md), [docs/privacy.md](./docs/privacy.md) |
+| Call the service API | [docs/api.md](./docs/api.md) |
 
 ## Overview
 
@@ -32,15 +42,13 @@ What the assistant does:
 - Builds interactive pages from a chat and stores them as Custom Objects ("composed pages").
 - Offers administrators a system prompt, a tool-call log level, a transcript and feedback browser (backoffice) and Managed MCP setup.
 
-The full feature inventory is in [FEATURES.md](./FEATURES.md).
-
 ## What it is not
 
 - It is not supported by commercetools (see the banner above).
 - It does not use a Subscription, an API Extension or a scheduled job, and it is never in the path of carts, orders or checkout.
 - It has no database of its own: all state is in commercetools Custom Objects of the project it is installed in.
 - It does not serve more than one commercetools project per installation.
-- It does not ship a continuous-integration pipeline; deployment is a set of Connect CLI commands ([docs/deployment.md](./docs/deployment.md)).
+- It does not ship a continuous-integration pipeline; deployment is a set of Connect CLI commands ([docs/connect-deployment.md](./docs/connect-deployment.md)).
 
 ## Architecture at a glance
 
@@ -79,28 +87,18 @@ gateway, which adds a short-lived signed token that the service verifies. See
 
 ## Repository layout
 
-| Path | Contents |
-| --- | --- |
-| `connect.yaml` | The Connect contract: four applications, their configuration keys and the API client scopes |
-| `service/` | The service (TypeScript, Express, npm) |
-| `mc-app/`, `composed-apps/`, `mc-view-app/` | The Merchant Center applications (TypeScript, React, Yarn 1, one install per folder) |
-| `contract/` | Shared test fixture of the composed page format |
-| `docs/` | Documentation |
-| `e2e/` | Browser test playbooks and their helpers, see [e2e/README.md](./e2e/README.md) |
-| `scripts/` | Repository checks, the deployment helper (`scripts/connect`) and the documentation checks (`scripts/docs`) |
-| `plans/`, `openspec/` | Design documentation |
-
-There are no npm workspaces and no shared package: each folder installs its own dependencies, as
-Connect requires. A few small files are copied between the Merchant Center applications and kept
-identical by `node scripts/check-duplicates.mjs`.
+`service/` is the service (npm); `mc-app/`, `composed-apps/` and `mc-view-app/` are the Merchant Center applications (Yarn 1, one install per folder, no workspaces, as Connect requires);
+`connect.yaml` is the Connect contract; `docs/` holds the documentation, `scripts/` the repository checks and the deployment helper, `e2e/` the browser test playbooks.
+`plans/` and `openspec/` hold the design documentation and imply no support. The full table is in [docs/development.md](./docs/development.md#repository-layout).
 
 ## Prerequisites
 
-- Node.js 22 (npm for `service/` and `scripts/`, Yarn 1 for the three frontends).
-- The commercetools Connect CLI (`@commercetools/cli`, version 0.0.17 or newer) and, for `commercetools connect validate`, a running Docker daemon.
-- A commercetools project and a Merchant Center account that may register Custom Applications and a Custom View.
-- A Google Cloud project with the Vertex AI, BigQuery and Cloud Storage APIs enabled and one service account key (roles are listed under [Required scopes](#required-scopes)).
-- Optional: Contentstack, Algolia or Stripe credentials for the matching tool sources.
+- Node.js 22, Yarn 1, a running Docker daemon and the Connect CLI (`@commercetools/cli` 0.0.17 or newer).
+- A commercetools project, a Merchant Center account that may register Custom Applications and a Custom View, and a Connect API client.
+- A Google Cloud project with Vertex AI, BigQuery and Cloud Storage enabled and one service-account key.
+- Optional: Contentstack, Algolia or Stripe credentials.
+
+How to create each of these is in [docs/setup.md](./docs/setup.md).
 
 ## Quick start (local)
 
@@ -110,37 +108,32 @@ This mode is refused when `NODE_ENV=production` and never reaches Connect.
 ```
 cd service
 npm ci
-cp .env.example .env.local
-# edit .env.local: NODE_ENV=development, PERSISTENCE_DRIVER=memory, MC_AUTH_DISABLED=true,
-# CONNECT_SERVICE_URL=http://localhost:8080/service (local only; Connect provides it when deployed),
-# CTP_PROJECT_KEY=<your project key>, CTP_REGION=us-central1.gcp,
-# ENCRYPTION_KEY=$(openssl rand -base64 32)
+cp .env.example .env.local     # set the values listed in docs/development.md
 npm run start:dev
 curl http://127.0.0.1:8080/service/status
-curl -H 'x-dev-user-id: user-id-a' -H 'x-dev-admin: true' http://127.0.0.1:8080/service/session/all
 ```
 
-Chat answers need `GCP_SA_KEY_BASE64`. The three frontends run with `yarn install && yarn start` in their folder
-and need a registered Custom Application, a Merchant Center login and a reachable service; see each folder's README.
-Full local instructions: [service/README.md](./service/README.md).
+Chat answers need `GCP_SA_KEY_BASE64`. The three frontends run with `yarn install && yarn start` in their folder.
+Which values to set, how a frontend reaches the local service and how to try the Managed MCP connect flow: [docs/development.md](./docs/development.md).
 
 ## Deployment summary
 
-Deployment uses the Connect CLI through `node scripts/connect/connect.mjs`. First install, after the prerequisites:
+The deployment runs **twice**, because the Merchant Center applications need the real `CHAT_SERVICE_ENDPOINT_URL`, which exists only after the service has been deployed once.
+It uses the Connect CLI through `node scripts/connect/connect.mjs`.
 
 1. Register the two Custom Applications and the Custom View in the Merchant Center with a placeholder URL.
 2. `stage`, then `publish` the connector from your repository and tag.
-3. `deploy` (phase 1), then `finalize` (phase 2: it sets `CHAT_SERVICE_ENDPOINT_URL` for the Merchant Center apps from the service URL).
-4. Put the printed application URLs into the Merchant Center registrations.
-5. Read your user ID in the app and set `ADMIN_USER_IDS` with `configure`.
+3. `deploy`: the first deployment, with everything except `CHAT_SERVICE_ENDPOINT_URL`.
+4. `finalize`: the second deployment, a redeploy that passes `CHAT_SERVICE_ENDPOINT_URL` (the service URL plus `/service`).
+5. Put the printed application URLs into the Merchant Center registrations.
+6. Read your user ID in the app and set `ADMIN_USER_IDS` with `configure`.
 
-Read [docs/deployment.md](./docs/deployment.md) for the concepts and the exact order and
-[docs/deployment-runbook.md](./docs/deployment-runbook.md) for the commands.
+The path with a diagram, and why the order matters: [docs/connect-deployment.md](./docs/connect-deployment.md). Commands: [docs/deployment-runbook.md](./docs/deployment-runbook.md).
 
 ## Configuration
 
-Every `connect.yaml` key, per application. Connect injects `CTP_API_URL`, `CTP_AUTH_URL`, `CTP_CLIENT_ID`,
-`CTP_CLIENT_SECRET`, `CTP_PROJECT_KEY` and `CTP_SCOPE` into the service from the API client it creates; they are never declared.
+Every `connect.yaml` key, per application, with its default. A key without a fixed default says what happens when it is empty in its description.
+Connect injects `CTP_API_URL`, `CTP_AUTH_URL`, `CTP_CLIENT_ID`, `CTP_CLIENT_SECRET`, `CTP_PROJECT_KEY` and `CTP_SCOPE` into the service from the API client it creates; they are never declared.
 The table is generated from `connect.yaml`; the notes are in [docs/configuration.md](./docs/configuration.md).
 
 <!-- gen:begin config -->
@@ -150,9 +143,9 @@ The table is generated from `connect.yaml`; the notes are in [docs/configuration
 
 | Key | Kind | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `CTP_REGION` | standard | yes |  | commercetools API region of the project in API-host spelling (us-central1.gcp, europe-west1.gcp, australia-southeast1.gcp, eu-central-1.aws or us-east-2.aws). Connect does not inject it |
+| `CTP_REGION` | standard | yes |  | commercetools API region of the project in API-host spelling (us-central1.gcp, europe-west1.gcp, australia-southeast1.gcp, eu-central-1.aws or us-east-2.aws). Connect does not inject it. No default, required |
 | `MC_APP_ENTRY_POINT_URI_PATH` | standard | no | `ai-assistant` | Entry point URI path of the chat Custom Application (used for logging and checks only) |
-| `GCP_PROJECT_ID` | standard | no |  | Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional; when empty the project_id inside the service-account key is used |
+| `GCP_PROJECT_ID` | standard | no |  | Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional. Default is the project_id inside the service-account key |
 | `GCP_VERTEX_LOCATION` | standard | no | `us-central1` | Vertex AI location (Gemini text and image models) |
 | `GEMINI_MODEL_NAME` | standard | no | `gemini-3.8-flash` | Main Gemini model id. Used by the chat orchestrator and by the Algolia, Stripe, export and Contentstack agents, all with a high thinking level |
 | `GEMINI_LITE_MODEL_NAME` | standard | no | `gemini-3.5-flash-lite` | Cheap Gemini model id used for session digests and prompt suggestions |
@@ -160,7 +153,7 @@ The table is generated from `connect.yaml`; the notes are in [docs/configuration
 | `GEMINI_IMAGE_MODEL_NAME` | standard | no | `gemini-2.5-flash-image` | Gemini model id used for image generation (must be available in GCP_VERTEX_LOCATION) |
 | `GCP_BIGQUERY_DATASET_ID` | standard | no | `aiassistant` | BigQuery dataset for offloaded tool results (created on first use when the service account may create datasets) |
 | `GCP_BIGQUERY_LOCATION` | standard | no | `us-central1` | BigQuery location of the dataset (immutable once the dataset exists) |
-| `GCP_BUCKET_NAME` | standard | no |  | Cloud Storage bucket for generated images. Optional; when empty the name is <gcp project id>-ai-assistant-images |
+| `GCP_BUCKET_NAME` | standard | no |  | Cloud Storage bucket for generated images. Optional. Default is <gcp project id>-ai-assistant-images |
 | `GCP_BUCKET_LOCATION` | standard | no | `us-central1` | Location used when the bucket has to be created (us-central1, or a multi-region such as US) |
 | `IMAGE_URL_MODE` | standard | no | `private` | private (default) = bucket stays private and images are streamed through the service; public = objects are publicly readable and stored with the public bucket URL |
 | `MCP_TOOLS_TTL_MS` | standard | no | `1800000` | In-process cache lifetime of fetched MCP tool sets in milliseconds |
@@ -175,38 +168,38 @@ The table is generated from `connect.yaml`; the notes are in [docs/configuration
 | `MCP_HANDSHAKE_TIMEOUT_MS` | standard | no | `10000` | Time in milliseconds a third-party MCP server may take to complete its handshake before it is skipped for the turn (at least 1) |
 | `CHAT_DIGEST_BEFORE_CLOSE` | standard | no | `false` | When true the chat stream waits up to 3 seconds for the session digest before closing (true or false) |
 | `LOG_LEVEL` | standard | no | `info` | Logger level (error, warn, info, debug) |
-| `ADMIN_USER_IDS` | standard | no |  | Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator |
+| `ADMIN_USER_IDS` | standard | no |  | Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator. Default is empty, so nobody is an administrator |
 | `MCP_BINDING_OPEN_TO_ALL` | standard | no | `false` | Feature flag. When true every verified Merchant Center user, not only an administrator from ADMIN_USER_IDS, may create, change and delete the shared Managed MCP (identity) binding. Nothing else loses its administrator gate (true or false) |
-| `CONTENTSTACK_BRANCH` | standard | no |  | Optional Contentstack branch name sent with every Content Management API call |
+| `CONTENTSTACK_BRANCH` | standard | no |  | Optional Contentstack branch name sent with every Content Management API call. Default is empty, so no branch header is sent |
 | `CONTENTSTACK_REGION` | standard | no | `na` | Contentstack region of the stack (na, eu, au, azure-na, azure-eu, gcp-na, gcp-eu) |
-| `STRIPE_CONNECTED_ACCOUNT_ID` | standard | no |  | Optional Stripe connected account id (acct_...) the Stripe tools act on behalf of |
-| `GCP_SA_KEY_BASE64` | secured | yes |  | Base64 of the complete Google service-account JSON key (single line, no wrapping) |
-| `ENCRYPTION_KEY` | secured | yes |  | Base64 of a 32-byte AES-256-GCM key that protects stored identity tokens; changing it makes stored tokens unreadable (see change E for rotation) |
-| `ENCRYPTION_KEY_PREVIOUS` | secured | no |  | Optional comma-separated retired ENCRYPTION_KEY values (base64, 32 bytes each) used only to decrypt data written before a key rotation |
-| `CONTENTSTACK_API_KEY` | secured | no |  | Optional Contentstack stack API key. Contentstack is enabled only when this and CONTENTSTACK_MANAGEMENT_TOKEN are both set |
-| `CONTENTSTACK_MANAGEMENT_TOKEN` | secured | no |  | Optional Contentstack Management Token (scope it to what the assistant may change) |
-| `ALGOLIA_MCP_URL` | secured | no |  | Optional https URL of the Algolia MCP server. Secured because it may embed a key; Algolia is enabled when it is set |
-| `STRIPE_SECRET_KEY` | secured | no |  | Optional Stripe secret or restricted key (sk_/rk_). Prefer a restricted key limited to the tools you want the assistant to use |
+| `STRIPE_CONNECTED_ACCOUNT_ID` | standard | no |  | Optional Stripe connected account id (acct_...) the Stripe tools act on behalf of. Default is empty, so the Stripe tools act on the account of the key |
+| `GCP_SA_KEY_BASE64` | secured | yes |  | Base64 of the complete Google service-account JSON key (single line, no wrapping). No default, required |
+| `ENCRYPTION_KEY` | secured | yes |  | Base64 of a 32-byte AES-256-GCM key that protects stored identity tokens; changing it makes stored tokens unreadable (see change E for rotation). No default, required |
+| `ENCRYPTION_KEY_PREVIOUS` | secured | no |  | Optional comma-separated retired ENCRYPTION_KEY values (base64, 32 bytes each) used only to decrypt data written before a key rotation. Default is unset |
+| `CONTENTSTACK_API_KEY` | secured | no |  | Optional Contentstack stack API key. Contentstack is enabled only when this and CONTENTSTACK_MANAGEMENT_TOKEN are both set. Default is unset |
+| `CONTENTSTACK_MANAGEMENT_TOKEN` | secured | no |  | Optional Contentstack Management Token (scope it to what the assistant may change). Default is unset |
+| `ALGOLIA_MCP_URL` | secured | no |  | Optional https URL of the Algolia MCP server. Secured because it may embed a key; Algolia is enabled when it is set. Default is unset |
+| `STRIPE_SECRET_KEY` | secured | no |  | Optional Stripe secret or restricted key (sk_/rk_). Prefer a restricted key limited to the tools you want the assistant to use. Default is unset |
 
 **`mc-app`** (merchant-center-custom-application)
 
 | Key | Kind | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `CUSTOM_APPLICATION_ID` | standard | yes |  | The Custom Application ID returned when registering the application in the Merchant Center |
-| `ENTRY_POINT_URI_PATH` | standard | yes |  | Entry point URI path of the Custom Application (unique per cloud region) |
+| `CUSTOM_APPLICATION_ID` | standard | yes |  | The Custom Application ID returned when registering the application in the Merchant Center. No default, required |
+| `ENTRY_POINT_URI_PATH` | standard | yes |  | Entry point URI path of the Custom Application (unique per cloud region). No default, required |
 
 **`composed-apps`** (merchant-center-custom-application)
 
 | Key | Kind | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `CUSTOM_APPLICATION_ID` | standard | yes |  | The Custom Application ID returned when registering the Pages application in the Merchant Center |
-| `ENTRY_POINT_URI_PATH` | standard | yes |  | Entry point URI path of the Pages Custom Application (unique per cloud region, different from the chat application) |
+| `CUSTOM_APPLICATION_ID` | standard | yes |  | The Custom Application ID returned when registering the Pages application in the Merchant Center. No default, required |
+| `ENTRY_POINT_URI_PATH` | standard | yes |  | Entry point URI path of the Pages Custom Application (unique per cloud region, different from the chat application). No default, required |
 
 **`mc-view-app`** (merchant-center-custom-view)
 
 | Key | Kind | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `CUSTOM_VIEW_ID` | standard | yes |  | The Custom View ID returned when registering the view in the Merchant Center |
+| `CUSTOM_VIEW_ID` | standard | yes |  | The Custom View ID returned when registering the view in the Merchant Center. No default, required |
 
 **Shared by all applications** (`inheritAs.configuration` in `connect.yaml`, set once per deployment without an application prefix)
 
@@ -224,13 +217,13 @@ when all of its required keys are set and valid; otherwise it is disabled and a 
 
 An administrator is a user whose Merchant Center user ID is listed in the Connect configuration `ADMIN_USER_IDS`
 (optional, comma-separated, at most 50 entries). The service decides this on every request from the user ID inside
-the signed gateway token. Nothing the browser sends (e-mail, label, flag) is ever trusted.
+the signed gateway token. Nothing the browser sends is ever trusted.
 
-- Empty or unset `ADMIN_USER_IDS` means nobody is an administrator (fail closed). The service logs `ADMIN_USER_IDS is empty: no administrator` at start.
-- To find your own ID, open the app, then Settings, About: the "Your user ID" line is shown to every user (the panel shows it in its footer).
-- First administrator: deploy, read the ID, run `node scripts/connect/connect.mjs configure ADMIN_USER_IDS=<id>` and refresh the app after the instances restart.
-- Non-administrators see no administrator screens and get HTTP 403 with code `ADMIN_REQUIRED` from administrator routes. Chat, sessions and connecting their own account keep working.
-- No Merchant Center permission grants administrator rights. The apps only use their default View and Manage permission pair, which controls access to the app.
+- Empty or unset `ADMIN_USER_IDS` means nobody is an administrator (fail closed).
+- To find your own ID, open the app, then Settings, About: the "Your user ID" line is shown to every user.
+- First administrator: deploy, read the ID, run `node scripts/connect/connect.mjs configure ADMIN_USER_IDS=<id>`.
+- Non-administrators see no administrator screens and get HTTP 403 with code `ADMIN_REQUIRED` from administrator routes.
+- `MCP_BINDING_OPEN_TO_ALL=true` opens only the shared Managed MCP binding to every user; nothing else.
 
 Details: [docs/permissions.md](./docs/permissions.md).
 
@@ -254,68 +247,16 @@ Generated from `connect.yaml` and the configuration files of the applications.
 | --- | --- | --- | --- |
 | `view_key_value_documents` | view | `mc-app`, `composed-apps`, `mc-view-app` | Reads the composed pages stored as Custom Objects; in the Custom View the list only has to be non-empty |
 | `view_mcp_servers` | view | `mc-app`, `mc-view-app` | Lists Managed MCP servers with the signed-in user's own permissions (administrator setup screen of the chat application; the Custom View declares it for parity and does not use it) |
-| `view_stores` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_tax_categories` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_products` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_product_selections` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_categories` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_standalone_prices` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_cart_discounts` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_discount_codes` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_customers` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_customer_groups` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_business_units` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_orders` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_payment_methods` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_shopping_lists` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_shipping_methods` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_quote_requests` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_staged_quotes` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `view_quotes` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
+| `view_stores`, `view_tax_categories`, `view_products`, `view_product_selections`, `view_categories`, `view_standalone_prices`, `view_cart_discounts`, `view_discount_codes`, `view_customers`, `view_customer_groups`, `view_business_units`, `view_orders`, `view_payment_methods`, `view_shopping_lists`, `view_shipping_methods`, `view_quote_requests`, `view_staged_quotes`, `view_quotes` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
 | `manage_key_value_documents` | manage | `mc-app`, `mc-view-app` | Lets the chat application save and delete composed pages; in the Custom View the list only has to be non-empty |
-| `manage_stores` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_tax_categories` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_products` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_product_selections` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_categories` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_standalone_prices` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_cart_discounts` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_customers` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_customer_groups` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_business_units` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_orders` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_payment_methods` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_shopping_lists` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_shipping_methods` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_quote_requests` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_staged_quotes` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_quotes` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
+| `manage_stores`, `manage_tax_categories`, `manage_products`, `manage_product_selections`, `manage_categories`, `manage_standalone_prices`, `manage_cart_discounts`, `manage_customers`, `manage_customer_groups`, `manage_business_units`, `manage_orders`, `manage_payment_methods`, `manage_shopping_lists`, `manage_shipping_methods`, `manage_quote_requests`, `manage_staged_quotes`, `manage_quotes` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
 | `manage_mcp_servers` | manage | `mc-app`, `mc-view-app` | Creates Managed MCP servers with the signed-in user's own permissions (administrator setup screen of the chat application; the Custom View declares it for parity and does not use it) |
-| `manage_approval_flows` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_approval_rules` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_associate_roles` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_attribute_groups` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_discount_codes` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_project_settings` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_order_edits` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_payments` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_recurring_orders` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_recurring_payments` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_recurrence_policies` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_states` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
-| `manage_types` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
+| `manage_approval_flows`, `manage_approval_rules`, `manage_associate_roles`, `manage_attribute_groups`, `manage_discount_codes`, `manage_project_settings`, `manage_order_edits`, `manage_payments`, `manage_recurring_orders`, `manage_recurring_payments`, `manage_recurrence_policies`, `manage_states`, `manage_types` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
 
 <!-- gen:end scopes -->
 
-The key `ENCRYPTION_KEY` protects stored identity tokens. The service-account key in `GCP_SA_KEY_BASE64` needs these Google Cloud roles:
-
-| Role | Why |
-| --- | --- |
-| `roles/aiplatform.user` | Gemini models on Vertex AI |
-| `roles/bigquery.jobUser` | Runs queries and load jobs |
-| `roles/bigquery.dataEditor` | Creates the dataset and the temporary tables of offloaded tool results |
-| `roles/storage.admin` on the project, or `roles/storage.objectAdmin` on a bucket you create yourself | Stores generated images; the first option lets the service create the private bucket, the second is the least-privilege option |
-
+The Google service account behind `GCP_SA_KEY_BASE64` needs `roles/aiplatform.user`, `roles/bigquery.jobUser`, `roles/bigquery.dataEditor` and either
+`roles/storage.admin` on the project or `roles/storage.objectAdmin` on a bucket you create; the commands are in [docs/setup.md](./docs/setup.md#3-service-account-and-key).
 Merchant Center users need the default View permission of an application to open it. Managing a Managed MCP server needs
 `manage_mcp_servers` in the user's own project permissions. See [docs/permissions.md](./docs/permissions.md).
 
@@ -344,10 +285,10 @@ Details and the code references are in [docs/operations.md](./docs/operations.md
 ## Operations
 
 - Health: `GET /service/status` answers `{"status":"UP", ...}` without calling any dependency; `GET /service/status/nimbus` checks the embedded Nimbus child.
-- Logs: JSON lines on standard output; set `LOG_LEVEL` (`error`, `warn`, `info`, `debug`) and `LOG_HTTP=true` for one line per request. Secrets, tokens and message content are never logged.
+- Logs: JSON lines on standard output; set `LOG_LEVEL` and `LOG_HTTP=true` for one line per request. Secrets, tokens and message content are never logged.
 - Correlation: send `X-Correlation-Id` (otherwise one is generated); it is the `correlationId` field of every log line of that request.
 - Audit: administrator actions log `audit.admin_action` with the user ID, route and outcome, never an e-mail address.
-- Data retention: chat messages and feedback are kept until an operator deletes them. There is no automatic deletion, expiry or cleanup job. See [docs/operations.md](./docs/operations.md#data-retention).
+- Data retention: chat messages and feedback are kept until an operator deletes them. There is no automatic deletion. See [docs/operations.md](./docs/operations.md#data-retention).
 
 ## Poison messages and replay
 
@@ -358,11 +299,9 @@ identity connection, or redeploy. See [docs/operations.md](./docs/operations.md#
 
 ## Testing
 
-- Service: `cd service && npm ci && npm test` (Jest, in-memory persistence, no network). `npm run typecheck`, `npm run lint` and `npm run check:foundation` are the other gates.
-- Frontends: `yarn typecheck && yarn lint && yarn test && yarn build` in each folder (the build needs the variables of `.env.example`).
-- Repository checks: `node scripts/spdx-check.mjs`, `node scripts/check-repo-rules.mjs`, `node scripts/check-connect-layout.mjs`, `node scripts/check-duplicates.mjs`.
-- Documentation checks: `node scripts/docs/gen-config-table.mjs --check`, `check-links.mjs`, `check-api-doc.mjs`, `check-docs-claims.mjs`.
-- Live checks against a deployed connector need a Merchant Center login and are run by hand; the playbooks, tiers and evidence rules are in [e2e/README.md](./e2e/README.md).
+- Service: `cd service && npm ci && npm test` (Jest, in-memory persistence, no network).
+- Frontends: `yarn typecheck && yarn lint && yarn test && yarn build` in each folder.
+- Repository and documentation checks, and live checks against a deployed connector: [docs/development.md](./docs/development.md#test-and-check) and [e2e/README.md](./e2e/README.md).
 
 ## Contributing
 

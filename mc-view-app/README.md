@@ -22,7 +22,7 @@ no poison-message or replay procedure.
 ## Prerequisites
 
 - The chat service is deployed and reachable (see the [service README](../service/README.md)).
-- The Custom View is registered in the Merchant Center with a placeholder URL first ([deployment guide](../docs/deployment.md#order-of-operations));
+- The Custom View is registered in the Merchant Center with a placeholder URL first ([deployment guide](../docs/connect-deployment.md#order-of-operations));
   Connect then provides the deployed URL, which is written back to the registration.
 - The project has an identity-mode Managed MCP binding, set up by an administrator in the AI Assistant
   application (`mc-app`). The panel only reads it.

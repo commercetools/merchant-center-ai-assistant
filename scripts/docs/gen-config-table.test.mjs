@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { readConnectYaml, readOAuthScopes, renderConfig, replaceBlocks, run } from './gen-config-table.mjs';
+import { readConnectYaml, readOAuthScopes, renderConfig, renderScopes, replaceBlocks, run } from './gen-config-table.mjs';
 
 const YAML = `deployAs:
   - name: service
@@ -120,4 +120,24 @@ test('a file without markers fails', () => {
   const root = fixture();
   writeFileSync(join(root, 'README.md'), '# nothing\n');
   assert.equal(run(['--check', '--root', root, 'README.md'], quiet), 1);
+});
+
+test('renderScopes: scopes with the same access, users and reason share one row', () => {
+  const connect = { scopes: ['view_key_value_documents'] };
+  const oauth = [
+    { app: 'mc-app', scopes: { view: ['view_a', 'view_b', 'view_special'], manage: ['manage_a'] } },
+    { app: 'composed-apps', scopes: { view: ['view_a', 'view_b'], manage: [] } },
+  ];
+  const reasons = {
+    api: { view_key_value_documents: 'Reads state' },
+    oauth: { view_special: 'Its own reason' },
+    oauthDefault: 'Commerce data',
+  };
+  const text = renderScopes(connect, oauth, reasons);
+  const rows = text.split('\n').filter((line) => line.startsWith('| `view_') || line.startsWith('| `manage_'));
+  // view_a and view_b are used by both apps with the default reason: one row. The others stand alone.
+  assert.ok(rows.some((row) => row.startsWith('| `view_a`, `view_b` | view | `mc-app`, `composed-apps` | Commerce data |')));
+  assert.ok(rows.some((row) => row.startsWith('| `view_special` | view | `mc-app` | Its own reason |')));
+  assert.ok(rows.some((row) => row.startsWith('| `manage_a` | manage | `mc-app` | Commerce data |')));
+  assert.equal(text.match(/`view_a`/g).length, 1, 'each scope is named once');
 });

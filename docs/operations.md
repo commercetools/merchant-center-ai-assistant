@@ -1,6 +1,6 @@
 # Operations
 
-How to observe, run and recover the connector. Deployment steps are in [deployment.md](./deployment.md); symptoms and fixes are in [troubleshooting.md](./troubleshooting.md).
+How to observe, run and recover the connector. Deployment steps are in [deployment.md](./connect-deployment.md); symptoms and fixes are in [troubleshooting.md](./troubleshooting.md).
 
 ## Health
 
@@ -88,7 +88,7 @@ Recovery paths for the failures that can happen:
 - A chat turn failed or was cut by the time limit: ask again or ask the assistant to continue. The messages that were produced are stored.
 - A session is stuck or too long (`Session is too long`): delete the session in the app and start a new one.
 - A user sees "not connected": reconnect the identity connection from the app (an administrator can remove and re-bind the Managed MCP server).
-- A configuration or code problem: fix the configuration and redeploy, or redeploy the previous tag ([deployment.md](./deployment.md#updating-and-rolling-back)).
+- A configuration or code problem: fix the configuration and redeploy, or redeploy the previous tag ([deployment.md](./connect-deployment.md#updating-and-rolling-back)).
 - Stored data is wrong or unwanted: delete the Custom Objects as described next.
 
 ## Data retention
@@ -104,7 +104,7 @@ How an operator deletes data:
   - one user's connection: the object with their user ID in `ai-assistant-identity-tokens` (or remove it with the "disconnect" action in the app);
   - feedback: the object in `ai-assistant-feedback` and every object of `ai-assistant-feedback-snap-<feedbackId>`;
   - cached suggestions: the user's object in `ai-assistant-suggestions`.
-- Undeploying the connector does not delete any of this ([deployment.md](./deployment.md#updating-and-rolling-back)). To remove everything, delete the containers whose names start with `ai-assistant-` and the container `shared-composed-pages`, and the BigQuery dataset and the image bucket.
+- Undeploying the connector does not delete any of this ([deployment.md](./connect-deployment.md#updating-and-rolling-back)). To remove everything, delete the containers whose names start with `ai-assistant-` and the container `shared-composed-pages`, and the BigQuery dataset and the image bucket.
 
 ## Backup and restore
 
