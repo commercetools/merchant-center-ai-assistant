@@ -1,14 +1,17 @@
-> **UNSUPPORTED - commercetools Labs.** This repository is freely available reference code,
-> provided AS IS under the MIT license with **no support, no SLA and no roadmap commitment**.
-> See [SUPPORT.md](./SUPPORT.md) and [LICENSE](./LICENSE).
+> **commercetools Labs, unsupported.** Freely available reference code under the MIT license,
+> shared as-is and not covered by commercetools support. See [SUPPORT.md](./SUPPORT.md) and [LICENSE](./LICENSE).
 
 # AI Assistant for the Merchant Center
 
-An AI chat assistant for the commercetools Merchant Center, packaged as a commercetools Connect
-connector. It is installed once per commercetools project. Version 0.1.0, unsupported.
+Ask your commerce data a question in plain language, right inside the Merchant Center.
 
-This README is the connector README: what it is, its configuration, scopes and failure behaviour.
-Everything else is in the guides below.
+Merchants and developers spend a lot of time clicking through lists and filters to answer simple questions ("which orders from last week are still unpaid?") or to make small repetitive changes. This connector adds a chat assistant to the Merchant Center that does that work for you. It uses Gemini on Google Vertex AI and a commercetools Managed MCP server, so every person acts with their own Merchant Center permissions and sees only what they are allowed to see.
+
+When it works, you get an "AI Assistant" application with chat, a side panel on Merchant Center pages that knows which page you are on, and pages the assistant builds for you. It installs once per commercetools project through commercetools Connect (version 0.1.0).
+
+This is shared as reference code: free to use and adapt, as-is, and unsupported by commercetools. Details are in [SUPPORT.md](./SUPPORT.md).
+
+This README is the connector README: its configuration, scopes and failure behaviour. Everything else is in the guides below.
 
 | I want to | Read |
 | --- | --- |
