@@ -20,10 +20,6 @@ export function getProviderOptions(tier: ModelTier): ProviderOptions | undefined
   switch (tier) {
     case 'main':
       return { vertex: { thinkingConfig: { thinkingLevel: 'high', includeThoughts: true } } };
-    case 'agent':
-      // thinkingBudget is a 2.5-era control: it is only valid while the `agent`
-      // model (default gemini-2.5-flash) is a 2.5 model; Gemini 3.x ignores or rejects it.
-      return { vertex: { thinkingConfig: { thinkingBudget: -1, includeThoughts: true } } };
     case 'lite':
       // No includeThoughts on purpose: with thoughts on, the digest and suggestion calls
       // were measured at over a thousand reasoning tokens and a multi-second cold start.

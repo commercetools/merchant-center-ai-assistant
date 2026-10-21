@@ -20,11 +20,8 @@ deployAs:
           description: Vertex AI location (Gemini text and image models)
           default: 'us-central1'
         - key: GEMINI_MODEL_NAME
-          description: Main Gemini model id
+          description: Main Gemini model id. Used by the chat orchestrator and by the Algolia, Stripe, export and Contentstack agents, all with a high thinking level
           default: 'gemini-3.8-flash'
-        - key: GEMINI_AGENT_MODEL_NAME
-          description: Gemini model id for the Algolia, Stripe, export and Contentstack agents. Uses a 2.5-era thinking budget, so keep a 2.5 model unless you also change the thinking configuration
-          default: 'gemini-2.5-flash'
         - key: GEMINI_LITE_MODEL_NAME
           description: Cheap Gemini model id used for session digests and prompt suggestions
           default: 'gemini-3.5-flash-lite'

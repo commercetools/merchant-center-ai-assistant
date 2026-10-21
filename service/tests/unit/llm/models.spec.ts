@@ -45,7 +45,6 @@ describe('getModel', () => {
   it('maps every tier to its default model', () => {
     useEnv({ GCP_SA_KEY_BASE64: fakeKeyBase64() });
     expect(getModel('main')).toEqual({ modelId: 'gemini-3.8-flash' });
-    expect(getModel('agent')).toEqual({ modelId: 'gemini-2.5-flash' });
     expect(getModel('lite')).toEqual({ modelId: 'gemini-3.5-flash-lite' });
     expect(getModel('image')).toEqual({ modelId: 'gemini-2.5-flash-image' });
     expect(getModelName('main')).toBe('gemini-3.8-flash');
@@ -54,7 +53,6 @@ describe('getModel', () => {
   it('overrides one tier independently', () => {
     useEnv({ GCP_SA_KEY_BASE64: fakeKeyBase64(), GEMINI_MODEL_NAME: 'custom-model' });
     expect(getModelName('main')).toBe('custom-model');
-    expect(getModelName('agent')).toBe('gemini-2.5-flash');
     expect(getModelName('lite')).toBe('gemini-3.5-flash-lite');
     expect(getModelName('image')).toBe('gemini-2.5-flash-image');
   });
@@ -71,9 +69,6 @@ describe('getProviderOptions', () => {
     useEnv({});
     expect(getProviderOptions('main')).toEqual({
       vertex: { thinkingConfig: { thinkingLevel: 'high', includeThoughts: true } },
-    });
-    expect(getProviderOptions('agent')).toEqual({
-      vertex: { thinkingConfig: { thinkingBudget: -1, includeThoughts: true } },
     });
     expect(getProviderOptions('lite')).toEqual({
       vertex: { thinkingConfig: { thinkingLevel: 'minimal' } },

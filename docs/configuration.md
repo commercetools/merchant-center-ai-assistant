@@ -25,8 +25,7 @@ and from the configuration files of the Merchant Center applications by `node sc
 | `MC_APP_ENTRY_POINT_URI_PATH` | standard | no | `ai-assistant` | Entry point URI path of the chat Custom Application (used for logging and checks only) |
 | `GCP_PROJECT_ID` | standard | no |  | Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional; when empty the project_id inside the service-account key is used |
 | `GCP_VERTEX_LOCATION` | standard | no | `us-central1` | Vertex AI location (Gemini text and image models) |
-| `GEMINI_MODEL_NAME` | standard | no | `gemini-3.8-flash` | Main Gemini model id |
-| `GEMINI_AGENT_MODEL_NAME` | standard | no | `gemini-2.5-flash` | Gemini model id for the Algolia, Stripe, export and Contentstack agents. Uses a 2.5-era thinking budget, so keep a 2.5 model unless you also change the thinking configuration |
+| `GEMINI_MODEL_NAME` | standard | no | `gemini-3.8-flash` | Main Gemini model id. Used by the chat orchestrator and by the Algolia, Stripe, export and Contentstack agents, all with a high thinking level |
 | `GEMINI_LITE_MODEL_NAME` | standard | no | `gemini-3.5-flash-lite` | Cheap Gemini model id used for session digests and prompt suggestions |
 | `GEMINI_LITE_THINKING_LEVEL` | standard | no | `minimal` | Thinking level of the cheap model (minimal, low, medium or high) |
 | `GEMINI_IMAGE_MODEL_NAME` | standard | no | `gemini-2.5-flash-image` | Gemini model id used for image generation (must be available in GCP_VERTEX_LOCATION) |
@@ -167,8 +166,7 @@ an entry that the pinned toolkit does not provide switches nothing.
 
 | Tier | Key | Default | Used for |
 | --- | --- | --- | --- |
-| main | `GEMINI_MODEL_NAME` | `gemini-3.8-flash` | The chat orchestrator, with a high thinking level |
-| agent | `GEMINI_AGENT_MODEL_NAME` | `gemini-2.5-flash` | Reserved: the chat orchestrator is flat and no current code path selects this tier (it remains the default of the token-count helper). It uses a 2.5-era thinking budget, so keep a 2.5 model unless you change `service/src/llm/provider-options.ts` |
+| main | `GEMINI_MODEL_NAME` | `gemini-3.8-flash` | The chat orchestrator and the Algolia, Stripe, export and Contentstack agents, with a high thinking level. There is no separate agent model (`GEMINI_AGENT_MODEL_NAME` was removed and is ignored); token counting uses this model too |
 | lite | `GEMINI_LITE_MODEL_NAME` | `gemini-3.5-flash-lite` | Session digests, suggestions, the result analyzer; thinking level from `GEMINI_LITE_THINKING_LEVEL` (`minimal`) |
 | image | `GEMINI_IMAGE_MODEL_NAME` | `gemini-2.5-flash-image` | Image generation; must exist in `GCP_VERTEX_LOCATION` |
 

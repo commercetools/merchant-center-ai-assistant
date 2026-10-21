@@ -6,7 +6,7 @@
 
 /**
  * Model layer (Gemini on Vertex AI). Contract used by specs G, H and L:
- * - `getModel(tier)`: Vertex language model for `main` | `agent` | `lite` | `image`
+ * - `getModel(tier)`: Vertex language model for `main` | `lite` | `image`
  *   (orchestrator and commercetools-facing agents use `main`; algolia, stripe, export and
  *   contentstack agents use `agent`; digest, suggestions and analyzer use `lite`;
  *   the image agent uses `image`).

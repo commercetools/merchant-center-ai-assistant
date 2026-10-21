@@ -41,7 +41,6 @@ function canonical() {
             k('GCP_PROJECT_ID', { required: false }),
             k('GCP_VERTEX_LOCATION', { default: 'us-central1' }),
             k('GEMINI_MODEL_NAME', { default: 'model-a' }),
-            k('GEMINI_AGENT_MODEL_NAME', { default: 'model-c' }),
             k('GEMINI_LITE_MODEL_NAME', { default: 'model-b' }),
             k('GEMINI_LITE_THINKING_LEVEL', { default: 'minimal' }),
             k('GEMINI_IMAGE_MODEL_NAME', { default: 'model-d' }),

@@ -11,7 +11,6 @@ export type ThinkingLevel = 'minimal' | 'low' | 'medium' | 'high';
 
 export interface LlmConfig {
   mainModel: string;
-  agentModel: string;
   liteModel: string;
   imageModel: string;
   liteThinkingLevel: ThinkingLevel;
@@ -39,7 +38,6 @@ export const parseLlm: SectionParser<LlmConfig> = (env) => {
     value: {
       // Each tier has its own variable (the legacy code let one variable pin two tiers).
       mainModel: modelName(env, 'GEMINI_MODEL_NAME', 'gemini-3.8-flash', errors),
-      agentModel: modelName(env, 'GEMINI_AGENT_MODEL_NAME', 'gemini-2.5-flash', errors),
       liteModel: modelName(env, 'GEMINI_LITE_MODEL_NAME', 'gemini-3.5-flash-lite', errors),
       imageModel: modelName(env, 'GEMINI_IMAGE_MODEL_NAME', 'gemini-2.5-flash-image', errors),
       liteThinkingLevel: oneOf(

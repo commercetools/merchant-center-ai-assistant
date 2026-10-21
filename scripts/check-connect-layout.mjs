@@ -42,7 +42,6 @@ const SERVICE_STANDARD = {
   GCP_PROJECT_ID: { optional: true },
   GCP_VERTEX_LOCATION: { default: 'us-central1' },
   GEMINI_MODEL_NAME: { hasDefault: true },
-  GEMINI_AGENT_MODEL_NAME: { hasDefault: true },
   GEMINI_LITE_MODEL_NAME: { hasDefault: true },
   GEMINI_LITE_THINKING_LEVEL: { default: 'minimal' },
   GEMINI_IMAGE_MODEL_NAME: { hasDefault: true },

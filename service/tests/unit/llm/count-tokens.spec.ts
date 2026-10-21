@@ -41,8 +41,9 @@ describe('countTokens', () => {
       location: c.location,
       googleAuthOptions: c.googleAuthOptions,
     });
+    // The default tier is `main`: there is no separate agent model any more.
     expect(countTokensCall).toHaveBeenNthCalledWith(1, {
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.8-flash',
       contents: 'hello world',
     });
     expect(countTokensCall).toHaveBeenNthCalledWith(2, {

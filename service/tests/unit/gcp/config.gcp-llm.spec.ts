@@ -119,7 +119,6 @@ describe('llm section', () => {
   it('has the documented defaults', () => {
     expect(freshConfig().llm).toEqual({
       mainModel: 'gemini-3.8-flash',
-      agentModel: 'gemini-2.5-flash',
       liteModel: 'gemini-3.5-flash-lite',
       imageModel: 'gemini-2.5-flash-image',
       liteThinkingLevel: 'minimal',
@@ -129,7 +128,6 @@ describe('llm section', () => {
   it('overrides one tier without touching the others', () => {
     const { llm } = freshConfig({ GEMINI_MODEL_NAME: 'custom-model' });
     expect(llm.mainModel).toBe('custom-model');
-    expect(llm.agentModel).toBe('gemini-2.5-flash');
     expect(llm.liteModel).toBe('gemini-3.5-flash-lite');
     expect(llm.imageModel).toBe('gemini-2.5-flash-image');
   });
@@ -142,8 +140,12 @@ describe('llm section', () => {
   });
 
   it('rejects an invalid model name', () => {
-    expect(() => freshConfig({ GEMINI_AGENT_MODEL_NAME: 'bad name!' })).toThrow(
-      /GEMINI_AGENT_MODEL_NAME/
-    );
+    expect(() => freshConfig({ GEMINI_MODEL_NAME: 'bad name!' })).toThrow(/GEMINI_MODEL_NAME/);
+  });
+
+  it('has no separate agent model: a leftover GEMINI_AGENT_MODEL_NAME changes nothing', () => {
+    const { llm } = freshConfig({ GEMINI_AGENT_MODEL_NAME: 'custom-agent' });
+    expect(llm).not.toHaveProperty('agentModel');
+    expect(Object.values(llm)).not.toContain('custom-agent');
   });
 });

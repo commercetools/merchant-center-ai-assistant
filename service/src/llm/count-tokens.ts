@@ -36,7 +36,7 @@ export function describeError(error: unknown): string {
  * Token count through Vertex. Callers use it as a soft guard, so an unknown
  * count is `0` (legacy contract): a failure is logged, never thrown.
  */
-export async function countTokens(text: string, tier: ModelTier = 'agent'): Promise<number> {
+export async function countTokens(text: string, tier: ModelTier = 'main'): Promise<number> {
   try {
     const result = await client().models.countTokens({
       model: getModelName(tier),

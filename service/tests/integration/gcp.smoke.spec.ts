@@ -39,7 +39,7 @@ suite('Google Cloud live smoke', () => {
     ]);
   });
 
-  it.each(['main', 'agent', 'lite'] as const)('%s tier answers', async (tier) => {
+  it.each(['main', 'lite'] as const)('%s tier answers', async (tier) => {
     const result = await generateText({
       model: getModel(tier),
       providerOptions: getProviderOptions(tier),

@@ -10,12 +10,13 @@ import { getGoogleCredentials } from '../gcp/credentials';
 
 /**
  * Model roles. Legacy consumers (so spec H can map them):
- * - `main`:  orchestrator, custom-view agent, commercetools, commercetools-ui, visualize, bigquery agents
- * - `agent`: algolia, stripe, export, contentstack agents and the image agent's token guard
+ * - `main`:  orchestrator, custom-view agent, commercetools, commercetools-ui, visualize, bigquery
+ *            agents, and the algolia, stripe, export and contentstack agents, which used a separate
+ *            `agent` tier before; they now share the `main` model and its thinking level
  * - `lite`:  session-digest, suggestions, analyzer agents
  * - `image`: image-generation agent
  */
-export type ModelTier = 'main' | 'agent' | 'lite' | 'image';
+export type ModelTier = 'main' | 'lite' | 'image';
 
 let provider: ReturnType<typeof createVertex> | undefined;
 
@@ -36,7 +37,6 @@ export function getModelName(tier: ModelTier): string {
   const { llm } = readConfiguration();
   return {
     main: llm.mainModel,
-    agent: llm.agentModel,
     lite: llm.liteModel,
     image: llm.imageModel,
   }[tier];
