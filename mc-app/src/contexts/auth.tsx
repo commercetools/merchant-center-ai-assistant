@@ -46,6 +46,8 @@ interface AuthContextValue {
   identityMcpConfigured: boolean;
   /** The service decided this user is an administrator. False until the bootstrap says so. */
   isAdmin: boolean;
+  /** The service decided this user may write the Managed MCP binding. False until the bootstrap says so. */
+  canManageMcpBinding: boolean;
   /** Optional: `undefined` when the service did not send it. */
   identityUserConnected?: boolean;
   /** Optional: `undefined` when the service did not send it. */
@@ -66,6 +68,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [projectKey, setProjectKey] = useState<string | null>(null);
   const [identityMcpConfigured, setIdentityMcpConfigured] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [canManageMcpBinding, setCanManageMcpBinding] = useState(false);
   const [identityUserConnected, setIdentityUserConnected] = useState<
     boolean | undefined
   >(undefined);
@@ -89,6 +92,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         setProjectKey(session.projectKey);
         setIdentityMcpConfigured(session.identityMcpConfigured);
         setIsAdmin(session.isAdmin === true);
+        setCanManageMcpBinding(session.canManageMcpBinding === true);
         setIdentityUserConnected(session.identityUserConnected);
         setToolCallLogs(session.toolCallLogs);
         // Cleared on success rather than up front, so a failed bootstrap stays on screen
@@ -127,6 +131,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       projectKey,
       identityMcpConfigured,
       isAdmin,
+      canManageMcpBinding,
       identityUserConnected,
       toolCallLogs,
       refresh,
@@ -140,6 +145,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       projectKey,
       identityMcpConfigured,
       isAdmin,
+      canManageMcpBinding,
       identityUserConnected,
       toolCallLogs,
       refresh,

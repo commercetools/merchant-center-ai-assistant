@@ -25,6 +25,13 @@ An administrator is a user whose Merchant Center user ID is listed in the Connec
 What an administrator can do: bind or remove the Managed MCP server, change the system prompt and the tool-call detail level, open the backoffice (all conversations and feedback of the project), and read generated images of any session.
 Every administrator call logs `audit.admin_action` with the user ID, the route and the outcome; an e-mail address is never logged.
 
+## Opening the Managed MCP binding to everyone
+
+The Managed MCP (identity) binding is shared: one binding serves every user of the project, and creating, changing or deleting it normally needs an administrator.
+Setting the Connect configuration `MCP_BINDING_OPEN_TO_ALL=true` (default `false`) lets every verified Merchant Center user write that binding.
+It changes only the `PUT` and `DELETE` routes of `/service/managed-mcp-identity`. Every other administrator route keeps its gate, and each user still connects their own account.
+The service logs a warning at start while the flag is on, and tells the app through `canManageMcpBinding` in the session bootstrap. Turn it off again once the binding is set up.
+
 ## Finding your user ID
 
 Every signed-in user sees the line "Your user ID" with a Copy button: in the chat application under Settings, About (and in the user menu), and in the footer of the Custom View panel.

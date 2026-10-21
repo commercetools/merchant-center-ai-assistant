@@ -18,13 +18,13 @@ type AuthState = {
 };
 
 let mockAuth: AuthState;
-let mockIsAdmin = false;
+let mockCanManageBinding = false;
 let mockIdentity: { connected: boolean | null; recheck: () => Promise<void> };
 const mockUseIdentityStatus = jest.fn();
 
 jest.mock('./auth', () => ({ useAuth: () => mockAuth }));
 jest.mock('../hooks/use-assistant-admin', () => ({
-  useIsAssistantAdmin: () => mockIsAdmin,
+  useCanManageMcpBinding: () => mockCanManageBinding,
 }));
 jest.mock('../hooks/use-managed-mcp/use-identity-status', () => ({
   useIdentityStatus: (enabled: boolean) => {
@@ -59,7 +59,7 @@ const renderGate = () =>
   );
 
 beforeEach(() => {
-  mockIsAdmin = false;
+  mockCanManageBinding = false;
   mockUseIdentityStatus.mockClear();
   mockAuth = {
     loading: false,
@@ -94,9 +94,9 @@ describe('ConnectProvider gate order', () => {
     expect(screen.getByText('reauthenticate-dialog')).toBeTruthy();
   });
 
-  it('shows the binding page to an administrator when no server is bound', () => {
+  it('shows the binding page to a user who may manage the binding (an administrator, or anyone under MCP_BINDING_OPEN_TO_ALL) when no server is bound', () => {
     mockAuth.identityMcpConfigured = false;
-    mockIsAdmin = true;
+    mockCanManageBinding = true;
     renderGate();
     expect(screen.getByText('managed-mcp-page')).toBeTruthy();
     expect(screen.queryByText('chat-app')).toBeNull();

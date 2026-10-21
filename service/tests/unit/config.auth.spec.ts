@@ -82,6 +82,14 @@ describe('auth section: entry point and bypass', () => {
   });
 });
 
+describe('auth section: MCP_BINDING_OPEN_TO_ALL', () => {
+  it('is off by default and accepts exactly true or false', () => {
+    expect(freshConfig().auth.mcpBindingOpenToAll).toBe(false);
+    expect(freshConfig({ MCP_BINDING_OPEN_TO_ALL: 'true' }).auth.mcpBindingOpenToAll).toBe(true);
+    expect(() => freshConfig({ MCP_BINDING_OPEN_TO_ALL: 'yes' })).toThrow(/MCP_BINDING_OPEN_TO_ALL/);
+  });
+});
+
 describe('auth section: ADMIN_USER_IDS', () => {
   it('is an empty set when unset', () => {
     expect(freshConfig().auth.adminUserIds.size).toBe(0);

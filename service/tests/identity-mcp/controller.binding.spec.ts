@@ -127,6 +127,19 @@ describe('PUT /managed-mcp-identity', () => {
     expect(await rig.stores.binding.get()).toBeNull();
   });
 
+  it('MCP_BINDING_OPEN_TO_ALL lets a non-admin write the binding', async () => {
+    const net = identityNetwork();
+    const { app, rig } = makeIdentityApp(net.fetchFn, {
+      MCP_BINDING_OPEN_TO_ALL: 'true',
+    });
+    const res = await request(app)
+      .put(BASE)
+      .set(MEMBER)
+      .send({ serverKey: SERVER_KEY });
+    expect(res.status).toBe(200);
+    expect(await rig.stores.binding.get()).not.toBeNull();
+  });
+
   it('forged e-mail and id fields do not make a non-admin an admin', async () => {
     const net = identityNetwork();
     const { app, rig } = makeIdentityApp(net.fetchFn);
@@ -278,6 +291,16 @@ describe('DELETE /managed-mcp-identity', () => {
     expect(await rig.stores.binding.get()).not.toBeNull();
   });
 
+  it('MCP_BINDING_OPEN_TO_ALL lets a non-admin delete the binding', async () => {
+    const { app, rig } = makeIdentityApp(identityNetwork().fetchFn, {
+      MCP_BINDING_OPEN_TO_ALL: 'true',
+    });
+    await rig.stores.binding.set(bindingFixture());
+    const res = await request(app).delete(BASE).set(MEMBER);
+    expect(res.status).toBe(200);
+    expect(await rig.stores.binding.get()).toBeNull();
+  });
+
   it("removes the binding and every other user's token records, and revokes best effort", async () => {
     const fake = fakeAuth2();
     const net = routedFetch(auth2Responder(fake));
@@ -360,6 +383,30 @@ describe('GET /status, DELETE /me, bootstrap fields', () => {
       identityMcpConfigured: true,
       identityUserConnected: true,
       managedMcpConfigured: true,
+    });
+  });
+
+  it('the bootstrap contributor reports canManageMcpBinding: admin, or anyone under the flag', async () => {
+    const member = {
+      user: { userId: 'member-1', projectKey: 'p', isAdmin: false },
+    } as AuthenticatedRequest;
+    const admin = {
+      user: { userId: 'admin-1', projectKey: 'p', isAdmin: true },
+    } as AuthenticatedRequest;
+
+    makeIdentityApp(identityNetwork().fetchFn);
+    expect(await runContributors(member)).toMatchObject({
+      canManageMcpBinding: false,
+    });
+    expect(await runContributors(admin)).toMatchObject({
+      canManageMcpBinding: true,
+    });
+
+    makeIdentityApp(identityNetwork().fetchFn, {
+      MCP_BINDING_OPEN_TO_ALL: 'true',
+    });
+    expect(await runContributors(member)).toMatchObject({
+      canManageMcpBinding: true,
     });
   });
 

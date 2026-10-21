@@ -16,7 +16,7 @@ import AdminRequiredNotice from '../components/admin-required-notice';
 import IdentityConnectGate from '../components/managed-mcp/identity-connect-gate';
 import ManagedMcpPage from '../components/managed-mcp';
 import ReauthenticateDialog from '../components/reauthenticate-dialog';
-import { useIsAssistantAdmin } from '../hooks/use-assistant-admin';
+import { useCanManageMcpBinding } from '../hooks/use-assistant-admin';
 import { useIdentityStatus } from '../hooks/use-managed-mcp/use-identity-status';
 import { useAuth } from './auth';
 
@@ -52,7 +52,7 @@ export const ConnectProvider: React.FC<{ children: ReactNode }> = ({
     identityMcpConfigured,
     refresh,
   } = useAuth();
-  const isAdmin = useIsAssistantAdmin();
+  const canManageBinding = useCanManageMcpBinding();
   // Called unconditionally (React rules); it only does work once a server is bound.
   const identity = useIdentityStatus(isAuthenticated && identityMcpConfigured);
   const recheckIdentity = identity.recheck;
@@ -93,7 +93,7 @@ export const ConnectProvider: React.FC<{ children: ReactNode }> = ({
   }
 
   if (!identityMcpConfigured) {
-    return isAdmin ? (
+    return canManageBinding ? (
       <ManagedMcpPage onConnected={recheck} />
     ) : (
       <AdminRequiredNotice context="managed-mcp" />

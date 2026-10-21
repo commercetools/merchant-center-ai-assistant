@@ -303,7 +303,9 @@ const requireHttpsCallbackUrl = (
     }
     throw error;
   }
-  if (!redirectUri.startsWith('https://')) {
+  // Plain http is allowed only under MC_AUTH_DISABLED (local development), which
+  // config validation rejects in production.
+  if (!redirectUri.startsWith('https://') && !config.auth.authDisabled) {
     throw new CustomError(503, 'MC_AUDIENCE must be an HTTPS origin');
   }
 };

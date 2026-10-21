@@ -14,7 +14,7 @@ import {
 } from '@commercetools/nimbus';
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/auth';
-import { useIsAssistantAdmin } from '../../hooks/use-assistant-admin';
+import { useCanManageMcpBinding } from '../../hooks/use-assistant-admin';
 import { useManagedMcpServers } from '../../hooks/use-managed-mcp';
 import type { McpServer } from '../../hooks/use-managed-mcp/types';
 import { useIdentityMcpConfig } from '../../hooks/use-managed-mcp/use-identity-mcp-config';
@@ -42,7 +42,7 @@ import ManagedMcpPermissionNotice, {
 
 const ManagedMcpPage = ({ onConnected }: { onConnected?: () => void }) => {
   const { refresh } = useAuth();
-  const isAssistantAdmin = useIsAssistantAdmin();
+  const canManageBinding = useCanManageMcpBinding();
   const { fetchServers } = useManagedMcpServers();
   const { fetchBinding, saveBinding } = useIdentityMcpConfig();
 
@@ -57,7 +57,7 @@ const ManagedMcpPage = ({ onConnected }: { onConnected?: () => void }) => {
   const [boundServerKey, setBoundServerKey] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!isAssistantAdmin) {
+    if (!canManageBinding) {
       setLoading(false);
       return;
     }
@@ -85,7 +85,7 @@ const ManagedMcpPage = ({ onConnected }: { onConnected?: () => void }) => {
     } finally {
       setLoading(false);
     }
-  }, [fetchBinding, fetchServers, isAssistantAdmin]);
+  }, [fetchBinding, fetchServers, canManageBinding]);
 
   useEffect(() => {
     void load();
@@ -121,7 +121,7 @@ const ManagedMcpPage = ({ onConnected }: { onConnected?: () => void }) => {
   );
 
   // Hooks above run unconditionally; the guard sits below them.
-  if (!isAssistantAdmin) {
+  if (!canManageBinding) {
     return <AdminRequiredNotice context="managed-mcp" />;
   }
 

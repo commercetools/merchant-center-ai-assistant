@@ -178,6 +178,7 @@ The table is generated from `connect.yaml`; the notes are in [docs/configuration
 | `CHAT_DIGEST_BEFORE_CLOSE` | standard | no | `false` | When true the chat stream waits up to 3 seconds for the session digest before closing (true or false) |
 | `LOG_LEVEL` | standard | no | `info` | Logger level (error, warn, info, debug) |
 | `ADMIN_USER_IDS` | standard | no |  | Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator |
+| `MCP_BINDING_OPEN_TO_ALL` | standard | no | `false` | Feature flag. When true every verified Merchant Center user, not only an administrator from ADMIN_USER_IDS, may create, change and delete the shared Managed MCP (identity) binding. Nothing else loses its administrator gate (true or false) |
 | `CONTENTSTACK_BRANCH` | standard | no |  | Optional Contentstack branch name sent with every Content Management API call |
 | `CONTENTSTACK_REGION` | standard | no | `na` | Contentstack region of the stack (na, eu, au, azure-na, azure-eu, gcp-na, gcp-eu) |
 | `STRIPE_CONNECTED_ACCOUNT_ID` | standard | no |  | Optional Stripe connected account id (acct_...) the Stripe tools act on behalf of |

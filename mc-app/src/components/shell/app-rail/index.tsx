@@ -160,7 +160,7 @@ export const AppRail: React.FC<Props> = ({
             cursor="pointer"
             padding="100"
           >
-            <UserAvatar />
+            <UserAvatar standalone />
           </Box>
         </Popover.Trigger>
         <Popover.Content aria-label="Account" maxWidth="4800">

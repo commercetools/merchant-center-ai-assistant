@@ -22,6 +22,11 @@ try {
 if (config.auth.adminUserIds.size === 0) {
   logger.warn('ADMIN_USER_IDS is empty: no administrator');
 }
+if (config.auth.mcpBindingOpenToAll) {
+  logger.warn(
+    'MCP_BINDING_OPEN_TO_ALL=true: every verified user may create, change and delete the Managed MCP binding'
+  );
+}
 if (config.auth.authDisabled) {
   logger.warn(
     'MC_AUTH_DISABLED=true: Merchant Center session verification is OFF (local development only)'

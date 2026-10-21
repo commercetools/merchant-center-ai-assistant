@@ -21,6 +21,11 @@ export interface AuthConfig {
   entryPointUriPath: string;
   /** Verified gateway user ids that are administrators. Compare only via isAdminUser. */
   adminUserIds: ReadonlySet<string>;
+  /**
+   * Feature flag: every verified user, not only administrators, may create, change and delete
+   * the shared Managed MCP (identity) binding. Nothing else becomes administrator-only-free.
+   */
+  mcpBindingOpenToAll: boolean;
 }
 
 const ENTRY_PATH = /^[a-z0-9][a-z0-9_-]*$/;
@@ -83,6 +88,8 @@ export const parseAuth: SectionParser<AuthConfig> = (env, ctx) => {
     errors.push('MC_APP_ENTRY_POINT_URI_PATH: must match ^[a-z0-9][a-z0-9_-]*$');
   }
 
+  const mcpBindingOpenToAll = bool(env, 'MCP_BINDING_OPEN_TO_ALL', false, errors);
+
   const admins = parseAdminUserIds(env.ADMIN_USER_IDS);
   errors.push(...admins.errors);
 
@@ -98,6 +105,7 @@ export const parseAuth: SectionParser<AuthConfig> = (env, ctx) => {
       issuerCloudIdentifier,
       entryPointUriPath,
       adminUserIds: admins.value,
+      mcpBindingOpenToAll,
     },
   };
 };

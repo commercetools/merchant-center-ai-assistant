@@ -7,7 +7,7 @@
 import type { ReactNode } from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../../contexts/auth';
-import { useIsAssistantAdmin } from './index';
+import { useCanManageMcpBinding, useIsAssistantAdmin } from './index';
 
 const mockBootstrapSession = jest.fn();
 
@@ -98,5 +98,30 @@ describe('useAuth', () => {
     await waitFor(() => expect(result.current.userId).toBe('user-42'));
     expect(result.current.projectKey).toBe('project-a');
     expect(result.current.isAdmin).toBe(true);
+  });
+});
+
+describe('useCanManageMcpBinding', () => {
+  beforeEach(() => mockBootstrapSession.mockReset());
+
+  const run = async (overrides: Record<string, unknown>) => {
+    mockBootstrapSession.mockResolvedValue(session(overrides));
+    const { result } = renderHook(
+      () => ({ can: useCanManageMcpBinding(), auth: useAuth() }),
+      { wrapper }
+    );
+    // Fail closed while the bootstrap is still loading.
+    expect(result.current.can).toBe(false);
+    await waitFor(() => expect(result.current.auth.isAuthenticated).toBe(true));
+    return result.current.can;
+  };
+
+  it('follows the service decision, not isAdmin', async () => {
+    expect(await run({ isAdmin: false, canManageMcpBinding: true })).toBe(true);
+    expect(await run({ isAdmin: true, canManageMcpBinding: false })).toBe(false);
+  });
+
+  it('is false when the service omitted the field', async () => {
+    expect(await run({ isAdmin: true })).toBe(false);
   });
 });

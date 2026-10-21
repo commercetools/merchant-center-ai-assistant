@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { ChatMessage } from '@commercetools/nimbus';
+import { Avatar, ChatMessage } from '@commercetools/nimbus';
 import { useApplicationContext } from '@commercetools-frontend/application-shell-connectors';
 import { useGravatarUrl } from '../../utils/gravatar';
 
@@ -22,8 +22,14 @@ import { useGravatarUrl } from '../../utils/gravatar';
  *
  * `firstName`/`lastName` also name the avatar, which is what opts it back into the
  * accessibility tree - see the note in agent-avatar.tsx.
+ *
+ * `ChatMessage.Avatar` reads its styles from the enclosing `ChatMessage.Root` and throws
+ * without one, so outside a chat message (the app rail) pass `standalone` to get the plain
+ * Nimbus `Avatar`, which looks the same.
  */
-export const UserAvatar: React.FC = () => {
+export const UserAvatar: React.FC<{ standalone?: boolean }> = ({
+  standalone = false,
+}) => {
   const { email, firstName, lastName } = useApplicationContext((context) => ({
     email: context.user?.email,
     firstName: context.user?.firstName,
@@ -31,6 +37,18 @@ export const UserAvatar: React.FC = () => {
   }));
 
   const gravatarUrl = useGravatarUrl(email);
+
+  if (standalone) {
+    return (
+      <Avatar
+        size="xs"
+        variant="subtle"
+        src={gravatarUrl}
+        firstName={firstName ?? undefined}
+        lastName={lastName ?? undefined}
+      />
+    );
+  }
 
   return (
     <ChatMessage.Avatar

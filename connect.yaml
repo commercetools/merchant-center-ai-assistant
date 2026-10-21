@@ -1,14 +1,3 @@
-# Platform environment contract (verified facts, see openspec change b-connect-skeleton, design "Platform facts")
-#
-# 1. inheritAs: the top-level `inheritAs.apiClient` block at the end of this file makes Connect generate ONE
-#    API client for the whole connector and inject exactly CTP_API_URL, CTP_AUTH_URL, CTP_CLIENT_ID,
-#    CTP_CLIENT_SECRET, CTP_PROJECT_KEY and CTP_SCOPE. Never declare these six keys under `configuration`.
-#    CTP_REGION is NOT injected: the service entry declares it as a standard configuration key.
-# 2. CONNECT_SERVICE_URL (the public URL of a service) exists only inside the postDeploy / preUndeploy scripts,
-#    not in the running service. The service URL is therefore unknown until the first deployment, so
-#    MC_AUDIENCE and CHAT_SERVICE_ENDPOINT_URL are set by a configuration redeploy (change U, two-phase deploy).
-# 3. APPLICATION_URL is injected by Connect for the Merchant Center applications and the view; it must not be
-#    declared here. The config files use '${env:APPLICATION_URL}'.
 deployAs:
   - name: service
     applicationType: service
@@ -105,6 +94,9 @@ deployAs:
         - key: ADMIN_USER_IDS
           description: Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator
           required: false
+        - key: MCP_BINDING_OPEN_TO_ALL
+          description: Feature flag. When true every verified Merchant Center user, not only an administrator from ADMIN_USER_IDS, may create, change and delete the shared Managed MCP (identity) binding. Nothing else loses its administrator gate (true or false)
+          default: 'false'
         - key: CONTENTSTACK_BRANCH
           description: Optional Contentstack branch name sent with every Content Management API call
           required: false

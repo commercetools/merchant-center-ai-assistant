@@ -32,6 +32,11 @@ export type McSessionBootstrap = {
    * treated as false (fail closed). UX hint only; the service enforces admin on every route.
    */
   isAdmin: boolean;
+  /**
+   * Decided by the service: this user may write the shared Managed MCP binding (an
+   * administrator, or anyone while `MCP_BINDING_OPEN_TO_ALL` is on). Missing means false.
+   */
+  canManageMcpBinding: boolean;
   /** Optional (contributed by the identity change): this user completed OAuth. */
   identityUserConnected?: boolean;
   /** Optional (contributed by the persistence change): transcript detail mode. */
@@ -74,6 +79,7 @@ export const useMcSession = () => {
         userId: data.userId,
         identityMcpConfigured: Boolean(data.identityMcpConfigured),
         isAdmin: data.isAdmin === true,
+        canManageMcpBinding: data.canManageMcpBinding === true,
         identityUserConnected: data.identityUserConnected,
         toolCallLogs: data.toolCallLogs,
       };

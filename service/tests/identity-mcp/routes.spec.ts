@@ -6,7 +6,7 @@
 
 import request from 'supertest';
 import { createApp } from '../../src/app';
-import { identityMcpRouter } from '../../src/identity-mcp/routes';
+import { identityMcpRouter, requireBindingAccess } from '../../src/identity-mcp/routes';
 import { requireAdmin } from '../../src/middleware/require-admin.middleware';
 import { verifyMcSession } from '../../src/middleware/mc-session.middleware';
 import { freshConfig } from '../helpers/env';
@@ -29,7 +29,9 @@ const table = (): string[] =>
           ? 'verifyMcSession'
           : s.handle === requireAdmin
             ? 'requireAdmin'
-            : 'handler'
+            : s.handle === requireBindingAccess
+              ? 'requireBindingAccess'
+              : 'handler'
       );
       return `${method} ${l.route!.path} [${names.join(',')}]`;
     });
@@ -39,8 +41,8 @@ describe('identity route table', () => {
     expect(table()).toEqual([
       'GET /callback [handler]',
       'GET / [verifyMcSession,handler]',
-      'PUT / [verifyMcSession,requireAdmin,handler]',
-      'DELETE / [verifyMcSession,requireAdmin,handler]',
+      'PUT / [verifyMcSession,requireBindingAccess,handler]',
+      'DELETE / [verifyMcSession,requireBindingAccess,handler]',
       'GET /status [verifyMcSession,handler]',
       'POST /authorize [verifyMcSession,handler]',
       'POST /verify [verifyMcSession,handler]',

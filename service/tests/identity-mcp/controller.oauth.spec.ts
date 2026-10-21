@@ -7,6 +7,7 @@
 import request from 'supertest';
 import { CACHE_NS, getCache } from '../../src/cache';
 import { captureLogs } from '../helpers/log-capture';
+import { setIdentityRuntimeForTests } from '../../src/identity-mcp/runtime';
 import { asUser, makeIdentityApp, resetIdentityApp } from './app';
 import { auth2Responder, fakeMcp, routedFetch } from './fake-network';
 import type { Responder } from './fake-network';
@@ -75,10 +76,25 @@ describe('POST /authorize', () => {
     const { app, rig } = setup({
       env: { MC_AUDIENCE: 'http://localhost:3000' },
     });
+    // The session middleware keeps the dev bypass; only the controller sees auth as enabled.
+    setIdentityRuntimeForTests({
+      config: { ...rig.config, auth: { ...rig.config.auth, authDisabled: false } },
+      stores: rig.stores,
+    });
     await rig.stores.binding.set(bindingFixture());
     const res = await request(app).post(`${BASE}/authorize`).set(ME);
     expect(res.status).toBe(503);
     expect(await stateCount(rig)).toBe(0);
+  });
+
+  it('allows a plain http callback under MC_AUTH_DISABLED (local development)', async () => {
+    const { app, rig } = setup({
+      env: { MC_AUDIENCE: 'http://localhost:3000' },
+    });
+    await rig.stores.binding.set(bindingFixture());
+    const { res, url } = await authorize(app);
+    expect(res.status).toBe(200);
+    expect(url?.searchParams.get('redirect_uri')).toMatch(/^http:\/\/localhost:3000\//);
   });
 
   it('returns a PKCE popup URL with the derived redirect and scope, one auth-state record, a registered client', async () => {
