@@ -9,11 +9,9 @@ How to run, test and change the connector on your machine. Setup that lives outs
 | `connect.yaml` | The Connect contract: four applications, their configuration keys and defaults, the API client scopes |
 | `service/` | The service (TypeScript, Express, npm) |
 | `mc-app/`, `composed-apps/`, `mc-view-app/` | The Merchant Center applications (TypeScript, React, Yarn 1, one install per folder) |
-| `contract/` | Shared test fixture of the composed page format |
+| `service/contract/` | Shared test fixture of the composed page format |
 | `docs/` | Documentation |
-| `e2e/` | Browser test playbooks and their helpers, see [e2e/README.md](../e2e/README.md) |
 | `scripts/` | Repository checks, the deployment helper (`scripts/connect`) and the documentation checks (`scripts/docs`) |
-| `plans/`, `openspec/` | Design documentation. It implies no support |
 
 There are no npm workspaces and no shared package: each folder installs its own dependencies, as Connect requires. A few small files are copied between the Merchant Center applications and kept identical by `node scripts/check-duplicates.mjs`.
 
@@ -65,7 +63,7 @@ yarn start                  # needs a Merchant Center login
 
 - **Against your local service:** set `CHAT_SERVICE_ENDPOINT_URL=http://localhost:8080/service`. Under `yarn start`, an `http://` service URL is called directly and the Merchant Center gateway is skipped (`src/utils/forward-to.ts`), because the gateway only reaches public https URLs. This works only with `MC_AUTH_DISABLED=true` on the service.
 - **Against a deployed service:** set the https URL of the sandbox service. Every request then goes through the gateway with a signed token, as in production.
-- **Ports:** the three apps all default to port 3001, and a Custom Application has one registered development URL, so run one at a time ([e2e/README.md](../e2e/README.md#environments)).
+- **Ports:** the three apps all default to port 3001, and a Custom Application has one registered development URL, so run one at a time.
 - **`composed-apps`** reads composed pages straight from commercetools and never calls the service. **`mc-view-app`** also needs `HOST_URI_PATH` in its `.env`.
 
 ### Connect a Managed MCP server locally
@@ -99,7 +97,7 @@ node scripts/check-duplicates.mjs
 cd scripts && npm ci && node --test tests/*.test.mjs docs/*.test.mjs
 ```
 
-The Connect CLI builds the current directory, so run `commercetools connect application build` and `application test` from `service/`; `commercetools connect validate` runs from the repository root and needs a running Docker daemon. Live checks against a deployed connector need a Merchant Center login and are run by hand; see [e2e/README.md](../e2e/README.md).
+The Connect CLI builds the current directory, so run `commercetools connect application build` and `application test` from `service/`; `commercetools connect validate` runs from the repository root and needs a running Docker daemon.
 
 ## Documentation checks
 

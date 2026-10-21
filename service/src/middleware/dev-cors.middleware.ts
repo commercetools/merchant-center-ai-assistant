@@ -10,8 +10,8 @@ const LOCAL_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
 /**
  * Lets a browser on localhost call the service directly (the frontends skip
- * `/proxy/forward-to` for an http service in development). Only installed under
- * MC_AUTH_DISABLED, which config validation rejects in production.
+ * `/proxy/forward-to` for an http service in development). Only installed with the
+ * local development bypass, which config validation rejects in production.
  *
  * Answers the preflight itself, so it must sit before session verification. No
  * credentials are allowed: the direct path carries no cookie or token.

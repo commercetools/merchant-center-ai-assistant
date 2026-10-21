@@ -70,7 +70,7 @@ Add `--dry-run` to any helper command to print what would run (secured values sh
 ### What each run sends
 
 - **First run (`deploy`)**: the two secrets (`GCP_SA_KEY_BASE64`, `ENCRYPTION_KEY`), `CTP_REGION`, the registration ids and entry point paths of the three applications, `CLOUD_IDENTIFIER` (derived from the region, so the service and the frontends cannot disagree) and any optional settings. It does not wait; it prints the command with secrets masked.
-- **Second run (`finalize`)**: waits up to about 25 minutes for the first deployment to reach `Deployed` and report a service URL, redeploys with `CHAT_SERVICE_ENDPOINT_URL`, waits again, reads the `post-deploy:` lines, retries the smoke check for cold starts and prints the application URLs under `[MANUAL M9]`.
+- **Second run (`finalize`)**: waits up to about 25 minutes for the first deployment to reach `Deployed` and report a service URL, redeploys with `CHAT_SERVICE_ENDPOINT_URL`, waits again, reads the `post-deploy:` lines, retries the smoke check for cold starts and prints the application URLs under `next: paste these URLs into the Merchant Center registrations`.
 
 ## Check the result
 

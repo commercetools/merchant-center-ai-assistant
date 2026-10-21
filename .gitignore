@@ -26,9 +26,6 @@ service-account*.json
 
 # agent working files
 .claude/settings.local.json
-plans/evidence/
 .claude/worktrees/
 
-# E2E helper runtime files (scripts/e2e/dev-up.sh)
-.e2e-*
 .connect/

@@ -205,7 +205,7 @@ test('finalize: sequence and values', async () => {
   ]);
   assert.ok(!redeploy.args.includes('--updateConnector'));
   assert.deepEqual(r.calls.map(subcommand), ['deployment redeploy', 'deployment logs']);
-  assert.ok(r.out.includes('[MANUAL M9] paste these URLs into the Merchant Center registrations'));
+  assert.ok(r.out.includes('next: paste these URLs into the Merchant Center registrations'));
   assert.ok(r.text.includes('https://pages.example'));
   assert.ok(r.text.includes('smoke: ok'));
 });

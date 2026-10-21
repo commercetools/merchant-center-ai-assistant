@@ -354,7 +354,7 @@ export async function main(argv, processEnv = process.env, overrides = {}) {
 
     await smokeCheck(origin);
 
-    out('[MANUAL M9] paste these URLs into the Merchant Center registrations');
+    out('next: paste these URLs into the Merchant Center registrations');
     for (const { applicationName, url } of mcApplicationUrls(second)) {
       out(`  ${applicationName.padEnd(14)} ${url || '(no URL reported yet)'}`);
     }

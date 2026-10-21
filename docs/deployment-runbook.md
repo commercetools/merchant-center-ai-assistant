@@ -2,7 +2,7 @@
 
 This runbook installs, updates, rolls back and removes the AI Assistant connector with the commercetools Connect command line only. There are no GitHub Actions, no containers you build yourself and no infrastructure code: every deployment command goes through `node scripts/connect/connect.mjs`, which calls the official `commercetools connect ...` CLI.
 
-Steps that only a person with the right access can do are marked `[MANUAL <id>]` and describe themselves, so this file can be followed without any other document.
+Steps that only a person with the right access can do (in the Merchant Center, Google Cloud or GitHub) are written out in full, so this file can be followed without any other document.
 
 The order of the steps and the reason for two deployment runs are in [connect-deployment.md](./connect-deployment.md); the Google Cloud and tool setup is in [setup.md](./setup.md).
 
@@ -22,15 +22,15 @@ Add `--dry-run` to any command to print what would run (secured values show as `
 
 Tools on your workstation: Node.js 22, the Connect CLI (`npm install -g @commercetools/cli`, version 0.0.17 or newer) and Docker for `commercetools connect validate`.
 
-- `[MANUAL M14]` Start Docker Desktop (or any Docker daemon). `commercetools connect validate` builds the applications with Buildpacks and needs a running daemon.
-- `[MANUAL M4]` Log in the Connect CLI with an API client that has the scopes `manage_connectors`, `manage_connectors_deployments` and `manage_api_clients` (the last one lets Connect create the API client described by `inheritAs` in `connect.yaml`): `commercetools auth login --client-credentials --client-id <id> --client-secret <secret> --region <region> --project-key <key>`.
-- `[MANUAL M16]` Put the same client id and secret, the project key and the Connect region into `scripts/connect/.env.connect` (copy `scripts/connect/.env.connect.example`; the file is git-ignored). The helper uses them for read-only REST calls (service URL and status) because the CLI has no machine-readable output.
-- `[MANUAL M15]` Make the repository that Connect stages from readable: for a private repository, grant the GitHub user `connect-mu` read access, and put its clone URL and the release tag into `REPO_URL` and `REPO_TAG`.
-- `[MANUAL M5]` Create the Google service account JSON key and Base64 it on one line. Roles: `roles/aiplatform.user`, `roles/bigquery.dataEditor`, `roles/bigquery.jobUser`, plus `roles/storage.admin` on the project (the service then creates the private image bucket) or `roles/storage.objectAdmin` on a bucket you create yourself. Command: `base64 < key.json | tr -d '\n'`. Put the result into `GCP_SA_KEY_BASE64`, then delete the local key file. Also set `ENCRYPTION_KEY` to a Base64 encoded 32-byte value (`openssl rand -base64 32`); changing it later makes stored identity tokens unreadable.
-- `[MANUAL M6]` In the Merchant Center (Settings, Developer settings, Custom Applications) register the Custom Applications "AI Assistant" and "AI Assistant Pages" with a placeholder URL such as `https://placeholder.invalid`, and record each application id and its entry point URI path in `.env.connect` (`MC_APP_CUSTOM_APPLICATION_ID`, `MC_APP_ENTRY_POINT_URI_PATH`, `COMPOSED_APPS_CUSTOM_APPLICATION_ID`, `COMPOSED_APPS_ENTRY_POINT_URI_PATH`). Register first, fix the URL last.
-- `[MANUAL M7]` Register the Custom View "AI Assistant" with a placeholder URL and record its id in `MC_VIEW_CUSTOM_VIEW_ID`. Its OAuth scopes must equal the ones in the view's configuration file.
-- `[MANUAL M21]` Optional: provide the third-party provider credentials (Contentstack API key and management token, Algolia MCP URL, Stripe restricted key). They are Connect configuration: put them into `.env.connect` before `deploy`, or pass them later with `configure`. They are never entered in the app.
-- `[MANUAL M10]` Create the two test users in the Merchant Center, user A (the administrator) and user B (not an administrator), and give both a Team with the app's ordinary Manage permission on the project. Open the deployed app as each user and read the "Your user ID" line (Settings, About). Set the allowlist with `node scripts/connect/connect.mjs configure ADMIN_USER_IDS=<user A id>`. Several administrators are comma-separated (at most 50; the value is one string). User B's id is deliberately not listed.
+- Start Docker Desktop (or any Docker daemon). `commercetools connect validate` builds the applications with Buildpacks and needs a running daemon.
+- Log in the Connect CLI with an API client that has the scopes `manage_connectors`, `manage_connectors_deployments` and `manage_api_clients` (the last one lets Connect create the API client described by `inheritAs` in `connect.yaml`): `commercetools auth login --client-credentials --client-id <id> --client-secret <secret> --region <region> --project-key <key>`.
+- Put the same client id and secret, the project key and the Connect region into `scripts/connect/.env.connect` (copy `scripts/connect/.env.connect.example`; the file is git-ignored). The helper uses them for read-only REST calls (service URL and status) because the CLI has no machine-readable output.
+- Make the repository that Connect stages from readable: for a private repository, grant the GitHub user `connect-mu` read access, and put its clone URL and the release tag into `REPO_URL` and `REPO_TAG`.
+- Create the Google service account JSON key and Base64 it on one line. Roles: `roles/aiplatform.user`, `roles/bigquery.dataEditor`, `roles/bigquery.jobUser`, plus `roles/storage.admin` on the project (the service then creates the private image bucket) or `roles/storage.objectAdmin` on a bucket you create yourself. Command: `base64 < key.json | tr -d '\n'`. Put the result into `GCP_SA_KEY_BASE64`, then delete the local key file. Also set `ENCRYPTION_KEY` to a Base64 encoded 32-byte value (`openssl rand -base64 32`); changing it later makes stored identity tokens unreadable.
+- In the Merchant Center (Settings, Developer settings, Custom Applications) register the Custom Applications "AI Assistant" and "AI Assistant Pages" with a placeholder URL such as `https://placeholder.invalid`, and record each application id and its entry point URI path in `.env.connect` (`MC_APP_CUSTOM_APPLICATION_ID`, `MC_APP_ENTRY_POINT_URI_PATH`, `COMPOSED_APPS_CUSTOM_APPLICATION_ID`, `COMPOSED_APPS_ENTRY_POINT_URI_PATH`). Register first, fix the URL last.
+- Register the Custom View "AI Assistant" with a placeholder URL and record its id in `MC_VIEW_CUSTOM_VIEW_ID`. Its OAuth scopes must equal the ones in the view's configuration file.
+- Optional: provide the third-party provider credentials (Contentstack API key and management token, Algolia MCP URL, Stripe restricted key). They are Connect configuration: put them into `.env.connect` before `deploy`, or pass them later with `configure`. They are never entered in the app.
+- Give the people who will use the assistant a Team with the app's ordinary Manage permission on the project. The administrator opens the deployed app, reads the "Your user ID" line (Settings, About) and sets the allowlist with `node scripts/connect/connect.mjs configure ADMIN_USER_IDS=<id>`. Several administrators are comma-separated (at most 50; the value is one string). Everyone not listed is an ordinary user.
 
 ### Google Cloud settings
 
@@ -66,7 +66,7 @@ The deployment runs twice because the Merchant Center applications need the real
 
 1. `deploy` creates the deployment without the endpoint URL. If Connect does not provide `CONNECT_SERVICE_URL` to the running service, it is healthy but rejects every Merchant Center request (it fails closed); the `auth configuration` line of its log shows `audience: not configured`.
 2. `finalize` reads the service URL, redeploys with `CHAT_SERVICE_ENDPOINT_URL=<origin>/service`, waits for `Deployed`, checks `GET <origin>/service/status` and prints the three application URLs.
-3. `[MANUAL M9]` You paste those URLs into the Merchant Center registrations.
+3. You paste those URLs into the Merchant Center registrations.
 
 A redeploy is a partial merge: values you do not pass keep their current value, so `finalize` and `configure` never re-send secrets.
 
@@ -75,9 +75,9 @@ A redeploy is a partial merge: values you do not pass keep their current value, 
 1. `node scripts/connect/connect.mjs stage` creates the staged connector from `REPO_URL` and `REPO_TAG` (or updates it when it exists).
 2. `node scripts/connect/connect.mjs publish`.
 3. `node scripts/connect/connect.mjs deploy` (phase 1). It prints the command with secrets masked and does not wait.
-4. `node scripts/connect/connect.mjs finalize` (phase 2). It waits up to 25 minutes, reads the postDeploy output, retries the smoke check for cold starts and prints the table headed `[MANUAL M9] paste these URLs into the Merchant Center registrations`.
+4. `node scripts/connect/connect.mjs finalize` (phase 2). It waits up to 25 minutes, reads the postDeploy output, retries the smoke check for cold starts and prints the application URLs under `next: paste these URLs into the Merchant Center registrations`.
 5. Optional: `node scripts/connect/connect.mjs configure KEY=VALUE ...` for provider keys (`CONTENTSTACK_API_KEY`, `CONTENTSTACK_MANAGEMENT_TOKEN`, `CONTENTSTACK_BRANCH`, `CONTENTSTACK_REGION`, `ALGOLIA_MCP_URL`, `STRIPE_SECRET_KEY`, `STRIPE_CONNECTED_ACCOUNT_ID`). A provider is enabled only when all its required keys are set and valid (Contentstack: API key and management token; Algolia: the URL; Stripe: the secret key). A change needs this configuration redeploy; rotate a key by running it again. Check `node scripts/connect/connect.mjs logs --application service --since 30m` for the `post-deploy: providers` lines.
-6. `[MANUAL M9]` Update the three registrations with the printed URLs.
+6. Update the three registrations with the printed URLs.
 7. Verify: `curl <service origin>/service/status` answers 200 with status `UP`, `authConfigured` true, and open the app in the Merchant Center.
 
 ### The first administrator

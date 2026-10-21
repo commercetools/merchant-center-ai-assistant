@@ -1,1 +1,0 @@
-- Flaky: tests/connector pre-undeploy 'api unreachable does not block' failed once under full run (passes on rerun); investigate timing/network.

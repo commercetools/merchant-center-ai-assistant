@@ -303,8 +303,8 @@ const requireHttpsCallbackUrl = (
     }
     throw error;
   }
-  // Plain http is allowed only under MC_AUTH_DISABLED (local development), which
-  // config validation rejects in production.
+  // Plain http is allowed only with the local development bypass, which config
+  // validation rejects in production.
   if (!redirectUri.startsWith('https://') && !config.auth.authDisabled) {
     throw new CustomError(503, 'CONNECT_SERVICE_URL must be an HTTPS URL');
   }

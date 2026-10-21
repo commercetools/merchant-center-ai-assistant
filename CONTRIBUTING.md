@@ -71,10 +71,10 @@ A tool source adds tools, a prompt fragment and a tools-menu group. The contract
 and update [docs/how-it-works.md](./docs/how-it-works.md), [FEATURES.md](./FEATURES.md) and, if it needs credentials, `connect.yaml` and [docs/configuration.md](./docs/configuration.md).
 Third-party credentials are Connect configuration only; do not add a screen or an API that writes them.
 
-## End-to-end checks
+## Checks against a deployed connector
 
 The apps can only be exercised fully in a browser that is logged in to the Merchant Center against a deployed sandbox connector. Keep such checks idempotent, clean up the sessions and objects they create, and assert structure
-rather than model wording. Follow [e2e/README.md](./e2e/README.md) for the format of a check, the tiers and the evidence rules.
+rather than model wording.
 
 ## Commits and pull requests
 
