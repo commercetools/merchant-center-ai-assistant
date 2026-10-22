@@ -90,7 +90,8 @@
     "@types/react-router": "<6",
     "@types/react-router-dom": "<6",
     "headers-polyfill": "3.2.5",
-    "nwsapi": "2.2.7"
+    "nwsapi": "2.2.7",
+    "**/sockjs/uuid": "11.1.1"
   },
   "devDependencies": {
     "@types/babel__standalone": "^7.1.9",

@@ -67,6 +67,14 @@ describe('envelope', () => {
     ).toThrow(EnvelopeAuthFailed);
   });
 
+  it('rejects an authentication tag that is shorter than 16 bytes', () => {
+    const env = encryptJson('identity-verifier', 'abc', 'u', ring1);
+    const short = Buffer.from(env.tag, 'base64').subarray(0, 4);
+    expect(() =>
+      decryptJson('identity-verifier', { ...env, tag: short.toString('base64') }, 'u', ring1)
+    ).toThrow(EnvelopeAuthFailed);
+  });
+
   it('rejects malformed input', () => {
     expect(() => decryptJson('identity-tokens', undefined, 'u', ring1)).toThrow(
       EnvelopeMalformed

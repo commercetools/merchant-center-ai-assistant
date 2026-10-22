@@ -55,6 +55,8 @@ export class EnvelopeAuthFailed extends CryptoError {
   }
 }
 
+const AUTH_TAG_LENGTH = 16;
+
 const aadBytes = (kind: EncryptedKind, aad: string): Buffer =>
   Buffer.from(`${kind}|${aad}`, 'utf8');
 
@@ -65,7 +67,9 @@ export function encryptJson<T>(
   keys: KeyRing = loadKeys()
 ): Envelope {
   const iv = randomBytes(12);
-  const cipher = createCipheriv('aes-256-gcm', keys.primary, iv);
+  const cipher = createCipheriv('aes-256-gcm', keys.primary, iv, {
+    authTagLength: AUTH_TAG_LENGTH,
+  });
   cipher.setAAD(aadBytes(kind, aad));
   const ct = Buffer.concat([
     cipher.update(JSON.stringify(value), 'utf8'),
@@ -110,7 +114,8 @@ export function decryptJson<T>(
     const decipher = createDecipheriv(
       'aes-256-gcm',
       key,
-      Buffer.from(envelope.iv, 'base64')
+      Buffer.from(envelope.iv, 'base64'),
+      { authTagLength: AUTH_TAG_LENGTH }
     );
     decipher.setAAD(aadBytes(kind, aad));
     decipher.setAuthTag(Buffer.from(envelope.tag, 'base64'));
