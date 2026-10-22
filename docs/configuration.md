@@ -80,7 +80,7 @@ and the configuration files of the Merchant Center applications.
 
 | Key | Kind | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `CLOUD_IDENTIFIER` | standard | no | `gcp-us` | Merchant Center API cloud identifier (for example gcp-us) |
+| `CLOUD_IDENTIFIER` | standard | yes | `gcp-us` | Merchant Center API cloud identifier (for example gcp-us). Required by the Connect validator for Merchant Center applications; the default is gcp-us |
 | `CHAT_SERVICE_ENDPOINT_URL` | standard | no | `https://not-configured.invalid/service` | Full URL of the service including /service; set on redeploy after the first deployment |
 
 Changing a key means a configuration redeploy. The helper `node scripts/connect/connect.mjs configure KEY=VALUE` accepts the provider keys, the Google settings and `ADMIN_USER_IDS`. `GCP_SA_KEY_BASE64` and `ENCRYPTION_KEY` are set at the first

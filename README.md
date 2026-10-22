@@ -205,7 +205,7 @@ The table mirrors `connect.yaml`; the notes are in [docs/configuration.md](./doc
 
 | Key | Kind | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `CLOUD_IDENTIFIER` | standard | no | `gcp-us` | Merchant Center API cloud identifier (for example gcp-us) |
+| `CLOUD_IDENTIFIER` | standard | yes | `gcp-us` | Merchant Center API cloud identifier (for example gcp-us). Required by the Connect validator for Merchant Center applications; the default is gcp-us |
 | `CHAT_SERVICE_ENDPOINT_URL` | standard | no | `https://not-configured.invalid/service` | Full URL of the service including /service; set on redeploy after the first deployment |
 
 Third-party provider keys (`CONTENTSTACK_*`, `ALGOLIA_MCP_URL`, `STRIPE_*`) are Connect configuration only. A provider is enabled

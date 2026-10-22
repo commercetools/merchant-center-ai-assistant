@@ -160,7 +160,8 @@ inheritAs:
   configuration:
     standardConfiguration:
       - key: CLOUD_IDENTIFIER
-        description: Merchant Center API cloud identifier (for example gcp-us)
+        description: Merchant Center API cloud identifier (for example gcp-us). Required by the Connect validator for Merchant Center applications; the default is gcp-us
+        required: true
         default: 'gcp-us'
       - key: CHAT_SERVICE_ENDPOINT_URL
         description: Full URL of the service including /service; set on redeploy after the first deployment
