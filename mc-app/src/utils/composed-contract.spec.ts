@@ -15,10 +15,7 @@ import {
 // the service module (separate build context), so the shared values are checked against its own
 // copy of the fixture (the service's drift test keeps the copies identical).
 const fixture = JSON.parse(
-  fs.readFileSync(
-    path.resolve(__dirname, 'composed-page.fixture.json'),
-    'utf8'
-  )
+  fs.readFileSync(path.resolve(__dirname, 'composed-page.fixture.json'), 'utf8')
 ) as {
   containerKey: string;
   storedValue: {

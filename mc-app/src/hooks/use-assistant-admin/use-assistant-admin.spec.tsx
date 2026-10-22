@@ -118,7 +118,9 @@ describe('useCanManageMcpBinding', () => {
 
   it('follows the service decision, not isAdmin', async () => {
     expect(await run({ isAdmin: false, canManageMcpBinding: true })).toBe(true);
-    expect(await run({ isAdmin: true, canManageMcpBinding: false })).toBe(false);
+    expect(await run({ isAdmin: true, canManageMcpBinding: false })).toBe(
+      false
+    );
   });
 
   it('is false when the service omitted the field', async () => {
