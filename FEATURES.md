@@ -5,12 +5,10 @@ What is not implemented is listed in [docs/operations.md](./docs/operations.md) 
 
 ## Repository shape
 
-- One Connect connector with four applications (`service`, `mc-app`, `composed-apps`, `mc-view-app`) in one `connect.yaml`, one folder each, no npm workspaces: `connect.yaml`, `scripts/check-connect-layout.mjs`.
-- All frontends use the same `@commercetools-frontend/*` version, Node 22, Yarn 1; the service uses npm: `scripts/check-versions.mjs`, `service/package.json`.
-- Files that must be identical in several frontends are guarded: `scripts/check-duplicates.mjs`.
-- MIT license, SPDX header in every source file, "unsupported" notices, no CI configuration: `scripts/spdx-check.mjs`, `scripts/check-repo-rules.mjs`.
+- One Connect connector with four applications (`service`, `mc-app`, `composed-apps`, `mc-view-app`) in one `connect.yaml`, one folder each, no npm workspaces: `connect.yaml`.
+- All frontends use the same `@commercetools-frontend/*` version, Node 22, Yarn 1; the service uses npm: `service/package.json`.
+- MIT license, SPDX header in every source file, "unsupported" notices, no CI configuration.
 - Deployment helper with ten commands (stage, publish, preview, deploy, finalize, configure, update-code, status, logs, delete) and a dry-run mode: `scripts/connect/connect.mjs`.
-- Documentation checks: generated configuration tables, links, REST routes against the docs, required statements: `scripts/docs/gen-config-table.mjs`, `scripts/docs/check-links.mjs`, `scripts/docs/check-api-doc.mjs`, `scripts/docs/check-docs-claims.mjs`.
 
 ## Authentication and permissions
 
@@ -27,7 +25,6 @@ What is not implemented is listed in [docs/operations.md](./docs/operations.md) 
 - All state as commercetools Custom Objects behind one gateway with optimistic concurrency, retries, size limits and an in-memory test double: `service/src/persistence/gateway/custom-object.gateway.ts`, `service/src/persistence/gateway/memory.gateway.ts`.
 - Stores for settings, sessions, messages (one object each), identity tokens and login attempts, feedback chunks and suggestions: `service/src/persistence/stores/`.
 - AES-256-GCM envelope encryption with key ids, a previous-key list and a re-encryption script: `service/src/crypto/envelope.ts`, `service/scripts/reencrypt.mjs`.
-- Maintenance script that purges test containers: `service/scripts/purge-containers.mjs`.
 - Messages and feedback are kept until an operator deletes them; no automatic deletion: `service/src/persistence/create-persistence.ts`.
 
 ## Chat service
@@ -101,7 +98,7 @@ What is not implemented is listed in [docs/operations.md](./docs/operations.md) 
 
 ## Testing
 
-- Service: Jest unit, wire and contract tests with an in-memory persistence double, a route-table contract test and a foundation gate that forbids browser-supplied identity: `service/tests/contract/routes.spec.ts`, `service/scripts/check-foundation.mjs`.
+- Service: Jest unit, wire and contract tests with an in-memory persistence double, and a route-table contract test: `service/tests/contract/routes.spec.ts`.
 - Integration suites that skip without credentials: `service/jest.integration.config.cjs`.
 - Frontends: type check, lint, Jest and build per folder: `mc-app/package.json`, `composed-apps/package.json`, `mc-view-app/package.json`.
-- Repository and documentation rules with Node tests: `scripts/tests/`, `scripts/docs/`.
+- The deployment helper with Node tests: `scripts/tests/`.

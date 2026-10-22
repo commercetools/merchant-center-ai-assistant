@@ -71,5 +71,5 @@ The example is a hypothetical store of per-user bookmarks. Names are placeholder
 - Undeploying the connector does not delete Custom Objects, so a store has to be safe to find old data
   (`service/src/connector/pre-undeploy.ts`).
 - A store must never receive an identity from the browser. The user ID comes from the verified token
-  (`req.user`), and `npm run check:foundation` fails the build if request code reads identity hints from the
+  (`req.user`); request code never reads identity hints from the
   client.

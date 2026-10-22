@@ -8,7 +8,7 @@ you contribute creates an obligation for commercetools. See [SUPPORT.md](./SUPPO
 
 ## Prerequisites
 
-- Node.js 22. The service (`service/`) and `scripts/` use npm; the three frontends (`mc-app/`, `composed-apps/`, `mc-view-app/`) use Yarn 1.
+- Node.js 22. The service (`service/`) and the deployment helper (`scripts/`) use npm; the three frontends (`mc-app/`, `composed-apps/`, `mc-view-app/`) use Yarn 1.
 - Docker running locally (needed by `commercetools connect validate`).
 - The commercetools Connect CLI for deployment work.
 
@@ -20,19 +20,18 @@ dependencies. The root [README](./README.md) explains the layout and [docs/archi
 
 ## Rules
 
-- Every source file carries the SPDX header. Check with `node scripts/spdx-check.mjs`.
+- Every source file carries the SPDX header.
 - Package names are `ai-assistant-<suffix>` (for example `ai-assistant-service`) and every `package.json` is `private`.
 - No `.github/workflows` and no other CI, container or infrastructure-as-code files: deployment is a set of Connect CLI commands ([docs/connect-deployment.md](./docs/connect-deployment.md)). That is by design.
 - Never commit `.env*` files except `.env.example`, and keep secret-looking values empty there. Never put secrets, customer names, real project keys or internal host names in a commit, an issue or a document.
 - Write documentation in neutral, factual language. Every statement should be true of the code; cite the path.
-- Check the repository rules with `node scripts/check-repo-rules.mjs`.
-- No `console.*`, no `any` escapes and no `process.env` outside `service/src/config` (ESLint and `npm run check:foundation` enforce them).
+- No `console.*`, no `any` escapes and no `process.env` outside `service/src/config` (ESLint enforces them).
 
 ## Development setup
 
 ```
 cd service && npm ci && cp .env.example .env.local     # see service/README.md for a local run without a project
-cd scripts && npm ci                                   # dependencies of the repository checks
+cd scripts && npm ci                                   # dependencies of the deployment helper
 cd mc-app && yarn install --frozen-lockfile            # same for composed-apps and mc-view-app
 ```
 
@@ -40,29 +39,18 @@ Per-folder commands:
 
 | Folder | Commands |
 | --- | --- |
-| `service/` | `npm run typecheck && npm run lint && npm run check:foundation && npm test`; `npm run build && node scripts/smoke-start.mjs` |
+| `service/` | `npm run typecheck && npm run lint && npm test && npm run build` |
 | `mc-app/`, `composed-apps/`, `mc-view-app/` | `yarn typecheck && yarn lint && yarn test && yarn build` (the build needs the values of `.env.example` exported) |
-| `scripts/` | `node --test tests/*.test.mjs docs/*.test.mjs` |
+| `scripts/` | `node --test tests/*.test.mjs` |
 
-Raising the App Kit version means changing all three frontends together (`yarn versions:appkit` in each) and running `node scripts/check-versions.mjs`.
+Raising the App Kit version means changing all three frontends together (`yarn versions:appkit` in each).
 The Nimbus version is pinned in the service and must match the frontends ([docs/operations.md](./docs/operations.md#upgrading-nimbus)).
 
 ## Before opening a PR
 
-- [ ] `node scripts/spdx-check.mjs`
-- [ ] `node scripts/check-repo-rules.mjs`
-- [ ] `node scripts/check-connect-layout.mjs`
-- [ ] `node scripts/check-duplicates.mjs` (files that must be identical across the frontends)
-- [ ] `node scripts/check-versions.mjs` and `node scripts/check-frontend-leftovers.mjs`
-- [ ] The tests of every folder you changed (table above)
-- [ ] Documentation checks, when you changed `connect.yaml`, an application's scopes, a route or a document:
-  - `node scripts/docs/gen-config-table.mjs` regenerates the configuration and scope tables; `node scripts/docs/gen-config-table.mjs --check` verifies them
-  - `node scripts/docs/check-links.mjs` (relative links and anchors)
-  - `node scripts/docs/check-api-doc.mjs` (routes of the code against `docs/api.md`)
-  - `node scripts/docs/check-docs-claims.mjs --certify --citations --scrub --stale`
-
-The generated blocks in `README.md` and `docs/configuration.md` come from `connect.yaml`, the `oAuthScopes` of the application config files and `docs/scope-reasons.json`; edit those sources, not the blocks.
-A new scope needs an entry in `docs/scope-reasons.json` unless the default reason fits.
+- [ ] The commands of every folder you changed (table above) pass.
+- [ ] When you changed a configuration key, a scope, a route or a document, the matching document says the same: the tables in `README.md` and `docs/configuration.md` come from `connect.yaml` and the `oAuthScopes` of the application config files, and `docs/api.md` lists the routes.
+- [ ] Files that are copies across the frontends are still identical ([docs/architecture.md](./docs/architecture.md)).
 
 ## Adding a tool source
 

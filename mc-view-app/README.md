@@ -107,7 +107,7 @@ Quality gates: `yarn typecheck && yarn lint && yarn test && yarn build` (Node 22
 
 The chat surface is copied from `mc-app/src/components/new-chat` at commit `a62e60e` and pruned.
 
-Copied unchanged and guarded byte for byte by `scripts/check-duplicates.mjs` (group `view-chat-parts`):
+Copied unchanged from `mc-app` and kept identical to it:
 `utils/forward-to.ts`, `utils/material-icons.ts`, `types/chart.ts`, `hooks/use-service-image.ts`,
 `components/your-user-id/index.tsx`, `components/new-chat/{types.ts,layout.ts,agent-avatar.tsx}`,
 `parts/{json-block,text-part,file-part,export-part,reasoning-part,source-part}.tsx`,
@@ -130,8 +130,7 @@ Left out (reason): server tool menu and tools panel (no tool selection in the pa
 rail (one session per host page), composed pages, code preview and annotations (admin/page features of
 `mc-app`), `use-current-user` (it reads the e-mail), `gravatar.ts` (same reason).
 
-Maintenance: when a guarded file changes in `mc-app`, copy it here (`node scripts/check-duplicates.mjs`
-prints the `cp` command). Review the adapted files against `mc-app` roughly quarterly.
+Maintenance: when one of the copied files changes in `mc-app`, copy it here. Review the adapted files against `mc-app` roughly quarterly.
 
 ## More
 

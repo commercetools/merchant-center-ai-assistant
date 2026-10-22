@@ -53,10 +53,10 @@ The service is mounted at `/service` (`service/src/app.ts`, `service/src/routes/
 
 `CLOUD_IDENTIFIER` and `CHAT_SERVICE_ENDPOINT_URL` are shared by all applications through `inheritAs.configuration` in `connect.yaml`, so each is set once per deployment, without an application prefix.
 
-The three frontends use the same `@commercetools-frontend/*` version (checked by `scripts/check-versions.mjs`). They cannot share a
-build, so a few small files are copies that `scripts/check-duplicates.mjs` keeps identical (for example `utils/forward-to.ts`
+The three frontends use the same `@commercetools-frontend/*` version, kept in step by hand. They cannot share a
+build, so a few small files are copies that must stay identical (for example `utils/forward-to.ts`
 and the composed page renderer files). Package names are `ai-assistant-<suffix>` (`ai-assistant-service`, `ai-assistant-mc-app`, ...), and
-every `package.json` is `private`, which `scripts/spdx-check.mjs` verifies.
+every `package.json` is `private`.
 
 ## Data model
 
@@ -120,7 +120,7 @@ step to wrap up. At the hard deadline a notice and a stored `data-turn-status` p
 ## Security boundaries
 
 - Secrets live in `securedConfiguration` of `connect.yaml` only; the service reads them once in `service/src/config` and wraps them in `Secret` values that never print.
-- Browser-supplied identity is never used: `service/scripts/check-foundation.mjs` fails the build when a source file reads an e-mail, label or admin flag from a request.
+- Browser-supplied identity is never used: no source file reads an e-mail, label or admin flag from a request.
 - Per-user data is filtered by the verified user ID in the service layer (`service/src/services/session.service.ts`), never by a value from the request body or query.
 - Generated page code runs in the Merchant Center application's own origin (`mc-app/custom-application-config.mjs` allows `unsafe-eval` for it); the Custom View does not.
 - Details: [security.md](./security.md) and [permissions.md](./permissions.md).
@@ -184,7 +184,7 @@ Commands are in [deployment-runbook.md](./deployment-runbook.md).
 | Service logic | Jest, supertest, msw, in-memory persistence | `service/tests/` |
 | Service against Custom Objects, Google Cloud, MCP servers | integration suites, skipped without credentials | `service/tests/integration/` |
 | Frontends | `tsc`, ESLint, Jest, `mc-scripts build` | each frontend folder |
-| Repository and documentation rules | Node test runner | `scripts/tests/`, `scripts/docs/` |
+| Deployment helper | Node test runner | `scripts/tests/` |
 | Deployed connector | manual checks in a browser logged in to the Merchant Center | see [troubleshooting.md](./troubleshooting.md) |
 
 ## Decisions

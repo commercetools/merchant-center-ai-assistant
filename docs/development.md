@@ -11,9 +11,9 @@ How to run, test and change the connector on your machine. Setup that lives outs
 | `mc-app/`, `composed-apps/`, `mc-view-app/` | The Merchant Center applications (TypeScript, React, Yarn 1, one install per folder) |
 | `service/contract/` | Shared test fixture of the composed page format |
 | `docs/` | Documentation |
-| `scripts/` | Repository checks, the deployment helper (`scripts/connect`) and the documentation checks (`scripts/docs`) |
+| `scripts/` | The deployment helper (`scripts/connect`) and its tests |
 
-There are no npm workspaces and no shared package: each folder installs its own dependencies, as Connect requires. A few small files are copied between the Merchant Center applications and kept identical by `node scripts/check-duplicates.mjs`.
+There are no npm workspaces and no shared package: each folder installs its own dependencies, as Connect requires. A few small files are copied between the Merchant Center applications and must stay identical; change a copy in every app ([architecture.md](./architecture.md#applications)).
 
 ## Run the service
 
@@ -78,9 +78,9 @@ Commerce tools come from a Managed MCP server in identity mode. To try the conne
 
 ```
 cd service
-npm run typecheck && npm run lint && npm run check:foundation
+npm run typecheck && npm run lint
 npm test                                         # Jest, no network, in-memory persistence
-npm run build && node scripts/smoke-start.mjs    # starts the built output; prints "smoke OK"
+npm run build
 npm run test:integration                         # needs credentials in .env.local; every suite skips without them
 ```
 
@@ -90,26 +90,10 @@ yarn typecheck && yarn lint && yarn test && yarn build    # the build needs the 
 ```
 
 ```
-node scripts/spdx-check.mjs
-node scripts/check-repo-rules.mjs
-node scripts/check-connect-layout.mjs
-node scripts/check-duplicates.mjs
-cd scripts && npm ci && node --test tests/*.test.mjs docs/*.test.mjs
+cd scripts && npm ci && node --test tests/*.test.mjs      # the deployment helper
 ```
 
 The Connect CLI builds the current directory, so run `commercetools connect application build` and `application test` from `service/`; `commercetools connect validate` runs from the repository root and needs a running Docker daemon.
-
-## Documentation checks
-
-Two tables of the README and of [configuration.md](./configuration.md) are generated from `connect.yaml` and the applications' config files. Do not edit them by hand.
-
-```
-node scripts/docs/gen-config-table.mjs           # rewrite the generated blocks
-node scripts/docs/gen-config-table.mjs --check   # fail when they are out of date
-node scripts/docs/check-links.mjs
-node scripts/docs/check-api-doc.mjs
-node scripts/docs/check-docs-claims.mjs --certify --citations --scrub --stale
-```
 
 ## Changing a configuration key
 
@@ -118,15 +102,14 @@ A key lives in several places that must agree. For a new optional setting:
 1. `service/src/config/sections/*.ts` reads it once, validates it and holds the default. No other module reads `process.env`.
 2. `connect.yaml` declares it with a `description` and, when the default is a fixed value, a `default`. When the default is derived or empty, say so in the description.
 3. `service/.env.example` lists it with a short comment.
-4. `scripts/check-connect-layout.mjs` and its test list it with its expectation (default, optional or required).
-5. Run `node scripts/docs/gen-config-table.mjs` and add a note to [configuration.md](./configuration.md) when it needs one.
-6. Add a case to the matching test in `service/tests/unit`.
+4. Update the configuration table in [README.md](../README.md#configuration) and in [configuration.md](./configuration.md), and add a note there when the key needs one.
+5. Add a case to the matching test in `service/tests/unit`.
 
 Keys shared by every application (`CLOUD_IDENTIFIER`, `CHAT_SERVICE_ENDPOINT_URL`) go under `inheritAs.configuration` instead, and the deployment helper passes them without an application prefix.
 
 ## Adding to the service
 
 - A new tool source: [service/src/tool-sources/README.md](../service/src/tool-sources/README.md) and [adding-a-store.md](./adding-a-store.md).
-- A new route: update [api.md](./api.md); `node scripts/docs/check-api-doc.mjs` compares it with the code.
+- A new route: add it to [api.md](./api.md).
 
 See also [CONTRIBUTING.md](../CONTRIBUTING.md). Contributions carry no support commitment.

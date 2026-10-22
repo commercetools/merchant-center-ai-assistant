@@ -57,8 +57,7 @@ Generated page code runs in the app's own origin with the user's session. The re
 `script-src`; connections, fonts, styles and images are limited to `*.commercetools.app` and
 `*.gstatic.com`. Only people who may create pages through the assistant can put code in pages.
 This is the reason the renderer is not a shared package: Merchant Center apps only compile
-their own `src` folder, so the renderer files are copies of the ones in `mc-app`, checked for
-drift by `node scripts/check-duplicates.mjs` (group `composed-renderer`).
+their own `src` folder, so the renderer files are copies of the ones in `mc-app` and must stay identical to them.
 
 ## Failure behaviour
 

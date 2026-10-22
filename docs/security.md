@@ -7,7 +7,7 @@ This document describes the security model of the connector as implemented. Repo
 - Secrets are Connect `securedConfiguration` only: `GCP_SA_KEY_BASE64`, `ENCRYPTION_KEY`, `ENCRYPTION_KEY_PREVIOUS` and the third-party credentials `CONTENTSTACK_API_KEY`, `CONTENTSTACK_MANAGEMENT_TOKEN`, `ALGOLIA_MCP_URL` (it may embed a key) and `STRIPE_SECRET_KEY`.
   They never reach the browser, are never stored in Custom Objects and are never returned by an API. `GET /service/mcp/providers` returns provider names, two booleans and the names of missing keys, nothing else.
 - The service reads configuration once and wraps secret values in a type that prints as redacted (`service/src/config/secret.ts`). The Base64 key and the decoded private key never appear in a log or a response; invalid keys are reported with a fixed reason.
-- Repository rules keep secrets out of the tree: `.env` files other than `.env.example` are ignored, `.env.example` values for secret-looking keys must be empty, and `node scripts/check-repo-rules.mjs` enforces both.
+- Repository rules keep secrets out of the tree: `.env` files other than `.env.example` are ignored, `.env.example` values for secret-looking keys must be empty.
 - The deployment helper passes secured values to the Connect CLI as command-line arguments, so they are visible in the local process list while the command runs. Run it on a personal workstation. It masks secured values in everything it prints (`scripts/connect/connect.mjs`).
 - Use least-privilege third-party credentials: a Stripe restricted key, a Contentstack management token scoped to what the assistant may change. There is no separate confirmation step for mutating Stripe calls, so a key that can write lets the assistant write.
 

@@ -6,6 +6,6 @@
 
 /**
  * The path the service router is mounted at. MUST equal `endpoint` of the service entry in
- * connect.yaml (checked by `scripts/check-connect-layout.mjs` and by the test of this constant).
+ * connect.yaml (checked by the test of this constant).
  */
 export const SERVICE_BASE_PATH = '/service';

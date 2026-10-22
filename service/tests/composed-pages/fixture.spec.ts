@@ -27,7 +27,7 @@ describe('shared composed page fixture', () => {
     const actual = readFileSync(FIXTURE, 'utf8');
     if (actual !== expected) {
       throw new Error(
-        'service/contract/composed-page.fixture.json is stale. Regenerate it with: cd service && npm run update:composed-page-fixture'
+        'service/contract/composed-page.fixture.json is stale: the composed page tool output changed. Rewrite it with the output of buildComposedPageFixtureJson() and copy it to mc-app/src/utils and composed-apps/src/hooks/use-composed-pages-storage.'
       );
     }
   });

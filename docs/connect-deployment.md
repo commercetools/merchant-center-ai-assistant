@@ -104,7 +104,7 @@ A configuration change (`configure KEY=VALUE`) is a redeploy of the same Deploym
 
 ## Connect certification
 
-The README at the repository root is the connector README that a certification review reads: configuration table, required scopes, fail-open and fail-closed behaviour, and the poison-message statement. `node scripts/docs/check-docs-claims.mjs --certify` checks that these are present. Certification itself is only needed to list a connector on the Connect marketplace; a private connector skips it.
+The README at the repository root is the connector README that a certification review reads: configuration table, required scopes, fail-open and fail-closed behaviour, and the poison-message statement. Certification itself is only needed to list a connector on the Connect marketplace; a private connector skips it.
 
 ## What is verified and what is not
 

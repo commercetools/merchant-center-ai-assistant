@@ -60,7 +60,7 @@ Hiding screens is cosmetic. The service decides on every request; a user who cal
 ## What is not trusted
 
 The service never uses an e-mail address, label, user ID or admin flag that comes from the browser, in a header, a body or a query parameter (for example a query parameter `userEmail` or a body field `isAdmin` has no effect).
-Ownership of sessions, feedback and images, the audit lines and every filter use the user ID from the verified token only. `service/scripts/check-foundation.mjs` fails the build when a source file reads such a value.
+Ownership of sessions, feedback and images, the audit lines and every filter use the user ID from the verified token only. No source file reads such a value from a request.
 
 ## Display label
 

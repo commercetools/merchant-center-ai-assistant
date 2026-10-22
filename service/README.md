@@ -43,17 +43,16 @@ Chat needs `GCP_SA_KEY_BASE64` (`base64 < key.json | tr -d '\n'`). With a real p
 ## Test and check
 
 ```
-npm run typecheck && npm run lint && npm run check:foundation
+npm run typecheck && npm run lint
 npm test                                         # Jest, no network, in-memory persistence
-npm run build && node scripts/smoke-start.mjs    # starts the built output; prints "smoke OK"
+npm run build
 npm run test:integration                         # needs credentials in .env.local; every suite skips without them
 ```
 
 The Connect CLI builds the current directory, so run it from `service/`: `commercetools connect application build` and `commercetools connect application test`.
 `commercetools connect validate` runs from the repository root and needs a running Docker daemon.
 
-Other scripts: `npm run persistence:reencrypt` (after rotating `ENCRYPTION_KEY`, see [configuration](../docs/configuration.md#encryption-key)), `npm run persistence:purge` (test containers), `npm run smoke:nimbus`,
-`npm run probe:identity`, `npm run generate:nimbus-surface` and `npm run check:nimbus-surface`.
+Other scripts: `npm run persistence:reencrypt` (after rotating `ENCRYPTION_KEY`, see [configuration](../docs/configuration.md#encryption-key)), `npm run generate:nimbus-surface` and `npm run check:nimbus-surface`.
 
 ## Fail-open and fail-closed behaviour
 

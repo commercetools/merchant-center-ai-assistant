@@ -1,8 +1,7 @@
 # REST API reference
 
 The service exposes its API under the base path `/service`. It is called by the Merchant Center applications through the
-Merchant Center gateway (`/proxy/forward-to`), not by browsers directly. The route table below is checked against the code by
-`node scripts/docs/check-api-doc.mjs`.
+Merchant Center gateway (`/proxy/forward-to`), not by browsers directly. The route table below lists every route of the code.
 
 ## Conventions
 

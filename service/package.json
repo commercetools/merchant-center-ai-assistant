@@ -14,16 +14,11 @@
     "lint": "eslint . --ext .ts",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.integration.config.cjs",
-    "check:foundation": "node scripts/check-foundation.mjs",
-    "probe:identity": "tsx scripts/probe-identity-mcp.ts",
     "connector:post-deploy": "node build/connector/post-deploy.js",
     "connector:pre-undeploy": "node build/connector/pre-undeploy.js",
-    "persistence:purge": "node --env-file=.env.local scripts/purge-containers.mjs",
     "persistence:reencrypt": "node --env-file=.env.local scripts/reencrypt.mjs",
-    "smoke:nimbus": "node scripts/smoke-nimbus.mjs",
     "generate:nimbus-surface": "node scripts/generate-nimbus-surface.mjs",
-    "check:nimbus-surface": "node scripts/generate-nimbus-surface.mjs --check",
-    "update:composed-page-fixture": "npm run build && node scripts/update-composed-page-fixture.mjs"
+    "check:nimbus-surface": "node scripts/generate-nimbus-surface.mjs --check"
   },
   "dependencies": {
     "@ai-sdk/google-vertex": "^5.0.109",

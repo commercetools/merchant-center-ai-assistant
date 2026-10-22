@@ -50,7 +50,7 @@ yarn typecheck && yarn lint && yarn test && yarn build
 
 `yarn build` needs the variables of `.env.example` exported or in `.env`. The gateway only reaches public https URLs, so a local development server talks to a deployed sandbox service, or to a local service over `http` when that service runs with `MC_AUTH_DISABLED=true` ([development.md](../docs/development.md#run-a-frontend)).
 `postinstall` generates the Nimbus type definitions and the Nimbus surface manifest (`yarn check:nimbus-surface` verifies that it is up to date; the service keeps a byte copy, checked by `npm run check:nimbus-surface` in `service/`).
-Files that must stay identical across the frontends are checked from the repository root with `node scripts/check-duplicates.mjs`.
+Some files are copied into the other frontends and must stay identical; change every copy ([architecture.md](../docs/architecture.md#applications)).
 
 ## Fail-open and fail-closed behaviour
 
