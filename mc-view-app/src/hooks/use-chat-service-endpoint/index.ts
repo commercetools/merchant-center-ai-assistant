@@ -1,0 +1,28 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 commercetools GmbH and the commercetools-labs contributors
+ * Freely available, AS IS and UNSUPPORTED. See LICENSE.
+ */
+
+import { useApplicationContext } from '@commercetools-frontend/application-shell-connectors';
+
+export const useChatServiceEndpoint = () => {
+  const { chatServiceEndpointUrl } = useApplicationContext((context) => {
+    let chatServiceEndpointUrl =
+      'chatServiceEndpointUrl' in context.environment
+        ? (context.environment.chatServiceEndpointUrl as string)
+        : undefined;
+
+    if (chatServiceEndpointUrl && !chatServiceEndpointUrl.endsWith('/')) {
+      chatServiceEndpointUrl = chatServiceEndpointUrl + '/';
+    }
+
+    return {
+      chatServiceEndpointUrl,
+    };
+  });
+
+  return {
+    chatServiceEndpointUrl,
+  };
+};

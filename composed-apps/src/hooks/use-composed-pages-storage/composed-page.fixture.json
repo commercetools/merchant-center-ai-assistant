@@ -1,0 +1,140 @@
+{
+  "containerKey": "shared-composed-pages",
+  "output": {
+    "schema": {
+      "components": [
+        {
+          "code": {
+            "text": "Y29uc3QgW2NvdW50LCBzZXRDb3VudF0gPSB1c2VTdGF0ZSgwKTsKdXNlRWZmZWN0KCgpID0+IHsKICBzZXRDb3VudChyZW5kZXJEYXRhLmRhdGEucHJvZHVjdHM/LnByb2R1Y3RzPy50b3RhbCA/PyAwKTsKfSwgW3JlbmRlckRhdGEuZGF0YS5wcm9kdWN0c10pOwpyZXR1cm4gKAogIDxTdGFjayBkaXJlY3Rpb249ImNvbHVtbiIgZ2FwPSI0MDAiPgogICAgPEhlYWRpbmcgYXM9ImgxIj5Qcm9kdWN0czoge2NvdW50fTwvSGVhZGluZz4KICAgIDxGb290ZXIgcmVuZGVyRGF0YT17cmVuZGVyRGF0YX0gZGlzcGF0Y2hVSUFjdGlvbj17ZGlzcGF0Y2hVSUFjdGlvbn0gLz4KICA8L1N0YWNrPgopOw==",
+            "transpiledCode": "ZnVuY3Rpb24gTWFpbih7CiAgcmVuZGVyRGF0YSwKICBkaXNwYXRjaFVJQWN0aW9uCn0pIHsKICBjb25zdCBbY291bnQsIHNldENvdW50XSA9IHVzZVN0YXRlKDApOwogIHVzZUVmZmVjdCgoKSA9PiB7CiAgICBzZXRDb3VudChyZW5kZXJEYXRhLmRhdGEucHJvZHVjdHM/LnByb2R1Y3RzPy50b3RhbCA/PyAwKTsKICB9LCBbcmVuZGVyRGF0YS5kYXRhLnByb2R1Y3RzXSk7CiAgcmV0dXJuIC8qI19fUFVSRV9fKi9SZWFjdC5jcmVhdGVFbGVtZW50KFN0YWNrLCB7CiAgICBkaXJlY3Rpb246ICJjb2x1bW4iLAogICAgZ2FwOiAiNDAwIgogIH0sIC8qI19fUFVSRV9fKi9SZWFjdC5jcmVhdGVFbGVtZW50KEhlYWRpbmcsIHsKICAgIGFzOiAiaDEiCiAgfSwgIlByb2R1Y3RzOiAiLCBjb3VudCksIC8qI19fUFVSRV9fKi9SZWFjdC5jcmVhdGVFbGVtZW50KEZvb3RlciwgewogICAgcmVuZGVyRGF0YTogcmVuZGVyRGF0YSwKICAgIGRpc3BhdGNoVUlBY3Rpb246IGRpc3BhdGNoVUlBY3Rpb24KICB9KSk7Cn0KTWFpbjs="
+          },
+          "dataSources": [
+            {
+              "id": "products",
+              "name": "Products",
+              "query": "query($limit:Int){ products(limit:$limit){ total } }",
+              "target": "COMMERCETOOLS_PLATFORM",
+              "variables": [
+                {
+                  "name": "limit",
+                  "type": "number",
+                  "value": 5
+                }
+              ]
+            }
+          ],
+          "imports": [
+            {
+              "items": [
+                "useState",
+                "useEffect"
+              ],
+              "source": "react"
+            },
+            {
+              "items": [
+                "Stack",
+                "Heading",
+                "Text"
+              ],
+              "source": "commercetools"
+            }
+          ],
+          "name": "Main"
+        },
+        {
+          "code": {
+            "text": "cmV0dXJuIDxUZXh0PkhpPC9UZXh0Pjs=",
+            "transpiledCode": "ZnVuY3Rpb24gRm9vdGVyKHsKICByZW5kZXJEYXRhLAogIGRpc3BhdGNoVUlBY3Rpb24KfSkgewogIHJldHVybiAvKiNfX1BVUkVfXyovUmVhY3QuY3JlYXRlRWxlbWVudChUZXh0LCBudWxsLCAiSGkiKTsKfQpGb290ZXI7"
+          },
+          "dataSources": [],
+          "imports": [
+            {
+              "items": [
+                "Text"
+              ],
+              "source": "commercetools"
+            }
+          ],
+          "name": "Footer"
+        }
+      ],
+      "description": "Shared contract fixture for the service and the frontends",
+      "props": {},
+      "title": "Fixture page",
+      "version": "5.0"
+    },
+    "success": true,
+    "uri": "ui://composed-page/fixture-page/v1"
+  },
+  "schemaVersion": "5.0",
+  "storedValue": {
+    "createdBy": "fixture-user",
+    "icon": "Page",
+    "isPublished": false,
+    "name": "Fixture page",
+    "schema": {
+      "components": [
+        {
+          "code": {
+            "text": "Y29uc3QgW2NvdW50LCBzZXRDb3VudF0gPSB1c2VTdGF0ZSgwKTsKdXNlRWZmZWN0KCgpID0+IHsKICBzZXRDb3VudChyZW5kZXJEYXRhLmRhdGEucHJvZHVjdHM/LnByb2R1Y3RzPy50b3RhbCA/PyAwKTsKfSwgW3JlbmRlckRhdGEuZGF0YS5wcm9kdWN0c10pOwpyZXR1cm4gKAogIDxTdGFjayBkaXJlY3Rpb249ImNvbHVtbiIgZ2FwPSI0MDAiPgogICAgPEhlYWRpbmcgYXM9ImgxIj5Qcm9kdWN0czoge2NvdW50fTwvSGVhZGluZz4KICAgIDxGb290ZXIgcmVuZGVyRGF0YT17cmVuZGVyRGF0YX0gZGlzcGF0Y2hVSUFjdGlvbj17ZGlzcGF0Y2hVSUFjdGlvbn0gLz4KICA8L1N0YWNrPgopOw==",
+            "transpiledCode": "ZnVuY3Rpb24gTWFpbih7CiAgcmVuZGVyRGF0YSwKICBkaXNwYXRjaFVJQWN0aW9uCn0pIHsKICBjb25zdCBbY291bnQsIHNldENvdW50XSA9IHVzZVN0YXRlKDApOwogIHVzZUVmZmVjdCgoKSA9PiB7CiAgICBzZXRDb3VudChyZW5kZXJEYXRhLmRhdGEucHJvZHVjdHM/LnByb2R1Y3RzPy50b3RhbCA/PyAwKTsKICB9LCBbcmVuZGVyRGF0YS5kYXRhLnByb2R1Y3RzXSk7CiAgcmV0dXJuIC8qI19fUFVSRV9fKi9SZWFjdC5jcmVhdGVFbGVtZW50KFN0YWNrLCB7CiAgICBkaXJlY3Rpb246ICJjb2x1bW4iLAogICAgZ2FwOiAiNDAwIgogIH0sIC8qI19fUFVSRV9fKi9SZWFjdC5jcmVhdGVFbGVtZW50KEhlYWRpbmcsIHsKICAgIGFzOiAiaDEiCiAgfSwgIlByb2R1Y3RzOiAiLCBjb3VudCksIC8qI19fUFVSRV9fKi9SZWFjdC5jcmVhdGVFbGVtZW50KEZvb3RlciwgewogICAgcmVuZGVyRGF0YTogcmVuZGVyRGF0YSwKICAgIGRpc3BhdGNoVUlBY3Rpb246IGRpc3BhdGNoVUlBY3Rpb24KICB9KSk7Cn0KTWFpbjs="
+          },
+          "dataSources": [
+            {
+              "id": "products",
+              "name": "Products",
+              "query": "query($limit:Int){ products(limit:$limit){ total } }",
+              "target": "COMMERCETOOLS_PLATFORM",
+              "variables": [
+                {
+                  "name": "limit",
+                  "type": "number",
+                  "value": 5
+                }
+              ]
+            }
+          ],
+          "imports": [
+            {
+              "items": [
+                "useState",
+                "useEffect"
+              ],
+              "source": "react"
+            },
+            {
+              "items": [
+                "Stack",
+                "Heading",
+                "Text"
+              ],
+              "source": "commercetools"
+            }
+          ],
+          "name": "Main"
+        },
+        {
+          "code": {
+            "text": "cmV0dXJuIDxUZXh0PkhpPC9UZXh0Pjs=",
+            "transpiledCode": "ZnVuY3Rpb24gRm9vdGVyKHsKICByZW5kZXJEYXRhLAogIGRpc3BhdGNoVUlBY3Rpb24KfSkgewogIHJldHVybiAvKiNfX1BVUkVfXyovUmVhY3QuY3JlYXRlRWxlbWVudChUZXh0LCBudWxsLCAiSGkiKTsKfQpGb290ZXI7"
+          },
+          "dataSources": [],
+          "imports": [
+            {
+              "items": [
+                "Text"
+              ],
+              "source": "commercetools"
+            }
+          ],
+          "name": "Footer"
+        }
+      ],
+      "description": "Shared contract fixture for the service and the frontends",
+      "props": {},
+      "title": "Fixture page",
+      "version": "5.0"
+    }
+  }
+}

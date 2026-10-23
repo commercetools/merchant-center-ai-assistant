@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 commercetools GmbH and the commercetools-labs contributors
+# Freely available, AS IS and UNSUPPORTED. See LICENSE.
+
+query FetchComposedPages(
+  $container: String!
+  $limit: Int!
+  $offset: Int!
+  $sort: [String!]
+) {
+  customObjects(
+    container: $container
+    limit: $limit
+    offset: $offset
+    sort: $sort
+  ) {
+    total
+    count
+    offset
+    results {
+      id
+      key
+      container
+      value
+      version
+      createdAt
+      lastModifiedAt
+    }
+  }
+}
