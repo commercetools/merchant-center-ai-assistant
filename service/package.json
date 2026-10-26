@@ -39,14 +39,14 @@
     "@modelcontextprotocol/sdk": "1.32.1",
     "@stripe/agent-toolkit": "0.7.12",
     "ai": "7.0.136",
-    "body-parser": "^1.20.8",
+    "body-parser": "^1.20.9",
     "express": "^4.22.3",
     "google-auth-library": "^10.9.1",
     "sharp": "^0.35.5",
     "graphql": "17.0.2",
     "uuid": "^13.0.2",
     "winston": "^3.19.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@ai-sdk/provider": "^4.0.26",
