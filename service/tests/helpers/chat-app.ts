@@ -12,6 +12,10 @@ import {
   type ChatControllerDeps,
 } from '../../src/chat/chat.controller';
 import { setChatModelForTests } from '../../src/chat/orchestrator';
+import {
+  cancelChatStream,
+  replayChatStream,
+} from '../../src/chat/stream-resume.controller';
 import { initRequestContext } from '../../src/middleware/context.middleware';
 import { errorMiddleware } from '../../src/middleware/error.middleware';
 import { loadSession } from '../../src/middleware/load-session.middleware';
@@ -66,6 +70,18 @@ export const makeChatApp = (o: {
       runTurnDigest,
       runTurnDigestBeforeClose: o.runTurnDigestBeforeClose,
     })
+  );
+  app.get(
+    '/service/ai-chat/:sessionId/message/stream',
+    fakeAuth,
+    loadSession,
+    replayChatStream
+  );
+  app.delete(
+    '/service/ai-chat/:sessionId/message/stream',
+    fakeAuth,
+    loadSession,
+    cancelChatStream
   );
   app.use(errorMiddleware);
   return { app, services, model, digests };

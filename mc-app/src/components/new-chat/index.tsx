@@ -71,7 +71,8 @@ const NewChat: React.FC = () => {
   // of `ChatArea` with the hook above; `ChatArea` reports back through `onTurnFinished`.
   const [turnFinishedAt, setTurnFinishedAt] = useState<number | null>(null);
   const handleTurnFinished = useCallback(
-    () => setTurnFinishedAt(Date.now()),
+    // `since` is given when the end of the turn was noticed late (see the recovery).
+    (since?: number) => setTurnFinishedAt(since ?? Date.now()),
     []
   );
   const { prompts: followUps, dismiss: dismissFollowUps } = useNextPrompts(

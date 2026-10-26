@@ -33,6 +33,20 @@ describe('RequestBudget', () => {
     jest.useRealTimers();
   });
 
+  it('cancel aborts the run and stays silent: no time-limit end, not even later', () => {
+    const { budget } = make();
+    jest.advanceTimersByTime(269_000);
+    expect(budget.hardSignal.aborted).toBe(false);
+
+    budget.cancel();
+    expect(budget.hardSignal.aborted).toBe(true);
+    expect(budget.timedOut()).toBe(false);
+
+    // The run takes a moment to unwind and the deadline passes meanwhile: still a stop.
+    jest.advanceTimersByTime(5_000);
+    expect(budget.timedOut()).toBe(false);
+  });
+
   it('moves through the phases at 0, 245 and 270 seconds', () => {
     const { budget } = make();
     expect(budget.phase()).toBe('normal');

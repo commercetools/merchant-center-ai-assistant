@@ -270,6 +270,7 @@ What happens when a dependency is unavailable. "Closed" means the request is rej
 | Embedded Nimbus MCP | Its tools are left out; `/service/status/nimbus` answers 503 | open | 20 s per call |
 | BigQuery | Offloading a large result fails: the tool result is returned unchanged; query tools return an error to the model | open for offload, closed per query | 60 s per query job |
 | Cloud Storage | A generated image that cannot be stored is dropped and logged; an image that cannot be read answers 404 or 500 for that file | open for chat, closed per image | none |
+| Browser connection cut by the Merchant Center gateway (about 120 s, observed) | The turn continues and is stored; the chat app (`mc-app`) reattaches to it or reads the stored answer. The Custom View does not, and shows its error | closed with a message | 3 reattaches, then reads for up to 5 minutes |
 | Five-minute Connect request limit | At 240 s running tools stop; at 270 s the answer is finished with a notice that is stored | closed with a message | `CHAT_REQUEST_BUDGET_MS`, `CHAT_FINALIZE_RESERVE_MS` |
 
 No Subscription or API Extension exists, so orders, carts and checkout never depend on this connector.

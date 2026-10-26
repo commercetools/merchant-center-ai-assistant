@@ -36,7 +36,7 @@ Users read their own sessions. Administrators (`ADMIN_USER_IDS`) can read every 
 
 ## Retention
 
-Chat messages and feedback are kept until an operator deletes them. There is no automatic deletion, expiry or cleanup job. Only the BigQuery tables (seven days) and pending login attempts (ten minutes) expire.
+Chat messages and feedback are kept until an operator deletes them. There is no automatic deletion, expiry or cleanup job. Only the BigQuery tables (seven days) and pending login attempts (ten minutes) expire. The service also keeps a copy of each running turn in its memory, and for two minutes after it ends, so a browser can reconnect; it is never written anywhere and is gone when the process restarts.
 Undeploying the connector does not delete data. [operations.md](./operations.md#data-retention) lists what to delete to remove one user's data (their sessions and the matching message containers, their connection, their feedback and suggestions) or all data.
 
 ## Choices that reduce what is collected

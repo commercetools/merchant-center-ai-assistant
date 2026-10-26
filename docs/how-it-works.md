@@ -19,6 +19,7 @@ The mechanisms of the connector, each with the files that implement it. For the 
    A session created by the Custom View uses a smaller orchestrator with only the commercetools and Knowledge sources (`service/src/chat/custom-view-orchestrator.ts`).
 8. The result streams as a UI message stream over server-sent events (`service/src/chat/stream.ts`). When the stream finishes, the new messages are stored (ids that already exist are skipped),
    and `runTurnDigest` starts in the background (`service/src/agents/turn-digest.ts`); it is not awaited, so it delays neither the answer nor the composer.
+   While the turn runs, its frames are also kept in memory so that a browser whose connection was cut can reattach to it (`service/src/chat/turn-buffer.ts`, [architecture.md](./architecture.md#the-browsers-connection)); the stored messages above never depend on that copy.
 
 Tool results that must be shown again after a reload (charts, exports, composed pages) keep their output in the stored message; others are stripped (`service/src/chat/storage-filter.ts`).
 

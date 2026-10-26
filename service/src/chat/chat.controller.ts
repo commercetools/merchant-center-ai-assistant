@@ -24,10 +24,11 @@ import { buildOrchestrator, type BuiltAgent } from './orchestrator';
 import { getRequestBudget } from './budget.middleware';
 import { processMessagesForStorage } from './storage-filter';
 import { createChatStream, type ChatUIMessage } from './stream';
+import { turnRegistry, type TurnBuffer } from './turn-buffer';
 import { validateChatRequest } from './validate-request';
 
 /** The headers of the SSE response. No `Access-Control-Allow-*`: the service has no CORS. */
-const STREAM_HEADERS = {
+export const STREAM_HEADERS = {
   'Content-Type': 'text/event-stream',
   'Cache-Control': 'no-cache, no-transform',
   Connection: 'keep-alive',
@@ -36,6 +37,31 @@ const STREAM_HEADERS = {
 
 const messageOf = (error: unknown, fallback: string): string =>
   error instanceof Error ? error.message : fallback;
+
+/**
+ * Copies every SSE frame of the turn into its replay buffer (see `turn-buffer.ts`).
+ *
+ * The reader must keep up: the SDK tees the stream, and a branch that is not read grows
+ * without bound. It also must never reject, because a rejection inside `consumeSseStream`
+ * is an unhandled rejection that takes the process down.
+ */
+const feedTurnBuffer = async (
+  stream: ReadableStream<string>,
+  turn: TurnBuffer
+): Promise<void> => {
+  const reader = stream.getReader();
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      turn.append(value);
+    }
+  } catch (error) {
+    logger.warn('Replay buffer reader stopped', { reason: messageOf(error, 'unknown') });
+  } finally {
+    turnRegistry.release(turn);
+  }
+};
 
 /**
  * `POST /service/ai-chat/:sessionId/message/stream` (row 19 of the REST contract).
@@ -61,6 +87,7 @@ export const createSendAiChatMessage =
     const { sessionId } = req.params;
     const user = (req as AuthenticatedRequest).user;
     const budget = getRequestBudget(res);
+    let turn: TurnBuffer | undefined;
 
     try {
       const validated = validateChatRequest(req);
@@ -136,6 +163,13 @@ export const createSendAiChatMessage =
         },
       });
 
+      // The browser's connection can be cut by the gateway while this turn is still running
+      // (about 120 s), so the frames are also kept for a reconnecting `resumeStream()`.
+      const replay = turnRegistry.start(sessionId, user.userId, () =>
+        budget.cancel()
+      );
+      turn = replay;
+
       // MUST be awaited. The promise rejects when a write fails mid-stream (it ends the
       // response and re-throws); left un-awaited that is an unhandled rejection, which takes
       // the whole Node process down.
@@ -144,9 +178,13 @@ export const createSendAiChatMessage =
         stream,
         status: 200,
         headers: STREAM_HEADERS,
+        consumeSseStream: ({ stream: frames }) => {
+          void feedTurnBuffer(frames, replay);
+        },
       });
       logger.info(`AI chat streaming completed for session ${sessionId}`);
     } catch (error) {
+      if (turn) turnRegistry.release(turn);
       logger.error(`Error in AI chat for session ${sessionId}`, {
         reason: messageOf(error, 'unknown'),
       });

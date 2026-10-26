@@ -31,6 +31,7 @@ What is not implemented is listed in [docs/operations.md](./docs/operations.md) 
 
 - Streaming chat endpoint with request validation before the first byte, history window of 20 messages, one flat orchestrator and at most 50 steps: `service/src/chat/chat.controller.ts`, `service/src/chat/orchestrator.ts`.
 - Time budget (270 s hard, 30 s reserve), soft abort of running tools, stored time-limit notice, 20 s keep-alive part: `service/src/chat/request-budget.ts`, `service/src/chat/budget-tools.ts`, `service/src/chat/stream.ts`.
+- Replay buffer of running chat turns with a reattach route (`GET`) and a stop route (`DELETE`) on the stream path, bounded per turn, per process and per connection: `service/src/chat/turn-buffer.ts`, `service/src/chat/stream-resume.controller.ts`.
 - Session CRUD, last session, list (at most 500), messages with paging, feature-flag scoping for the Custom View: `service/src/routes/session.route.ts`, `service/src/services/session.service.ts`.
 - Background session digest (title, description, icon, summary, follow-up prompts) and personalised suggestions with a static fallback: `service/src/agents/session-digest.agent.ts`, `service/src/agents/suggestions.agent.ts`, `service/src/services/suggestions.service.ts`.
 - Per-session tools menu with a stored negative list: `service/src/controllers/tools.controller.ts`.
@@ -67,6 +68,7 @@ What is not implemented is listed in [docs/operations.md](./docs/operations.md) 
 - Message parts: text, reasoning, tool steps, sources, files and private images, exports, charts, sub-agent output, annotations, generated UI: `mc-app/src/components/new-chat/parts/index.tsx`.
 - Chats drawer with grouping and deletion, rail with a user menu: `mc-app/src/components/panels/chats-drawer/index.tsx`, `mc-app/src/components/shell/app-rail/index.tsx`.
 - Feedback popup that sends a transcript snapshot: `mc-app/src/components/new-chat/feedback-popup.tsx`.
+- Recovery from a connection that is cut while an answer is being written: reattach with the AI SDK's `resumeStream()`, fall back to reading the stored answer, stop that reaches the model run: `mc-app/src/components/new-chat/use-stream-recovery.ts`, `mc-app/src/components/new-chat/chat-area.tsx`.
 - Composed pages: preview, code preview, save dialog, list, view, in-browser Babel renderer: `mc-app/src/components/compose-preview/compose-preview.tsx`, `mc-app/src/utils/babel-renderer.tsx`.
 - Preview annotations toolbar: `mc-app/src/components/preview-annotations/preview-annotations.tsx`.
 - Administrator screens: Managed MCP setup and connect gate, Connections drawer, system prompt, tool-call detail level, provider status cards (read-only), backoffice with thread list, feedback list, session detail and a SQL query tab: `mc-app/src/components/managed-mcp/index.tsx`, `mc-app/src/components/backoffice/backoffice-tabs.tsx`, `mc-app/src/components/panels/settings-drawer/index.tsx`.

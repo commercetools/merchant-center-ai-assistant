@@ -10,7 +10,7 @@ commercetools Custom Objects, hosts the tool sources and serves the feedback and
 ## What it is
 
 - Type `service`, endpoint `/service` in `connect.yaml`; Node.js 22 and npm (`package-lock.json` only).
-- Stateless: all durable state is in Custom Objects ([architecture](../docs/architecture.md#data-model)); in-process memory is only a cache.
+- Stateless: all durable state is in Custom Objects ([architecture](../docs/architecture.md#data-model)); in-process memory holds caches and the replay buffer of running chat turns, which only lets a browser reattach to a turn ([architecture](../docs/architecture.md#the-browsers-connection)). The stored answer never depends on it.
 - Authenticates every route except the status routes with the Merchant Center gateway token and decides administrator status from `ADMIN_USER_IDS` ([permissions](../docs/permissions.md)).
 - Lifecycle scripts `connector:post-deploy` and `connector:pre-undeploy` verify a deployment and keep stored data on undeploy.
 - Routes: [REST API reference](../docs/api.md). Mechanisms: [how it works](../docs/how-it-works.md).

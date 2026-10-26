@@ -8,7 +8,7 @@ import { UIMessage, useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApplicationContext } from '@commercetools-frontend/application-shell-connectors';
-import { Alert, Box, ChatMessageList } from '@commercetools/nimbus';
+import { Alert, Box, ChatMessageList, Text } from '@commercetools/nimbus';
 import { useSession } from '../../contexts';
 import { useChatServiceConnector } from '../../hooks/use-chat-service-connector/use-chat-service-connector';
 import { useCurrentUser } from '../../hooks/use-current-user';
@@ -19,6 +19,7 @@ import type {
 import { useFlipTransition } from '../../motion';
 import { buildFeedbackSnapshot } from '../../utils/feedback-payload';
 import { forwardToFetch } from '../../utils/forward-to';
+import { withTurn } from '../../utils/with-turn';
 import { ConversationHeader } from '../shell/conversation-header';
 import type { TabId } from '../shell/view-tabs';
 import { Composer } from './composer';
@@ -27,6 +28,12 @@ import { FollowUpChips } from './follow-up-chips';
 import { CHAT_COLUMN_WIDTH, CHAT_TRANSCRIPT_WIDTH } from './layout';
 import { Message } from './message';
 import { TypingIndicator } from './typing-indicator';
+import {
+  isConnectionDrop,
+  sameConversation,
+  snapshotOf,
+  useStreamRecovery,
+} from './use-stream-recovery';
 
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 1000;
@@ -46,7 +53,7 @@ type Props = {
   followUps: NextPrompt[];
   onDismissFollowUps: () => void;
   /** Tells `NewChat` a turn just landed, so it can poll for that turn's digest. */
-  onTurnFinished: () => void;
+  onTurnFinished: (since?: number) => void;
 };
 
 /**
@@ -77,7 +84,8 @@ const ChatArea = ({
   onDismissFollowUps,
   onTurnFinished,
 }: Props) => {
-  const { submitFeedback } = useChatServiceConnector();
+  const { submitFeedback, getMessages, cancelChatStream } =
+    useChatServiceConnector();
   const {
     pendingPrompt,
     clearPendingPrompt,
@@ -97,29 +105,98 @@ const ChatArea = ({
   const [files, setFiles] = useState<FileList | undefined>(undefined);
 
   const [showErrorBanner, setShowErrorBanner] = useState(false);
+  const [bannerMessage, setBannerMessage] = useState<string | undefined>();
   const [isRetrying, setIsRetrying] = useState(false);
+  // The last error `useChat` reported; `onFinish` does not carry it, `onError` does.
+  const lastErrorRef = useRef<Error | undefined>(undefined);
+  // Filled in below, once `useChat` has returned the functions the recovery needs.
+  const recoveryRef = useRef<ReturnType<typeof useStreamRecovery> | null>(null);
+  // The answer a reattach asks the service for: the one that was streaming when the
+  // connection dropped, so the service never serves another turn of the session.
+  const reconnectIdRef = useRef<string | undefined>(undefined);
+  // Declared before `useChat` because its callbacks read it; assigned below, during render.
+  const messagesRef = useRef<UIMessage[]>(initialMessages);
   const retryCountRef = useRef(0);
   const isRetryingRef = useRef(false);
 
-  const { messages, sendMessage, regenerate, status, error, stop } = useChat({
+  const {
+    messages,
+    sendMessage,
+    regenerate,
+    status,
+    error,
+    stop,
+    resumeStream,
+    setMessages,
+    clearError,
+  } = useChat({
     id: sessionId,
     messages: initialMessages,
 
-    onError: () => {
+    onError: (err) => {
+      lastErrorRef.current = err;
       if (retryCountRef.current >= MAX_RETRIES) {
         setShowErrorBanner(true);
         retryCountRef.current = 0;
       }
     },
 
-    onFinish: ({ finishReason }) => {
+    onFinish: ({
+      message,
+      messages: finished,
+      isAbort,
+      isError,
+      isDisconnect,
+      finishReason,
+    }) => {
+      const recovery = recoveryRef.current;
+      const failure = lastErrorRef.current;
+      lastErrorRef.current = undefined;
+      // `useChat` hands a late finish of a chat the user already left to the callbacks of
+      // the chat on screen, with the other chat's messages. That finish says nothing about
+      // this chat, so it must not start, count in, or end this chat's recovery.
+      const ownFinish = sameConversation(finished, messagesRef.current);
+      if (ownFinish) recovery?.noteFinish();
+
+      /*
+       * The gateway ends a response after about 120 s, while the service keeps working and
+       * stores the answer. A connection that fails after the answer had started is
+       * therefore not a failed turn: reattach (or wait for the stored answer) instead of
+       * treating the partial text as final or running the whole turn again.
+       */
+      if (
+        recovery &&
+        isConnectionDrop({
+          message,
+          isError,
+          isAbort,
+          isDisconnect,
+          error: failure,
+          recovering: recovery.isActive(),
+        })
+      ) {
+        if (ownFinish) {
+          const snapshot = snapshotOf(finished);
+          reconnectIdRef.current = snapshot.assistantId;
+          recovery.handleDrop(snapshot);
+        }
+        return;
+      }
+      // A reattach that ends normally is the end of a turn whose connection was lost earlier;
+      // that moment, not the end of the replay, is what the digest of the turn is newer than.
+      let finishedSince: number | undefined;
+      if (ownFinish && recovery) {
+        if (recovery.isActive()) finishedSince = recovery.droppedAt();
+        recovery.settle();
+      }
+
       if (finishReason !== 'error') {
         retryCountRef.current = 0;
         // The service digests the turn after the stream closes: it renames the session and
         // works out what to offer next. Record when that happened so the follow-up poll
         // can ask for a digest newer than this moment, and re-read the session list so
         // the rail count and recent order catch up. Neither is awaited.
-        onTurnFinished();
+        onTurnFinished(finishedSince);
         void refreshSessions();
         return;
       }
@@ -146,6 +223,11 @@ const ChatArea = ({
       prepareSendMessagesRequest({ messages: outgoing, id }) {
         return { body: { message: outgoing[outgoing.length - 1], id } };
       },
+      // The SDK's default is `${api}/${id}/stream`, which would append to our `?locale=`.
+      // The service answers the same path with GET (replay) and DELETE (stop).
+      prepareReconnectToStreamRequest: () => ({
+        api: withTurn(url, reconnectIdRef.current),
+      }),
       // No `headers`: the request goes through the Merchant Center gateway, which builds
       // them. The transport's own Content-Type becomes the outer header inside
       // forwardToFetch, so it is never duplicated on the service hop. A 401 no longer means
@@ -155,15 +237,48 @@ const ChatArea = ({
     }),
   });
 
+  const recovery = useStreamRecovery({
+    sessionId,
+    resumeStream,
+    getMessages,
+    cancelTurn: cancelChatStream,
+    applyStored: (stored) =>
+      setMessages((current) =>
+        current.some((message) => message.id === stored.id)
+          ? current.map((message) =>
+              message.id === stored.id ? stored : message
+            )
+          : [...current, stored]
+      ),
+    onRecovered: (droppedAt) => {
+      clearError();
+      // The turn ended after the connection was lost, so its digest is newer than that
+      // moment; "now" would be later than a digest the service has already written.
+      onTurnFinished(droppedAt);
+      void refreshSessions();
+    },
+    onGiveUp: () => {
+      // The last reattach may have left the SDK in its error state, which would keep the
+      // composer from sending.
+      clearError();
+      setBannerMessage(
+        'The connection was interrupted and the answer could not be retrieved. If the assistant has finished, reload this chat to see it.'
+      );
+      setShowErrorBanner(true);
+    },
+  });
+  recoveryRef.current = recovery;
+  const { isRecovering } = recovery;
+
   // Assigned DURING render, deliberately: `useChat`'s `messages` is a new array reference
   // on every streamed token, so it can never be a prop or a dep here (it would re-render
   // the header and its open popup dozens of times a second). A `useEffect` sync would lag
   // by a commit, and a feedback submit racing the last token would snapshot stale state.
-  const messagesRef = useRef<UIMessage[]>(messages);
   messagesRef.current = messages;
 
   const isEmpty = messages.length === 0;
-  const isLoading = status === 'submitted' || status === 'streaming';
+  const isLoading =
+    status === 'submitted' || status === 'streaming' || isRecovering;
 
   // The composer's two homes. See the note at the top of this file.
   const composerRef = useRef<HTMLDivElement>(null);
@@ -212,25 +327,54 @@ const ChatArea = ({
     [submitFeedback, userLabel, sessionId]
   );
 
+  /**
+   * Stop ends the browser's request AND the model run on the service. The first is not
+   * enough once the stream has been reattached: the original request is gone from the
+   * browser, so nothing it can close would reach the run.
+   */
+  const handleStop = useCallback(() => {
+    const last = messagesRef.current[messagesRef.current.length - 1];
+    stop();
+    recovery.stop(last?.role === 'assistant' ? last.id : undefined);
+    // A stop pressed while recovering has no request to abort, so the SDK can still be in
+    // its error state, which would keep the composer from sending.
+    clearError();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `recovery.stop` is stable.
+  }, [stop, recovery.stop, clearError]);
+
+  /**
+   * Try again starts a new model run, so it ends any recovery first. It is not offered
+   * while one is running (the original run is still going on the service); this is the
+   * second line of defence.
+   */
+  const handleRegenerate = useCallback(() => {
+    recovery.reset();
+    setBannerMessage(undefined);
+    void regenerate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `recovery.reset` is stable.
+  }, [recovery.reset, regenerate]);
+
   const handleSubmit = useCallback(() => {
-    if (input.trim() && status === 'ready') {
+    if (input.trim() && status === 'ready' && !isRecovering) {
       retryCountRef.current = 0;
       setShowErrorBanner(false);
+      setBannerMessage(undefined);
       onDismissFollowUps();
       sendMessage({ text: input, files });
       setInput('');
       setFiles(undefined);
     }
-  }, [input, status, sendMessage, files, onDismissFollowUps]);
+  }, [input, status, isRecovering, sendMessage, files, onDismissFollowUps]);
 
   const handlePickPrompt = useCallback(
     (prompt: string) => {
-      if (status !== 'ready') return;
+      if (status !== 'ready' || isRecovering) return;
       setShowErrorBanner(false);
+      setBannerMessage(undefined);
       onDismissFollowUps();
       sendMessage({ text: prompt });
     },
-    [status, sendMessage, onDismissFollowUps]
+    [status, isRecovering, sendMessage, onDismissFollowUps]
   );
 
   /**
@@ -254,12 +398,13 @@ const ChatArea = ({
       return;
     }
 
-    if (status !== 'ready') {
+    if (status !== 'ready' || isRecovering) {
       return;
     }
 
     retryCountRef.current = 0;
     setShowErrorBanner(false);
+    setBannerMessage(undefined);
     onDismissFollowUps();
     /*
      * The `{ parts }` form rather than `{ text }` when something rides along: the two are
@@ -281,6 +426,7 @@ const ChatArea = ({
     pendingPrompt,
     clearPendingPrompt,
     status,
+    isRecovering,
     sendMessage,
     onDismissFollowUps,
   ]);
@@ -311,7 +457,7 @@ const ChatArea = ({
         overflowY={isEmpty ? 'auto' : undefined}
         paddingTop={isEmpty ? '800' : '0'}
       >
-        {(showErrorBanner || error) && !isRetrying && (
+        {(showErrorBanner || error) && !isRetrying && !isRecovering && (
           <Alert.Root
             colorPalette="critical"
             variant="outlined"
@@ -320,7 +466,8 @@ const ChatArea = ({
             marginY="200"
           >
             <Alert.Description>
-              {error?.message ||
+              {bannerMessage ||
+                error?.message ||
                 'An error occurred while processing your request. Please try again.'}
             </Alert.Description>
             <Alert.DismissButton onPress={() => setShowErrorBanner(false)} />
@@ -362,10 +509,13 @@ const ChatArea = ({
                     message.role === 'assistant' &&
                     index === messages.length - 1
                   }
+                  // The answer is still being written while the connection is being
+                  // recovered: it gets no actions yet, and the other messages keep theirs.
                   isStreaming={
-                    status === 'streaming' && index === messages.length - 1
+                    (status === 'streaming' || isRecovering) &&
+                    index === messages.length - 1
                   }
-                  onRegenerate={regenerate}
+                  onRegenerate={handleRegenerate}
                   onRate={handleRate}
                 />
               </ChatMessageList.Item>
@@ -379,6 +529,18 @@ const ChatArea = ({
             {status === 'submitted' && (
               <ChatMessageList.Item>
                 <TypingIndicator />
+              </ChatMessageList.Item>
+            )}
+            {/*
+             * The connection was cut while the answer was still being written. The service
+             * keeps going, so say that this is a wait and not a failure. Gone as soon as the
+             * reattached answer streams in: it speaks for itself.
+             */}
+            {isRecovering && status !== 'streaming' && (
+              <ChatMessageList.Item>
+                <Text fontSize="300" color="neutral.11" role="status">
+                  Reconnecting to the answer…
+                </Text>
               </ChatMessageList.Item>
             )}
             {/*
@@ -412,8 +574,8 @@ const ChatArea = ({
             onChange={setInput}
             onSubmit={handleSubmit}
             isLoading={isLoading}
-            onStop={stop}
-            error={error}
+            onStop={handleStop}
+            error={isRecovering ? undefined : error}
             files={files}
             onFilesChange={setFiles}
           />

@@ -101,7 +101,8 @@ Until `CONNECT_SERVICE_URL` is available to the service it answers 401 to every 
 Anything that must survive a request or be shared by two instances goes through the persistence layer. In-process memory is only a cache:
 the tool-set cache (`MCP_TOOLS_TTL_MS`), the settings cache (`SETTINGS_CACHE_TTL_MS`), the identity tool-set cache and the JWKS cache of the verifier.
 Correctness therefore holds with several instances and with scale to zero. A change to a setting can take up to `SETTINGS_CACHE_TTL_MS` (5 s by default) to be seen by
-another running instance. The only per-process state with a lifecycle is the embedded Nimbus child process (`service/src/nimbus/process-manager.ts`).
+another running instance. The per-process state with a lifecycle is the embedded Nimbus child process (`service/src/nimbus/process-manager.ts`) and the replay buffer of running chat turns
+(`service/src/chat/turn-buffer.ts`, see below). The replay buffer only lets a browser reattach to a turn; the stored answer does not depend on it.
 
 ## Request time budget
 
@@ -116,6 +117,17 @@ request start                 soft deadline            hard deadline        Conn
 At the soft deadline (`CHAT_REQUEST_BUDGET_MS` minus `CHAT_FINALIZE_RESERVE_MS`) running tools are answered with a stop message and the model gets one
 step to wrap up. At the hard deadline a notice and a stored `data-turn-status` part are appended and the stream ends normally. A transient
 `data-keepalive` part is written every 20 s while the stream is idle. See `service/src/chat/stream.ts`.
+
+### The browser's connection
+
+The Merchant Center gateway (`/proxy/forward-to`) sits between the browser and the service, and a response through it has been observed to end after about 120 s (a `net::ERR_QUIC_PROTOCOL_ERROR` in the browser) while the
+service does not notice: the turn runs to its own end and is stored. A long turn therefore finishes on the service although the browser lost the stream. The chat app (`mc-app`) handles it in three steps; the Custom View (`mc-view-app`) does not, and keeps its earlier behaviour (it shows the error):
+
+1. The service copies every SSE frame of a running turn into a per-session buffer (`service/src/chat/turn-buffer.ts`: at most 8 MiB per turn, 256 turns and 96 MiB per process, the provider metadata of each frame is dropped, a finished turn is kept for 120 s and goes first when the budget is reached).
+2. When the stream fails after the answer had started, `mc-app` calls the AI SDK's `resumeStream()`, which sends `GET .../message/stream?messageId=<answer>`. The service replays the turn from its first frame and follows it live (`service/src/chat/stream-resume.controller.ts`), but only the turn the id names, so a buffer of an earlier turn is never put under a newer answer. `mc-app` tries this up to three times, since each reattach can be cut too. A connection that does not read cannot make the service hold copies of the turn: a frame is written only after the connection took the previous ones.
+3. When there is nothing to reattach to (204, a failed connect, or the attempts are used up) `mc-app` reads the stored messages every 4 s, up to 75 times, and puts the stored answer in place of the partial one. After that it shows an error that says the answer may still be there (`mc-app/src/components/new-chat/use-stream-recovery.ts`).
+
+No step starts a second model run: while it recovers, `mc-app` offers no Try again and no new message. A failure before the answer had started, and an error the service reports itself, are handled as before: the error is shown. The stop button also calls `DELETE .../message/stream?messageId=<answer>`, because a reattached stream is not the request the run was started with. That stop is best effort: it reaches only a turn that runs on the instance that receives it, and the reply says `Nothing to stop` otherwise.
 
 ## Security boundaries
 

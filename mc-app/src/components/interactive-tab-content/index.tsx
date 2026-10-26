@@ -33,7 +33,7 @@ type Props = {
   isLoadingSuggestions: boolean;
   followUps: NextPrompt[];
   onDismissFollowUps: () => void;
-  onTurnFinished: () => void;
+  onTurnFinished: (since?: number) => void;
 };
 
 /**

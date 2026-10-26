@@ -6,6 +6,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { isForwardToError } from '../../utils/forward-to';
+import { withTurn } from '../../utils/with-turn';
 import type {
   CreateSessionRequest,
   CreateSessionResponse,
@@ -58,6 +59,19 @@ export const useChatServiceConnector = () => {
   const getSession = useCallback(
     (sessionId: string) =>
       request<GetSessionResponse>('GET', `session/${sessionId}`),
+    [request]
+  );
+
+  /**
+   * The stop button. Aborting the browser's request is not enough once the stream has been
+   * reattached, so the service is told to stop the model run itself. Safe to repeat.
+   */
+  const cancelChatStream = useCallback(
+    (sessionId: string, messageId?: string) =>
+      request<{ success: boolean; message?: string }>(
+        'DELETE',
+        withTurn(`ai-chat/${sessionId}/message/stream`, messageId)
+      ),
     [request]
   );
 
@@ -180,6 +194,7 @@ export const useChatServiceConnector = () => {
       getSession,
       getLastSession,
       updateSession,
+      cancelChatStream,
       deleteSession,
       getMessages,
       getSessionTools,
@@ -196,6 +211,7 @@ export const useChatServiceConnector = () => {
       getSession,
       getLastSession,
       updateSession,
+      cancelChatStream,
       deleteSession,
       getMessages,
       getSessionTools,

@@ -23,6 +23,10 @@ for deployment see [deployment.md](./connect-deployment.md). The labels below ar
 4. The empty state of a new chat shows suggestion cards and your recent chats. Suggestions are personal and
    are refreshed in the background; when they cannot be produced a fixed set is shown.
 
+If the connection is cut while a long answer is being written, the chat application shows "Reconnecting to the answer…" and picks it up again, or shows the finished answer once it is stored; you do not need to ask again.
+If that does not work, an error says so, and the answer appears when you reload the chat after the assistant has finished.
+Stop ends the reply in this case too. The panel on Merchant Center pages does not do this and shows an error instead.
+
 A single reply has a time limit. When it is reached, the reply ends with a notice that it may be incomplete;
 ask the assistant to continue in a new message. A long chat is read from its last 20 stored messages, so
 repeat important details if a conversation is long.

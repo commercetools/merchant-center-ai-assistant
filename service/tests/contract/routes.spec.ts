@@ -8,12 +8,19 @@ import express, { Express } from 'express';
 import request from 'supertest';
 import { createApp } from '../../src/app';
 import { freshConfig } from '../helpers/env';
+import { makePersistence } from '../helpers/persistence';
+import {
+  createServices,
+  resetServicesForTests,
+  setServicesForTests,
+} from '../../src/services/registry';
 
 /**
  * The published route table (openspec change G, capability rest-api-contract, rows 1-25 and
  * 28, plus rows 29 and 30 for the liveness alias of change C and the Nimbus readiness route of
- * change K). Rows 26 and 27 (changes I and J) are matched by prefix. Every change has landed,
- * so every row must be mounted.
+ * change K, and rows 31 and 32 for reattaching to and stopping a running chat turn). Rows 26
+ * and 27 (changes I and J) are matched by prefix. Every change has landed, so every row must
+ * be mounted.
  */
 type Row = { n: number; method: string; path: string };
 
@@ -46,6 +53,8 @@ const TABLE: Row[] = [
   { n: 28, method: 'GET', path: '/service/files/:sessionId/:fileName' },
   { n: 29, method: 'GET', path: '/service/health' },
   { n: 30, method: 'GET', path: '/service/status/nimbus' },
+  { n: 31, method: 'GET', path: '/service/ai-chat/:sessionId/message/stream' },
+  { n: 32, method: 'DELETE', path: '/service/ai-chat/:sessionId/message/stream' },
 ];
 
 /** Rows 26 and 27 (changes I and J) are matched by prefix. */
@@ -143,10 +152,31 @@ describe('authentication on every G route', () => {
     ['PUT', '/service/tool-call-logs'],
     ['GET', '/service/session/x/tools'],
     ['GET', '/service/files/x/y.png'],
+    ['POST', '/service/ai-chat/x/message/stream'],
+    ['GET', '/service/ai-chat/x/message/stream'],
+    ['DELETE', '/service/ai-chat/x/message/stream'],
   ])('%s %s without a session answers 401', async (method, path) => {
     const app = createApp(freshConfig({ CONNECT_SERVICE_URL: 'https://mc.example.test' }));
     const res = await request(app)[method.toLowerCase() as 'get'](path);
     expect(res.status).toBe(401);
     expect(res.body.success).toBe(false);
   });
+});
+
+describe('the stream routes load the session first', () => {
+  beforeEach(() => setServicesForTests(createServices(makePersistence().p)));
+  afterEach(() => resetServicesForTests());
+
+  it.each(['GET', 'DELETE'])(
+    '%s answers 404 for a session that does not exist, so nothing is replayed or stopped for it',
+    async (method) => {
+      const verb = method.toLowerCase() as 'get';
+      const res = await request(build())[verb]('/service/ai-chat/nope/message/stream').set(
+        'x-dev-user-id',
+        'u1'
+      );
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+    }
+  );
 });

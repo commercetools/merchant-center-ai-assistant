@@ -32,6 +32,7 @@ export class RequestBudget {
   private readonly hardController = new AbortController();
   private readonly timers: NodeJS.Timeout[] = [];
   private hardFired = false;
+  private cancelled = false;
 
   constructor(
     readonly startedAt: number,
@@ -58,6 +59,18 @@ export class RequestBudget {
     });
   }
 
+  /**
+   * Stops the run on purpose (the user pressed stop). Like a client disconnect it is silent:
+   * `timedOut()` stays false, so no time-limit notice is written.
+   */
+  cancel(): void {
+    // A deadline that is still armed must not turn this stop into a time-limit end later, if
+    // the run takes a moment to unwind.
+    this.cancelled = true;
+    this.dispose();
+    this.hardController.abort();
+  }
+
   remainingMs(): number {
     return this.hardDeadlineAt - this.now();
   }
@@ -71,7 +84,7 @@ export class RequestBudget {
 
   /** True when the hard deadline (not a client disconnect) ended the run. */
   timedOut(): boolean {
-    return this.hardFired && !this.clientGone.aborted;
+    return this.hardFired && !this.clientGone.aborted && !this.cancelled;
   }
 
   /** Clears the timers; call once the turn is over so no handle stays open. */

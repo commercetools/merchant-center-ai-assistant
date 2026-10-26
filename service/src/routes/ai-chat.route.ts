@@ -7,6 +7,10 @@
 import { Router } from 'express';
 import { startBudget } from '../chat/budget.middleware';
 import { sendAiChatMessage } from '../chat/chat.controller';
+import {
+  cancelChatStream,
+  replayChatStream,
+} from '../chat/stream-resume.controller';
 import { loadSession } from '../middleware/load-session.middleware';
 import { verifyMcSession } from '../middleware/mc-session.middleware';
 
@@ -23,4 +27,22 @@ aiChatRouter.post(
   verifyMcSession,
   loadSession,
   sendAiChatMessage
+);
+
+/**
+ * Reattach to the running turn after the gateway cut the POST (see `turn-buffer.ts`). No
+ * budget clock: the replay ends when the turn does, and the turn has its own budget.
+ */
+aiChatRouter.get(
+  '/:sessionId/message/stream',
+  verifyMcSession,
+  loadSession,
+  replayChatStream
+);
+
+aiChatRouter.delete(
+  '/:sessionId/message/stream',
+  verifyMcSession,
+  loadSession,
+  cancelChatStream
 );

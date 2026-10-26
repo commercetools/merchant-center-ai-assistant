@@ -44,6 +44,8 @@ Merchant Center gateway (`/proxy/forward-to`), not by browsers directly. The rou
 | `GET` | `/service/tool-call-logs` | token | no | Read the tool-call detail level |
 | `PUT` | `/service/tool-call-logs` | token | yes | Set the tool-call detail level |
 | `POST` | `/service/ai-chat/:sessionId/message/stream` | token | no | Send a message; the answer streams back |
+| `GET` | `/service/ai-chat/:sessionId/message/stream` | token | no | Replay and follow the running turn of the session (optional `messageId`); 204 when there is none |
+| `DELETE` | `/service/ai-chat/:sessionId/message/stream` | token | no | Stop the running turn of the session (optional `messageId`) |
 | `POST` | `/service/feedback/submit` | token | no | Submit feedback with a transcript snapshot |
 | `GET` | `/service/feedback/fetch` | token | yes | List feedback |
 | `GET` | `/service/feedback/fetch/:feedbackId` | token | yes | Read one feedback with its transcript |
@@ -110,6 +112,20 @@ terminated by `data: [DONE]`. Additional parts of this service:
 | `data-ct-annotations` | Sent by the app with a message: annotations on a composed page preview |
 
 After headers are sent a failure is reported as an in-band error chunk followed by `[DONE]`. See `service/src/chat/stream.ts`.
+
+### Reconnecting to a running turn
+
+A browser can lose the response of a turn that is still running (the Merchant Center gateway has been observed to end it after about 120 s, see [architecture.md](./architecture.md#request-time-budget)). The service keeps every frame of a running turn in memory
+(`service/src/chat/turn-buffer.ts`) and serves it on the same path:
+
+- `GET /service/ai-chat/:sessionId/message/stream` answers `text/event-stream` with every frame of the turn from the `start` chunk on (same `messageId`), then follows the turn live until it ends. The AI SDK's `resumeStream()` expects this: it has no offset, so the whole message is sent again and replaces the partial one.
+  The optional query `messageId` is the id of the assistant message the browser is showing (the `messageId` of the `start` chunk it received). With it, only that turn is replayed; a different turn of the session answers 204.
+  It answers 204 with no body when the session has no running or just-finished turn on this instance, when the turn was too large to keep, when the turn is not the one named, or when the turn already has 8 followers.
+  A turn stays replayable for 120 s after it ends. Only the user who started the turn can replay it; for anyone else the session is unknown (404 `Session not found`).
+  Frames are written to a connection only after it took the previous ones, so a connection that does not read costs the service no copies of the turn.
+- `DELETE /service/ai-chat/:sessionId/message/stream` stops the running turn without the time-limit notice, as a closed request does (`service/src/chat/request-budget.ts`). With `messageId` it stops only that turn. It answers 200 `{ success: true, message: "Stopped" }`, or `{ success: true, message: "Nothing to stop" }` when no matching turn of the caller is running on this instance (including a turn that runs on another instance, which it cannot reach). A browser that has reattached no longer holds the original request, so this is how its stop button reaches the model run.
+
+The buffer is process memory. A reconnect that reaches another instance, or one that restarted, finds nothing and gets 204; the app then reads the stored answer (`GET /service/session/:sessionId/messages`) until it appears. Nothing here changes what is stored or when.
 
 ## Limits applied inside a chat turn
 

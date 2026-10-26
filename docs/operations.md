@@ -36,6 +36,7 @@ after a failed check so one log shows every problem (`service/src/connector/post
 ## Capacity, scaling and cold start
 
 - The service is stateless; Connect may run several instances and a sandbox scales to zero. The first request after a quiet period is slower while an instance starts (a cold start); the duration depends on the platform and has not been measured for this connector. State and secrets survive because they are in Custom Objects.
+- Each instance keeps the frames of running chat turns in memory so a browser can reattach (`service/src/chat/turn-buffer.ts`): at most 8 MiB per turn, 256 turns and 96 MiB in all per process, and each reattaching browser holds one connection (at most 8 per turn). Real turns are far smaller (about 0.2 MB); a turn that exports data carries its payload in one frame, and a turn above 8 MiB is simply not replayable. Finished turns are dropped first when the budget is reached. A restart or another instance has nothing to replay, and the app then reads the stored answer.
 - The embedded Nimbus child needs about 70 MB of memory when started (measured on a workstation, not in Connect) and a 96 MB heap cap; it is started on first use and stopped after 10 minutes without a call. Set `NIMBUS_MCP_ENABLED=false` if memory is tight.
 - Custom Object requests have a 15 second timeout and up to 3 tries on transient errors. Large sessions are limited by what the platform returns (at most 10,000 messages readable per session) and by the object size limits in `service/src/persistence/limits.ts`.
 - There is no queue: a chat turn runs inside one HTTP request, limited to 270 seconds.
@@ -73,6 +74,7 @@ after a failed check so one log shows every problem (`service/src/connector/post
 | Embedded Nimbus MCP | Its tools are left out for the turn; a call that times out counts toward recycling the child after three timeouts; `/service/status/nimbus` answers 503 | open | 20 s per call, 15 s to spawn | `service/src/nimbus/process-manager.ts` |
 | BigQuery | A failed offload returns the tool's own result unchanged; the query and table tools return an error to the model; with no Google key the source is off | open for offload, closed per query | 60 s per query job | `service/src/analytics/pipeline/pipeline.ts`, `service/src/analytics/tools/query.ts` |
 | Cloud Storage | A generated image that cannot be stored is dropped from the stored message and logged (with the fix for a missing bucket role); reading an image answers 404 or 500 for that file only | open for chat, closed per image | none set | `service/src/storage/uploader.ts`, `service/src/storage/files-route.ts` |
+| Browser connection cut by the Merchant Center gateway (about 120 s, observed) | The turn continues and is stored; the app reattaches with `GET .../message/stream` or reads the stored answer. A restart or another instance loses the replay buffer, so the app falls back to reading the stored answer | closed with a message | 3 reattaches, then 75 reads 4 s apart | `service/src/chat/turn-buffer.ts`, `mc-app/src/components/new-chat/use-stream-recovery.ts` |
 | Five-minute Connect request limit | At the soft deadline running tools stop; at the hard deadline a notice is appended and stored and the stream ends normally | closed with a message | 240 s soft, 270 s hard | `service/src/chat/request-budget.ts` |
 
 Merchant Center applications: `composed-apps` has no dependency on the service and keeps working when the service is down. `mc-app` and `mc-view-app` show an error with a retry action when the session bootstrap fails and offer no chat without it.
@@ -94,7 +96,7 @@ Recovery paths for the failures that can happen:
 ## Data retention
 
 Chat messages and feedback are kept until an operator deletes them. There is no automatic deletion, no expiry and no cleanup job. The size caps (100 kB request body, 10 MB feedback body, 8 MiB feedback snapshot) limit size, not age.
-Only these things expire on their own: BigQuery tables of offloaded tool results (seven days), pending OAuth login attempts (ten minutes) and the in-process caches.
+Only these things expire on their own: BigQuery tables of offloaded tool results (seven days), pending OAuth login attempts (ten minutes), the in-process caches and the replay buffers of chat turns (kept in process memory only, for two minutes after a turn ends; they hold the complete frames of the turn, tool output included).
 
 How an operator deletes data:
 
