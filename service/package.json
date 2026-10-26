@@ -74,13 +74,15 @@
   "license": "MIT",
   "overrides": {
     "@stripe/agent-toolkit": {
-      "ai": "$ai"
+      "ai": "$ai",
+      "zod": "$zod"
     },
     "openai": {
       "zod": "$zod"
     },
     "@langchain/core": {
-      "uuid": "11.1.1"
+      "uuid": "11.1.1",
+      "zod": "$zod"
     },
     "gaxios": {
       "uuid": "11.1.1"

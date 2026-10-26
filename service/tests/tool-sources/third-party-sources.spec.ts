@@ -425,6 +425,52 @@ describe('stripe source with the REAL @stripe/agent-toolkit@0.7.12', () => {
       expect(menu).toContain(name);
     }
   });
+
+  /*
+   * The package declares zod 3 and runs on the service's zod 4 (`overrides` in
+   * package.json). A schema that parses differently under zod 4 would let the model send
+   * arguments the toolkit then passes to Stripe unchecked, or reject valid ones. The JSON
+   * Schema check above cannot see that; these run the validators.
+   */
+  describe('argument validation under the shared zod', () => {
+    const validate = async (name: string, value: unknown): Promise<boolean> => {
+      const tools = await stripeToolSource.getTools(ctxFor(STRIPE_ENV));
+      const schema = asSchema(
+        (tools[name] as unknown as { inputSchema: never }).inputSchema
+      );
+      const result = await schema.validate?.(value);
+      return result?.success === true;
+    };
+
+    it('required fields, types and formats are enforced', async () => {
+      expect(await validate('customers.create', { name: 'Ada' })).toBe(true);
+      expect(await validate('customers.create', {})).toBe(false);
+      expect(
+        await validate('customers.create', { name: 'Ada', email: 'a@b.co' })
+      ).toBe(true);
+      expect(
+        await validate('customers.create', { name: 'Ada', email: 'nope' })
+      ).toBe(false);
+      expect(await validate('customers.create', 'Ada')).toBe(false);
+    });
+
+    it('integers stay integers and mins and maxes still apply', async () => {
+      const refund = { payment_intent: 'pi_1' };
+      expect(await validate('refunds.create', { ...refund, amount: 500 })).toBe(
+        true
+      );
+      expect(await validate('refunds.create', { ...refund, amount: 5.5 })).toBe(
+        false
+      );
+      expect(await validate('refunds.create', { amount: 500 })).toBe(false);
+      const item = (quantity: number) => ({
+        subscription: 'sub_1',
+        items: [{ id: 'si_1', quantity }],
+      });
+      expect(await validate('subscriptions.update', item(1))).toBe(true);
+      expect(await validate('subscriptions.update', item(0))).toBe(false);
+    });
+  });
 });
 
 describe('third-party sources: contract', () => {
