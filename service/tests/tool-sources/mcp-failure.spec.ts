@@ -20,7 +20,7 @@ class HandshakeError extends Error {
   }
 }
 
-describe('shared describeMcpFailure (TA-21)', () => {
+describe('shared describeMcpFailure', () => {
   it('default: class and status only, never the message', () => {
     const error = new HandshakeError(
       'GET https://x.test/?key=SECRET failed',

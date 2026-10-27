@@ -39,7 +39,7 @@
  *     request with `Proto field is not repeating, cannot start list`. `update_channels`
  *     models a GeoJSON `coordinates` pair that way - one node, in one tool, and it took down
  *     all 135. The same defect reaches us through zod for the in-process commerce agent; see
- *     client/legacy-tool-schema.ts, which makes the same trade in the zod layer.
+ *     schema/legacy-tool-schema.ts, which makes the same trade in the zod layer.
  *
  *  4. **Reference cycles made of required fields.** Gemini accepts recursion, but only where
  *     the loop passes through an optional or nullable property or a possibly-empty array:
@@ -47,15 +47,12 @@
  *     `update_types` and `update_product_types` declare `attributeType.set.elementType` -
  *     another `attributeType` - as required. Handled by {@link relaxRequiredRefCycles}, and
  *     again there is a zod-layer twin, `breakRequiredRefCycles` in
- *     client/legacy-tool-schema.ts, for the same commercetools type.
+ *     schema/legacy-tool-schema.ts, for the same commercetools type.
  *
  * All four are the server's to fix; until it does, rewriting here is what keeps the tool set
  * usable. Worth re-checking against a future Managed MCP Server release - if the schemas
  * are corrected upstream, {@link needsGeminiNormalization} starts returning false and this
  * becomes a no-op rather than something to remove.
- *
- * Reported upstream: docs/upstream/managed-mcp-gemini-schema-incompatibility.md, which
- * carries the verbatim `tools/list` schema and the exact errors.
  *
  * TWO STRATEGIES LIVE HERE, and the one that preserves the schema is the default.
  *
@@ -213,7 +210,7 @@ const collapsedItemSchema = (candidates: JsonObject[]): unknown => {
 /**
  * Rewrite a tuple as a length-bounded array of one element type.
  *
- * Same trade as the zod-layer fix in client/legacy-tool-schema.ts, and for the same schema:
+ * Same trade as the zod-layer fix in schema/legacy-tool-schema.ts, and for the same schema:
  * commercetools models a GeoJSON `coordinates` pair as a two-number tuple. Arity moves to
  * `minItems`/`maxItems` and the element type becomes the shared schema, or a union of the
  * positions when they differ. Gemini's restricted schema drops the bounds, so per-position
@@ -419,7 +416,7 @@ const walkRelaxingRequired = (
  * Dropping the property from `required` is safe in the way that matters: the Managed MCP
  * Server and the commercetools API still reject a `set` attribute with no `elementType`. This
  * is the same trade `breakRequiredRefCycles` makes for the zod-authored tools in
- * client/legacy-tool-schema.ts; the difference is that this one has to identify the cycles
+ * schema/legacy-tool-schema.ts; the difference is that this one has to identify the cycles
  * first, because hoisting emits references for non-cyclic shared schemas too.
  */
 const relaxRequiredRefCycles = (root: JsonObject): void => {

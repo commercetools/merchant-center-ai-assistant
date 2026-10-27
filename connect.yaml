@@ -15,16 +15,17 @@ deployAs:
         - key: MC_APP_ENTRY_POINT_URI_PATH
           description: Entry point URI path of the chat Custom Application (used for logging and checks only)
           default: 'ai-assistant'
-        - key: ADMIN_USER_IDS
-          description: Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator. Default is empty, so nobody is an administrator
-          required: false
         - key: MCP_BINDING_OPEN_TO_ALL
           description: Feature flag. When true every verified Merchant Center user, not only an administrator from ADMIN_USER_IDS, may create, change and delete the shared Managed MCP (identity) binding. Nothing else loses its administrator gate (true or false)
           default: 'false'
-        # Google Cloud and Gemini on Vertex AI
+        - key: ADMIN_USER_IDS
+          description: Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator. Default is empty, so nobody is an administrator
+          required: false
+        # Google Cloud project
         - key: GCP_PROJECT_ID
           description: Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional. Default is the project_id inside the service-account key
           required: false
+        # Gemini on Vertex AI
         - key: GCP_VERTEX_LOCATION
           description: Vertex AI location (Gemini text and image models)
           default: 'us-central1'
@@ -40,22 +41,23 @@ deployAs:
         - key: GEMINI_IMAGE_MODEL_NAME
           description: Gemini model id used for image generation (must be available in GCP_VERTEX_LOCATION)
           default: 'gemini-2.5-flash-image'
-        # BigQuery and Cloud Storage
+        # BigQuery
         - key: GCP_BIGQUERY_DATASET_ID
           description: BigQuery dataset for offloaded tool results (created on first use when the service account may create datasets)
           default: 'aiassistant'
         - key: GCP_BIGQUERY_LOCATION
           description: BigQuery location of the dataset (immutable once the dataset exists)
           default: 'us-central1'
-        - key: GCP_BUCKET_NAME
-          description: Cloud Storage bucket for generated images. Optional. Default is <gcp project id>-ai-assistant-images
-          required: false
+        # Cloud Storage images
         - key: GCP_BUCKET_LOCATION
           description: Location used when the bucket has to be created (us-central1, or a multi-region such as US)
           default: 'us-central1'
         - key: IMAGE_URL_MODE
           description: private (default) = bucket stays private and images are streamed through the service; public = objects are publicly readable and stored with the public bucket URL
           default: 'private'
+        - key: GCP_BUCKET_NAME
+          description: Cloud Storage bucket for generated images. Optional. Default is <gcp project id>-ai-assistant-images
+          required: false
         # Chat and tool limits
         - key: CHAT_REQUEST_BUDGET_MS
           description: Time one chat reply may take in milliseconds, at most 285000 (Connect times a request out after 5 minutes; the reply is finished gracefully when this is reached)
@@ -106,15 +108,18 @@ deployAs:
           description: Optional Stripe connected account id (acct_...) the Stripe tools act on behalf of. Default is empty, so the Stripe tools act on the account of the key
           required: false
       securedConfiguration:
+        # Google Cloud credentials (required)
         - key: GCP_SA_KEY_BASE64
           description: Base64 of the complete Google service-account JSON key (single line, no wrapping). No default, required
           required: true
+        # Encryption
         - key: ENCRYPTION_KEY
           description: Base64 of a 32-byte AES-256-GCM key that protects stored identity tokens; changing it makes stored tokens unreadable (rotation is described in the configuration guide). No default, required
           required: true
         - key: ENCRYPTION_KEY_PREVIOUS
           description: Optional comma-separated retired ENCRYPTION_KEY values (base64, 32 bytes each) used only to decrypt data written before a key rotation. Default is unset
           required: false
+        # Optional providers
         - key: CONTENTSTACK_API_KEY
           description: Optional Contentstack stack API key. Contentstack is enabled only when this and CONTENTSTACK_MANAGEMENT_TOKEN are both set. Default is unset
           required: false
@@ -156,7 +161,8 @@ deployAs:
           required: true
 inheritAs:
   # Shared by every application, set once per deployment (a global value, no application prefix).
-  # The service ignores both; the Merchant Center applications read them in their config files.
+  # The service ignores both. All three Merchant Center applications read CLOUD_IDENTIFIER;
+  # mc-app and mc-view-app also read CHAT_SERVICE_ENDPOINT_URL, in their config files.
   configuration:
     standardConfiguration:
       - key: CLOUD_IDENTIFIER

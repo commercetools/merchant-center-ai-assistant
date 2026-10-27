@@ -21,8 +21,8 @@ describe('SettingsStore', () => {
 
   it('keeps both of two concurrent partial updates', async () => {
     const { p } = makePersistence(undefined, { SETTINGS_CACHE_TTL_MS: '0' });
-    // The very first write is an upsert without a version (see design gap G-E1), so the
-    // object exists before the race starts.
+    // The very first write is an upsert without a version, so the object exists before the
+    // race starts.
     await p.settings.update((s) => ({ ...s }));
     await Promise.all([
       p.settings.update((s) => ({ ...s, systemPrompt: 'be brief' })),

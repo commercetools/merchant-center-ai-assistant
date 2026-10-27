@@ -77,8 +77,8 @@ yarn start               # http://localhost:3001
 yarn typecheck && yarn lint && yarn test && yarn build
 ```
 
-`yarn build` needs the `.env.example` values exported or an `.env` file (both git-ignored
-apart from `.env.example`).
+`yarn build` needs the `.env.example` values exported or in `.env`, a git-ignored local copy of
+`.env.example` (only `.env.example` is committed).
 
 ## Events and jobs
 

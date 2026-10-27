@@ -17,7 +17,7 @@ commercetools Custom Objects, hosts the tool sources and serves the feedback and
 
 ## Configuration
 
-The keys of the `service` application, their defaults and which are secured are in the generated tables of [docs/configuration.md](../docs/configuration.md#keys-of-connectyaml); the Google Cloud settings, models and provider keys have their own sections there.
+The keys of the `service` application, their defaults and which are secured are in the tables of [docs/configuration.md](../docs/configuration.md#keys-of-connectyaml); the Google Cloud settings, models and provider keys have their own sections there.
 Connect injects `CTP_API_URL`, `CTP_AUTH_URL`, `CTP_CLIENT_ID`, `CTP_CLIENT_SECRET`, `CTP_PROJECT_KEY` and `CTP_SCOPE` from the API client it creates for `inheritAs`.
 `readConfiguration()` (`src/config/index.ts`) reads everything once and exits with `Invalid environment configuration:` plus the key names when something is wrong. No module outside `src/config` reads `process.env` (ESLint enforces it).
 
@@ -46,7 +46,6 @@ Chat needs `GCP_SA_KEY_BASE64` (`base64 < key.json | tr -d '\n'`). With a real p
 npm run typecheck && npm run lint
 npm test                                         # Jest, no network, in-memory persistence
 npm run build
-npm run test:integration                         # needs credentials in .env.local; every suite skips without them
 ```
 
 The Connect CLI builds the current directory, so run it from `service/`: `commercetools connect application build` and `commercetools connect application test`.

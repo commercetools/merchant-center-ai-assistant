@@ -41,7 +41,7 @@ import {
 export { CREATE_COMPOSED_PAGE_TOOL };
 
 export interface ComposedPageToolOptions {
-  /** Mention the Nimbus lookup tools (change K's source contributed them). Default true. */
+  /** Mention the Nimbus lookup tools (the Nimbus source contributed them). Default true. */
   nimbusTools?: boolean;
   /** Key generator for new pages (tests and the fixture inject a fixed one). */
   generateKey?: () => string;

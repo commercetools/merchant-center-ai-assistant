@@ -18,9 +18,9 @@ export type MenuGroup = {
 };
 
 /**
- * Seam for change H: its ToolSource registry implements this and installs itself with
- * `setToolMenuProvider` when the app is composed. G ships an empty default so it can be
- * tested alone.
+ * Seam for the tool-source registry: the ToolSource registry implements this and installs
+ * itself with `setToolMenuProvider` when the app is composed. The default is empty so the
+ * menu can be tested alone.
  */
 export interface ToolMenuProvider {
   listMenuGroups(ctx: {

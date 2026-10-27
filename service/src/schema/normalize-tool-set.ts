@@ -18,7 +18,7 @@ import {
 type SchemaLike = Parameters<typeof asSchema>[0];
 
 /**
- * Makes every tool of a merged tool set safe to send to Gemini (design D-H7).
+ * Makes every tool of a merged tool set safe to send to Gemini.
  *
  * Schema conversion runs over the WHOLE tool set of a request, so one unusable tool from any
  * source strips the model of all of them. Hoisting is tried first because it preserves the

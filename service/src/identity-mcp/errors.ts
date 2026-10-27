@@ -40,7 +40,7 @@ export const describeMcpFailure = (error: unknown): string =>
 
 /**
  * The exact wording of the "no tool permitted" rejection is not documented: the 403 status
- * is the primary signal, the message pattern is a fallback (tighten after E2E-I-05b).
+ * is the primary signal, the message pattern is a fallback.
  */
 export const looksLikeNoPermittedTools = (error: unknown): boolean =>
   statusOf(error) === 403 ||

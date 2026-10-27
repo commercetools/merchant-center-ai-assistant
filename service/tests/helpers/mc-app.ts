@@ -18,8 +18,8 @@ export const authEnv = (extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv => ({
 });
 
 /**
- * Minimal app with one verified route and one admin-only route (the real
- * admin routes arrive with later changes). Same middleware order as createApp.
+ * Minimal app with one verified route and one admin-only route. Same middleware order as
+ * createApp.
  */
 export function probeApp(
   handler: RequestHandler,

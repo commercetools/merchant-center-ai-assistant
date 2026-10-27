@@ -44,7 +44,7 @@ export interface FeedbackRecord {
   messageCount: number;
   chunkCount: number;
   snapshotBytes: number;
-  /** Hex SHA-256 over the UTF-8 bytes of the serialised transcript (change N). */
+  /** Hex SHA-256 over the UTF-8 bytes of the serialised transcript. */
   snapshotSha256?: string;
   clientMessageCount: number;
   storedMessageCount: number;

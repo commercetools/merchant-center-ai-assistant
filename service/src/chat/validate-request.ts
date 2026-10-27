@@ -82,7 +82,7 @@ const validateMessageShape = (
 
 /**
  * Validates the chat request BEFORE any header is flushed and before the user message is
- * stored (capability chat-stream-endpoint, "Request validation before streaming").
+ * stored.
  *
  * A missing `message` has two causes and the error text tells them apart:
  *  - the client sent a body without it (`JSON.stringify` drops the key when the last message

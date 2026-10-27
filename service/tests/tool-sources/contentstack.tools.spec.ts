@@ -240,7 +240,7 @@ describe('the 15 Contentstack tools', () => {
     ).toBe(true);
   });
 
-  it('the descriptions and optional-field schemas are present (byte-identical port)', () => {
+  it('the descriptions and optional-field schemas are present', () => {
     for (const name of CONTENTSTACK_TOOLS) {
       expect((all[name] as { description?: string }).description).toBeTruthy();
     }

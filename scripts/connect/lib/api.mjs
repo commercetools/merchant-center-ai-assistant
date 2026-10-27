@@ -4,7 +4,7 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-// Read-only Connect REST helper: the CLI has no machine-readable output (design E1, D-U2).
+// Read-only Connect REST helper: the CLI has no machine-readable output.
 import { authHost, connectApiHost } from './url.mjs';
 
 export class DeploymentFailed extends Error {
@@ -75,7 +75,7 @@ export async function getDeployment({ fetch, region, projectKey, key, getTokenVa
  * Polls until the deployment status is `Deployed`. `Failed` throws DeploymentFailed.
  * With `since` (a snapshot of the deployment before a redeploy) it first waits for evidence
  * that the redeploy started (version or lastModifiedAt changed, or the status left `Deployed`),
- * because right after `redeploy` the old `Deployed` status can still be read (design 5.4).
+ * because right after `redeploy` the old `Deployed` status can still be read.
  * If nothing changes within `graceMs` the wait proceeds and `onWarning` is told.
  * `ready` is an extra condition for a Deployed deployment (for example: the service URL is known).
  */

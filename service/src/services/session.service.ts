@@ -28,7 +28,7 @@ import type { RequestUser } from '../types/request.types';
 import { logger } from '../utils/logger.utils';
 import { sanitizeUserLabel } from '../utils/user-label';
 
-/** A hook run before a session is deleted (change L drops BigQuery temp tables). */
+/** A hook run before a session is deleted (the BigQuery hook drops the session's temp tables). */
 export type SessionCleanupHook = (session: ChatSession) => Promise<void>;
 
 const cleanupHooks: SessionCleanupHook[] = [];

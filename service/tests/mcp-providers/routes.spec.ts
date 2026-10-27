@@ -80,7 +80,7 @@ describe('GET /service/mcp/providers', () => {
     });
   });
 
-  it('mixed state matches the spec scenario', async () => {
+  it('reports a mix of configured, partial and absent providers', async () => {
     const res = await request(
       app({ STRIPE_SECRET_KEY: 'sk_test_abc', CONTENTSTACK_API_KEY: 'k' })
     ).get('/service/mcp/providers');

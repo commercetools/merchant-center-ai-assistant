@@ -115,7 +115,7 @@ async function checkStorage(
 }
 
 /**
- * The analytics self-check run by `postDeploy` (change U). Creates the dataset and the bucket
+ * The analytics self-check run by `postDeploy`. Creates the dataset and the bucket
  * idempotently when missing and permitted, proves a probe table and a probe object can be
  * written and removed, and checks the anonymous visibility of the probe object against
  * `IMAGE_URL_MODE`. Never throws.

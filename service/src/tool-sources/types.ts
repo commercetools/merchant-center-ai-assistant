@@ -18,7 +18,7 @@ import type { UrlReference } from '../utils/url-references';
  * Built per request by `chat/context.ts`; never cached across requests.
  */
 export interface ToolContext {
-  /** Verified identity (change D). The only identity there is. */
+  /** Verified identity. The only identity there is. */
   user: RequestUser;
   sessionId: string;
   /** Loaded once per request. */
@@ -33,7 +33,7 @@ export interface ToolContext {
   stores: Persistence;
   /** Hard budget + client disconnect: aborts when the whole turn has to stop. */
   abortSignal: AbortSignal;
-  /** Soft/hard deadlines (capability request-time-budget). */
+  /** Soft/hard deadlines. */
   budget: RequestBudget;
   logger: Log;
   /**
@@ -56,7 +56,7 @@ export interface MenuEntry {
 }
 
 /**
- * One provider of tools + prompt + menu entry: the plug-in point of changes I-M.
+ * One provider of tools + prompt + menu entry: the plug-in point of every tool source.
  *
  * `name` is simultaneously the registry key, the tools-menu group id
  * (`GroupedSessionTools.mcp`) and the key under which the session stores `disabledTools`. It
@@ -105,8 +105,8 @@ export interface ResolvedTools {
 }
 
 /**
- * Uploads generated images (provided by change L). `upload` returns what is stored in the
- * file part: the public bucket URL, or in `private` mode a service-relative `/files/...` path.
+ * Uploads generated images. `upload` returns what is stored in the file part: the public
+ * bucket URL, or in `private` mode a service-relative `/files/...` path.
  */
 export interface ImageUploader {
   upload(

@@ -17,8 +17,8 @@ type Props = {
 /**
  * The header's right-hand actions.
  *
- * "Share" appears in the design and is deliberately absent here: nothing in the service
- * can share a conversation, and a button that does nothing is worse than no button.
+ * There is deliberately no "Share" action: nothing in the service can share a conversation,
+ * and a button that does nothing is worse than no button.
  *
  * These two were previously a floating panel that hovered over the bottom-right of the
  * transcript, overlapping the last message and needing `pointerEvents: none` plumbing to

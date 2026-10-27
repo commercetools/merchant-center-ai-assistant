@@ -13,7 +13,7 @@ import type { PromptSuggestion } from '../../src/persistence';
 import { setConnectedSourcesProvider } from '../../src/services/connected-sources.provider';
 import { DEFAULT_SUGGESTIONS } from '../../src/services/suggestions.service';
 import type { RequestUser } from '../../src/types/request.types';
-import { asUser, makeGApp, resetGApp } from '../helpers/g-app';
+import { asUser, makeSessionApp, resetSessionApp } from '../helpers/session-app';
 
 const USER: RequestUser = { userId: 'user-a', projectKey: 'p', isAdmin: false };
 
@@ -25,12 +25,12 @@ const generated: PromptSuggestion[] = Array.from({ length: 4 }, (_, i) => ({
 }));
 
 afterEach(() => {
-  resetGApp();
+  resetSessionApp();
   setConnectedSourcesProvider({ list: async () => [] });
 });
 
 /** A session that finished a turn: has a digest and a summary. */
-async function digestedSession(t: ReturnType<typeof makeGApp>, at = Date.now()) {
+async function digestedSession(t: ReturnType<typeof makeSessionApp>, at = Date.now()) {
   const s = await t.services.sessions.create(USER, {});
   await t.persistence.sessions.update(s.id, (cur) => ({
     ...cur,
@@ -44,7 +44,7 @@ async function digestedSession(t: ReturnType<typeof makeGApp>, at = Date.now()) 
 describe('SuggestionsService', () => {
   it('no history: defaults, personalised false, no model call', async () => {
     const generate = jest.fn(async () => generated);
-    const t = makeGApp({ generateSuggestions: generate });
+    const t = makeSessionApp({ generateSuggestions: generate });
     const res = await t.services.suggestions.getForUser(USER, 'en');
     expect(res).toEqual({ suggestions: DEFAULT_SUGGESTIONS, personalised: false });
     expect(generate).not.toHaveBeenCalled();
@@ -52,7 +52,7 @@ describe('SuggestionsService', () => {
 
   it('generates and caches, then reuses the cache', async () => {
     const generate = jest.fn(async () => generated);
-    const t = makeGApp({ generateSuggestions: generate });
+    const t = makeSessionApp({ generateSuggestions: generate });
     await digestedSession(t, Date.now() - 1000);
     const first = await t.services.suggestions.getForUser(USER, 'en');
     expect(first).toEqual({ suggestions: generated, personalised: true });
@@ -66,7 +66,7 @@ describe('SuggestionsService', () => {
 
   it('a newer digest invalidates the cache', async () => {
     const generate = jest.fn(async () => generated);
-    const t = makeGApp({ generateSuggestions: generate });
+    const t = makeSessionApp({ generateSuggestions: generate });
     await digestedSession(t, Date.now() - 1000);
     await t.services.suggestions.getForUser(USER, 'en');
     await new Promise((r) => setTimeout(r, 3));
@@ -77,7 +77,7 @@ describe('SuggestionsService', () => {
 
   it('a locale change regenerates', async () => {
     const generate = jest.fn(async () => generated);
-    const t = makeGApp({ generateSuggestions: generate });
+    const t = makeSessionApp({ generateSuggestions: generate });
     await digestedSession(t, Date.now() - 1000);
     await t.services.suggestions.getForUser(USER, 'en');
     await t.services.suggestions.getForUser(USER, 'de');
@@ -85,7 +85,7 @@ describe('SuggestionsService', () => {
   });
 
   it('a model failure yields the defaults', async () => {
-    const t = makeGApp({
+    const t = makeSessionApp({
       generateSuggestions: async () => {
         throw new Error('model down');
       },
@@ -98,7 +98,7 @@ describe('SuggestionsService', () => {
   });
 
   it('a null generation yields the defaults', async () => {
-    const t = makeGApp({ generateSuggestions: async () => null });
+    const t = makeSessionApp({ generateSuggestions: async () => null });
     await digestedSession(t);
     expect((await t.services.suggestions.getForUser(USER, 'en')).personalised).toBe(false);
   });
@@ -106,7 +106,7 @@ describe('SuggestionsService', () => {
   it('passes connected sources and the system prompt to the generator', async () => {
     setConnectedSourcesProvider({ list: async () => ['stripe'] });
     const generate = jest.fn(async () => generated);
-    const t = makeGApp({ generateSuggestions: generate });
+    const t = makeSessionApp({ generateSuggestions: generate });
     await t.services.settings.setSystemPrompt('We sell mugs.');
     await digestedSession(t);
     await t.services.suggestions.getForUser(USER, 'en');
@@ -116,7 +116,7 @@ describe('SuggestionsService', () => {
   });
 
   it('a store failure yields the defaults', async () => {
-    const t = makeGApp();
+    const t = makeSessionApp();
     t.persistence.suggestions.get = async () => {
       throw new Error('boom');
     };
@@ -126,7 +126,7 @@ describe('SuggestionsService', () => {
 
 describe('GET /suggestions', () => {
   it('always answers 200 with four cards, even when the store and the model throw', async () => {
-    const t = makeGApp({
+    const t = makeSessionApp({
       generateSuggestions: async () => {
         throw new Error('model down');
       },
@@ -144,7 +144,7 @@ describe('GET /suggestions', () => {
 
   it('ignores a silly locale', async () => {
     const generate = jest.fn(async () => generated);
-    const t = makeGApp({ generateSuggestions: generate });
+    const t = makeSessionApp({ generateSuggestions: generate });
     await digestedSession(t);
     await request(t.app).get(`/service/suggestions?locale=${'x'.repeat(100)}`).set(asUser('user-a'));
     expect(generate).toHaveBeenCalledWith(expect.objectContaining({ locale: 'en' }));
@@ -159,14 +159,14 @@ describe('model-facing agents', () => {
   });
 
   it('generateSuggestions returns null (never throws) when no model is configured', async () => {
-    makeGApp();
+    makeSessionApp();
     await expect(
       generateSuggestions({ recentSummaries: [], connectedSources: [], locale: 'en' })
     ).resolves.toBeNull();
   });
 
   it('generateSessionDigest returns null (never throws) when no model is configured', async () => {
-    makeGApp();
+    makeSessionApp();
     await expect(
       generateSessionDigest({ messages: [{ role: 'user', content: 'hi' }] })
     ).resolves.toBeNull();

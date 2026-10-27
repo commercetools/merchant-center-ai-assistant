@@ -116,7 +116,7 @@ npm run start:dev
 curl http://127.0.0.1:8080/service/status
 ```
 
-Chat answers need `GCP_SA_KEY_BASE64`. The three frontends run with `yarn install && yarn start` in their folder.
+Chat answers need `GCP_SA_KEY_BASE64`. The three frontends run with `yarn install && cp .env.example .env && yarn start` in their folder (the `.env` copy is git-ignored; set `INITIAL_PROJECT_KEY` in it).
 Which values to set, how a frontend reaches the local service and how to try the Managed MCP connect flow: [docs/development.md](./docs/development.md).
 
 ## Deployment summary
@@ -145,8 +145,8 @@ The table mirrors `connect.yaml`; the notes are in [docs/configuration.md](./doc
 | --- | --- | --- | --- | --- |
 | `CTP_REGION` | standard | yes |  | commercetools API region of the project in API-host spelling (us-central1.gcp, europe-west1.gcp, australia-southeast1.gcp, eu-central-1.aws or us-east-2.aws). Connect does not inject it. No default, required |
 | `MC_APP_ENTRY_POINT_URI_PATH` | standard | no | `ai-assistant` | Entry point URI path of the chat Custom Application (used for logging and checks only) |
-| `ADMIN_USER_IDS` | standard | no |  | Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator. Default is empty, so nobody is an administrator |
 | `MCP_BINDING_OPEN_TO_ALL` | standard | no | `false` | Feature flag. When true every verified Merchant Center user, not only an administrator from ADMIN_USER_IDS, may create, change and delete the shared Managed MCP (identity) binding. Nothing else loses its administrator gate (true or false) |
+| `ADMIN_USER_IDS` | standard | no |  | Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator. Default is empty, so nobody is an administrator |
 | `GCP_PROJECT_ID` | standard | no |  | Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional. Default is the project_id inside the service-account key |
 | `GCP_VERTEX_LOCATION` | standard | no | `us-central1` | Vertex AI location (Gemini text and image models) |
 | `GEMINI_MODEL_NAME` | standard | no | `gemini-3.8-flash` | Main Gemini model id. Used by the chat orchestrator and by the Algolia, Stripe, export and Contentstack agents, all with a high thinking level |
@@ -155,9 +155,9 @@ The table mirrors `connect.yaml`; the notes are in [docs/configuration.md](./doc
 | `GEMINI_IMAGE_MODEL_NAME` | standard | no | `gemini-2.5-flash-image` | Gemini model id used for image generation (must be available in GCP_VERTEX_LOCATION) |
 | `GCP_BIGQUERY_DATASET_ID` | standard | no | `aiassistant` | BigQuery dataset for offloaded tool results (created on first use when the service account may create datasets) |
 | `GCP_BIGQUERY_LOCATION` | standard | no | `us-central1` | BigQuery location of the dataset (immutable once the dataset exists) |
-| `GCP_BUCKET_NAME` | standard | no |  | Cloud Storage bucket for generated images. Optional. Default is <gcp project id>-ai-assistant-images |
 | `GCP_BUCKET_LOCATION` | standard | no | `us-central1` | Location used when the bucket has to be created (us-central1, or a multi-region such as US) |
 | `IMAGE_URL_MODE` | standard | no | `private` | private (default) = bucket stays private and images are streamed through the service; public = objects are publicly readable and stored with the public bucket URL |
+| `GCP_BUCKET_NAME` | standard | no |  | Cloud Storage bucket for generated images. Optional. Default is <gcp project id>-ai-assistant-images |
 | `CHAT_REQUEST_BUDGET_MS` | standard | no | `270000` | Time one chat reply may take in milliseconds, at most 285000 (Connect times a request out after 5 minutes; the reply is finished gracefully when this is reached) |
 | `CHAT_FINALIZE_RESERVE_MS` | standard | no | `30000` | Part of the chat time budget reserved for the final summary step, in milliseconds (5000 up to half the budget) |
 | `CHAT_DIGEST_BEFORE_CLOSE` | standard | no | `false` | When true the chat stream waits up to 3 seconds for the session digest before closing (true or false) |
@@ -295,6 +295,7 @@ identity connection, or redeploy. See [docs/operations.md](./docs/operations.md#
 
 - Service: `cd service && npm ci && npm test` (Jest, in-memory persistence, no network).
 - Frontends: `yarn typecheck && yarn lint && yarn test && yarn build` in each folder.
+- Deployment helper: `cd scripts && npm ci && node --test tests/*.test.mjs` (Node's built-in test runner).
 - All commands: [docs/development.md](./docs/development.md#test-and-check).
 
 ## Contributing

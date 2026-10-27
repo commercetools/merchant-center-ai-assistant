@@ -4,7 +4,7 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-/** Limits verified against the platform documentation (see the change design, P1-P15). */
+/** Limits verified against the platform documentation. */
 export const MIB = 1024 * 1024;
 
 /** Above this a warning is logged. */

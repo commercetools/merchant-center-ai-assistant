@@ -11,17 +11,17 @@ import {
 } from '../../src/services/session.service';
 import type { ChatSession } from '../../src/types/chat.types';
 import type { RequestUser } from '../../src/types/request.types';
-import { makeGApp, resetGApp } from '../helpers/g-app';
+import { makeSessionApp, resetSessionApp } from '../helpers/session-app';
 import { spyGateway } from '../helpers/persistence';
 
 const A: RequestUser = { userId: 'user-a', projectKey: 'p', isAdmin: false };
 const B: RequestUser = { userId: 'user-b', projectKey: 'p', isAdmin: false };
 
-afterEach(resetGApp);
+afterEach(resetSessionApp);
 
 describe('SessionService', () => {
   it('create applies defaults and the verified user id', async () => {
-    const { services } = makeGApp();
+    const { services } = makeSessionApp();
     const s = await services.sessions.create(A, {});
     expect(s.title).toBe('New chat');
     expect(s.userId).toBe('user-a');
@@ -32,7 +32,7 @@ describe('SessionService', () => {
   });
 
   it('create stores a sanitised label and never uses it as identity', async () => {
-    const { services } = makeGApp();
+    const { services } = makeSessionApp();
     const s = await services.sessions.create(A, { userLabel: ' <b>Ann</b>\u0007 ' });
     expect(s.userLabel).toBe('bAnn/b');
     expect(s.userId).toBe('user-a');
@@ -41,7 +41,7 @@ describe('SessionService', () => {
   });
 
   it('isolates users', async () => {
-    const { services } = makeGApp();
+    const { services } = makeSessionApp();
     const s = await services.sessions.create(A, {});
     expect(await services.sessions.get(s.id, A)).not.toBeNull();
     expect(await services.sessions.get(s.id, B)).toBeNull();
@@ -51,7 +51,7 @@ describe('SessionService', () => {
   });
 
   it('update changes only title and metadata and refreshes updatedAt', async () => {
-    const { services } = makeGApp();
+    const { services } = makeSessionApp();
     const s = await services.sessions.create(A, {});
     await new Promise((r) => setTimeout(r, 3));
     const updated = (await services.sessions.update(s.id, A, {
@@ -67,7 +67,7 @@ describe('SessionService', () => {
 
   it('a version conflict on a digest write keeps both the digest and the tools change', async () => {
     let conflicts = 1;
-    const { services, mem } = makeGApp({
+    const { services, mem } = makeSessionApp({
       wrap: (gw) =>
         spyGateway(gw, {
           onPut: (container) => {
@@ -100,7 +100,7 @@ describe('SessionService', () => {
   });
 
   it('applySessionDigest does nothing for a foreign or missing session', async () => {
-    const { services } = makeGApp();
+    const { services } = makeSessionApp();
     const s = await services.sessions.create(A, {});
     const digest = { title: 'x', description: '', icon: 'sell', summary: '', nextPrompts: [] };
     expect(await services.sessions.applySessionDigest(s.id, B.userId, digest)).toBeNull();
@@ -110,7 +110,7 @@ describe('SessionService', () => {
 
   describe('delete and cleanup hooks', () => {
     it('runs hooks with the session before it is removed', async () => {
-      const { services } = makeGApp();
+      const { services } = makeSessionApp();
       const s = await services.sessions.create(A, {});
       await services.messages.appendMissing(s.id, [
         { id: 'm1', role: 'user', parts: [{ type: 'text', text: 'hi' }] },
@@ -127,7 +127,7 @@ describe('SessionService', () => {
     });
 
     it('a failing hook does not stop the deletion', async () => {
-      const { services } = makeGApp();
+      const { services } = makeSessionApp();
       const s = await services.sessions.create(A, {});
       registerSessionCleanupHook(async () => {
         throw new Error('bigquery down');
@@ -137,7 +137,7 @@ describe('SessionService', () => {
     });
 
     it('a second delete answers false', async () => {
-      const { services } = makeGApp();
+      const { services } = makeSessionApp();
       const s = await services.sessions.create(A, {});
       await services.sessions.remove(s.id, A);
       expect(await services.sessions.remove(s.id, A)).toBe(false);
@@ -148,7 +148,7 @@ describe('SessionService', () => {
     const table = { tableRef: 'ds.t1', toolName: 'export', args: '{}', columnNames: 'a, b' };
 
     it('de-duplicates by tableRef', async () => {
-      const { services } = makeGApp();
+      const { services } = makeSessionApp();
       const s = await services.sessions.create(A, {});
       await services.sessions.addTemporaryTable(s.id, A, table);
       const tables = await services.sessions.addTemporaryTable(s.id, A, table);
@@ -157,7 +157,7 @@ describe('SessionService', () => {
     });
 
     it('renders columns in the message text only when known', async () => {
-      const { services } = makeGApp();
+      const { services } = makeSessionApp();
       const s = await services.sessions.create(A, {});
       await services.sessions.addTemporaryTable(s.id, A, table);
       await services.sessions.addTemporaryTable(s.id, A, {
@@ -171,7 +171,7 @@ describe('SessionService', () => {
     });
 
     it('refuses a foreign session', async () => {
-      const { services } = makeGApp();
+      const { services } = makeSessionApp();
       const s = await services.sessions.create(A, {});
       await expect(services.sessions.addTemporaryTable(s.id, B, table)).rejects.toThrow();
     });
@@ -179,7 +179,7 @@ describe('SessionService', () => {
 
   describe('flag-scoped listing', () => {
     it('returns the right four of 1200 with limit=4 and never another user', async () => {
-      const { services, persistence } = makeGApp();
+      const { services, persistence } = makeSessionApp();
       // Written straight to the store: 1 200 sessions, a few flagged, some of another user.
       const mk = (i: number, userId: string, flags?: { customView: string }) =>
         persistence.sessions.create({
@@ -206,7 +206,7 @@ describe('SessionService', () => {
   });
 
   it('is constructible from stores alone', () => {
-    const { persistence } = makeGApp();
+    const { persistence } = makeSessionApp();
     expect(new SessionService(persistence.sessions, persistence.messages)).toBeDefined();
   });
 });

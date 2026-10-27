@@ -14,7 +14,7 @@ describe('parseAdminUserIds', () => {
     expect(parseAdminUserIds(raw)).toEqual({ value: set(), errors: [] });
   });
 
-  it('normalises the spec example', () => {
+  it('normalises whitespace, separators, duplicates and empty entries', () => {
     expect(parseAdminUserIds(' u1, u2 ;u1,, ').value).toEqual(set('u1', 'u2'));
   });
 

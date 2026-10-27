@@ -12,7 +12,7 @@ import { PROVIDERS } from './types';
 
 /**
  * Pure status of the three providers, in API order, with exactly four fields each (no
- * values, lengths, hosts or prefixes). Also used by the post-deploy report (change U).
+ * values, lengths, hosts or prefixes). Also used by the post-deploy report.
  */
 export const getProviderStatuses = (cfg: ProvidersConfig): ProviderStatus[] =>
   PROVIDERS.map((provider) => {

@@ -38,7 +38,7 @@ describe('limits', () => {
     expect(MAX_INLINE_DATA_URL_BYTES).toBe(2048);
   });
 
-  it('keeps the spec inequalities', () => {
+  it('keeps the chunk and snapshot size limits consistent', () => {
     expect(MAX_CHUNK_BYTES * 6).toBeLessThan(2 * 1024 * 1024);
     expect(MAX_SNAPSHOT_BYTES).toBeLessThan(14 * 1024 * 1024);
     expect(Math.ceil(MAX_SNAPSHOT_BYTES / MAX_CHUNK_BYTES)).toBeLessThanOrEqual(43);

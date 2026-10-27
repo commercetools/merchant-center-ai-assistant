@@ -14,9 +14,9 @@ import type { TemporaryTable } from '../../src/types/chat.types';
 import { sessionTableRef, useGcpEnv } from '../helpers/gcp-env';
 
 /*
- * Ported from the legacy `query-error-schema.spec.ts`: a failed query must come back with the
- * columns that DO exist (`Unrecognized name: orderNumber` was seen in three turns; the model
- * overrode a prompt that already listed the columns).
+ * A failed query must come back with the columns that DO exist (`Unrecognized name:
+ * orderNumber` was seen in three turns; the model overrode a prompt that already listed the
+ * columns).
  */
 const ORDERS_REF = sessionTableRef('sess_read_orders');
 const CARTS_REF = sessionTableRef('sess_read_carts');

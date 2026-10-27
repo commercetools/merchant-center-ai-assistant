@@ -137,8 +137,8 @@ export const getMessages: RequestHandler = asyncHandler(async (req, res) => {
   const flags = getRequestFlags(res);
   let session = getLoadedSession(res);
 
-  // Legacy behaviour kept: a session whose flags do not match the request falls back to
-  // the user's last session that does.
+  // A session whose flags do not match the request falls back to the user's last session
+  // that does.
   if (!sessionVisibleFor(session, flags)) {
     const last = await services.sessions.lastByFlags(userOf(req), flags);
     if (!last) return fail(res, 404, 'Session not found');

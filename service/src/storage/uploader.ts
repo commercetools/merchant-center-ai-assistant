@@ -11,8 +11,8 @@ import { BucketUnavailableError } from './ensure-bucket';
 import { ImageRejectedError, putImage } from './gcs-objects';
 
 /**
- * Change H's `ImageUploader` over a private bucket. A failed upload is logged and answered
- * with `''` so the stream continues (H's storage filter then drops the base64 part).
+ * The `ImageUploader` over a private bucket. A failed upload is logged and answered with `''`
+ * so the stream continues (the storage filter then drops the base64 part).
  */
 export const createGcsImageUploader = (): ImageUploader => ({
   async upload(bytes, mediaType, sessionId) {

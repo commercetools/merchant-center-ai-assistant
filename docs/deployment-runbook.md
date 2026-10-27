@@ -42,9 +42,9 @@ Every setting is optional; empty means the default. They are standard (not secre
 | `GCP_VERTEX_LOCATION` | `us-central1` | Vertex AI location of the Gemini models |
 | `GCP_BIGQUERY_DATASET_ID` | `aiassistant` | dataset for offloaded tool results |
 | `GCP_BIGQUERY_LOCATION` | `us-central1` | dataset location (immutable once the dataset exists) |
-| `GCP_BUCKET_NAME` | `<project>-ai-assistant-images` | private bucket for generated images |
 | `GCP_BUCKET_LOCATION` | `us-central1` | location when the bucket has to be created |
 | `IMAGE_URL_MODE` | `private` | `private` streams images through the service, `public` makes objects publicly readable |
+| `GCP_BUCKET_NAME` | `<project>-ai-assistant-images` | private bucket for generated images |
 
 The `post-deploy: gcp analytics:` log lines tell you when the dataset or the bucket is missing or not reachable with the current roles. They are warnings only: chat works without analytics or images. To avoid granting `roles/storage.admin`, create the bucket yourself in the Google Cloud console (uniform bucket-level access, public access prevention enforced, location `GCP_BUCKET_LOCATION`) and grant the service account `roles/storage.objectAdmin` on that bucket only; the dataset can be created the same way.
 
@@ -123,12 +123,12 @@ Deployment inputs (`scripts/connect/.env.connect.example`) and what they become:
 | Variable | Goes to | Notes |
 |---|---|---|
 | `GCP_SA_KEY_BASE64`, `ENCRYPTION_KEY` | `service` (secured) | required; deploy only, not changeable with `configure` |
+| `CONNECT_REGION` | `service.CTP_REGION` and the shared `CLOUD_IDENTIFIER` (one global item for all applications) | the cloud identifier is derived (`us-central1.gcp` gives `gcp-us`, `europe-west1.gcp` gives `gcp-eu`, `australia-southeast1.gcp` gives `gcp-au`, `us-east-2.aws` gives `aws-us`, `eu-central-1.aws` gives `aws-eu`) so they cannot disagree |
+| application ids, and entry point paths of the two Custom Applications | ids for `mc-app`, `composed-apps` and `mc-view-app`; paths for `mc-app` and `composed-apps` | from the registrations |
 | `ADMIN_USER_IDS` | `service` (standard) | optional, comma-separated Merchant Center user ids, at most 50; empty means nobody is an administrator; changes need a `configure` redeploy and take effect after the instances restart |
 | Google settings (table above) | `service` (standard) | optional |
 | `CONTENTSTACK_API_KEY`, `CONTENTSTACK_MANAGEMENT_TOKEN`, `ALGOLIA_MCP_URL`, `STRIPE_SECRET_KEY` | `service` (secured) | optional |
 | `CONTENTSTACK_BRANCH`, `CONTENTSTACK_REGION`, `STRIPE_CONNECTED_ACCOUNT_ID` | `service` (standard) | optional |
-| `CONNECT_REGION` | `service.CTP_REGION` and the shared `CLOUD_IDENTIFIER` (one global item for all applications) | the cloud identifier is derived (`us-central1.gcp` gives `gcp-us`, `europe-west1.gcp` gives `gcp-eu`, `australia-southeast1.gcp` gives `gcp-au`, `us-east-2.aws` gives `aws-us`, `eu-central-1.aws` gives `aws-eu`) so they cannot disagree |
-| application ids and entry point paths | `mc-app`, `composed-apps`, `mc-view-app` | from the registrations |
 | `CHAT_SERVICE_ENDPOINT_URL` | set by `finalize` | origin plus `/service` |
 
 Secret values are passed as `--configuration` arguments to the CLI, so they are visible in the local process list while the command runs. Use a personal workstation, never a shared machine. Everything the script prints has secured values replaced by `***`.
@@ -139,26 +139,9 @@ Secret values are passed as `--configuration` arguments to the CLI, so they are 
 |---|---|
 | deployment status `Failed` | `node scripts/connect/connect.mjs logs`; a failed status needs a new deployment or support |
 | `post-deploy: FAILED <check>` | read the reason on that line: `sa-key` (fix `GCP_SA_KEY_BASE64`), `vertex` (the hint names the role or model), `probe` (the reason ends with `(HTTP <status>)`, for example 403 when the API client lacks `manage_key_value_documents`, or with `(commercetools unavailable)` when the platform answered 5xx or timed out after the built-in retries; in the second case run the deployment again once the platform recovers), `audience` (see below) |
-| the service answers 401 | the service has no audience: the `auth configuration` line of its log shows `audience: not configured`, so `CONNECT_SERVICE_URL` does not reach the running service (U5); `post-deploy: service origin <origin>` shows what the lifecycle script sees |
+| the service answers 401 | the service has no audience: the `auth configuration` line of its log shows `audience: not configured`, so `CONNECT_SERVICE_URL` does not reach the running service; `post-deploy: service origin <origin>` shows what the lifecycle script sees |
 | first request is slow or `finalize` retries | sandbox and preview scale to zero (cold start); the smoke check retries up to 10 times |
 | a redeploy shows old behaviour | use `update-code` (stage, publish, redeploy with `--updateConnector`); a plain `configure` does not move to new code |
 | a provider shows "Not configured" in Settings | read the `post-deploy: providers` line for the missing key names, then run `configure` |
 | `deploy` says the deployment already exists | use `finalize` or `configure`, or `delete --yes` and start again |
 | `stage` cannot describe the connector | check the CLI login; an unrelated error never triggers a create |
-
-## 11. Verified behaviour
-
-These platform behaviours could not be confirmed without a real Connect deployment. They are filled in during the first sandbox rehearsal; until then each row is open and the scripts are written to tolerate either outcome.
-
-| Id | Question | Result (date) |
-|---|---|---|
-| U1 | Is a non-required key without a default absent or empty in the environment? | open |
-| U2 | Does a configuration redeploy re-bake `CHAT_SERVICE_ENDPOINT_URL` into the Merchant Center bundles? | open |
-| U3 | Is `PORT` injected, or must the service use 8080? | open |
-| U4 | Does `redeploy --updateConnector` apply changed `inheritAs` scopes? | open |
-| U5 | Does Connect provide `CONNECT_SERVICE_URL` to the running service, not only to the lifecycle scripts, and with which path? The service depends on it for its audience | open |
-| U6 | Does `npm ci` in `postDeploy` omit development dependencies? | open |
-| U7 | How long do the sandbox deployment and redeploy take? | open |
-| U8 | Is the creating project added to `privateProjects` of a private staged connector automatically? | open |
-| U9 | Does a redeploy with an empty value clear a configuration key? | open |
-| U10 | Is a comma-separated `ADMIN_USER_IDS` value kept as one string? | open |

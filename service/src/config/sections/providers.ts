@@ -22,7 +22,7 @@ const PROVIDER_KEYS = [
 ] as const;
 
 /**
- * Provider enablement (change J): a provider is enabled iff all required keys are set and
+ * Provider enablement: a provider is enabled iff all required keys are set and
  * every set key is valid. A partial or invalid set disables the provider with a warning that
  * names keys only; it never adds an error, so a typo cannot stop the service. No network.
  */

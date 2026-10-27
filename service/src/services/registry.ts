@@ -41,7 +41,10 @@ export function createServices(
 
 let instance: Services | undefined;
 
-/** Process-wide services (handlers call this per request; H and tests use it too). */
+/**
+ * Process-wide services (handlers call this per request; the tool-source registry and tests
+ * use it too).
+ */
 export function getServices(): Services {
   if (!instance) instance = createServices(getPersistence());
   return instance;

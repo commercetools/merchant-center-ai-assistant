@@ -133,11 +133,11 @@ const toStorablePart = (part: Part): Record<string, unknown> | null => {
 };
 
 /**
- * Reduces the conversation of a finished turn to what is persisted (capability
- * chat-stream-endpoint, "Storage filter"): non-empty text, files with non-`data:` URLs
- * (web URLs and service-relative `/files/...` paths), annotation parts, the time-limit
- * marker, terminal outputs of the storable tools, subagent outputs with their nested parts
- * reduced, plus the `metadata.usage` counters. Messages left with no part are dropped.
+ * Reduces the conversation of a finished turn to what is persisted: non-empty text, files
+ * with non-`data:` URLs (web URLs and service-relative `/files/...` paths), annotation
+ * parts, the time-limit marker, terminal outputs of the storable tools, subagent outputs
+ * with their nested parts reduced, plus the `metadata.usage` counters. Messages left with no
+ * part are dropped.
  */
 export const processMessagesForStorage = (
   messages: ReadonlyArray<Pick<UIMessage, 'id' | 'role' | 'parts' | 'metadata'>>

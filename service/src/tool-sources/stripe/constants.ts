@@ -46,7 +46,7 @@ export const STRIPE_TOOLS: readonly string[] = [
 
 /**
  * Menu names without a tool in `@stripe/agent-toolkit@0.7.12` (it ships 21 tools, the menu
- * lists 24): the switch changes nothing. Decision (Q-impl-39 default, TA-22): keep the 24
+ * lists 24): the switch changes nothing. Decision: keep the 24
  * names so the menu and stored `disabledTools` keep working across a toolkit upgrade, and
  * mark these in the menu response (`available: false`) instead of trimming them.
  * Derived from the key map, so a toolkit upgrade that adds a tool updates it automatically.

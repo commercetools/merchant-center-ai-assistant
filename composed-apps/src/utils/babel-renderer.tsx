@@ -344,7 +344,7 @@ export function decodeBase64(base64: string): string {
  * Is `script` (the decoded `transpiledCode`) a script that evaluates to the component?
  * It must parse as a plain script, start with the function declaration `name` and end with
  * the expression statement `name;`. Same semantics as `isUsableTranspiledCode` in the
- * service contract (`service/src/composed-pages/contract.ts`, change M); the old regex test
+ * service contract (`service/src/composed-pages/contract.ts`); the old regex test
  * for `return` rejected every component with hooks before its return.
  */
 export function isUsableTranspiledCode(script: string, name: string): boolean {

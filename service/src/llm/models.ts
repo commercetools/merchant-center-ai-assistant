@@ -9,10 +9,10 @@ import { readConfiguration } from '../config';
 import { getGoogleCredentials } from '../gcp/credentials';
 
 /**
- * Model roles. Legacy consumers (so spec H can map them):
+ * Model roles and their consumers:
  * - `main`:  orchestrator, custom-view agent, commercetools, commercetools-ui, visualize, bigquery
- *            agents, and the algolia, stripe, export and contentstack agents, which used a separate
- *            `agent` tier before; they now share the `main` model and its thinking level
+ *            agents, and the algolia, stripe, export and contentstack agents; all of them share
+ *            the `main` model and its thinking level
  * - `lite`:  session-digest, suggestions, analyzer agents
  * - `image`: image-generation agent
  */

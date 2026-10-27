@@ -75,7 +75,7 @@ export const Composer: React.FC<Props> = ({
 
   /**
    * Enter sends; Shift+Enter inserts a newline. Cmd/Ctrl+Enter keeps working, because it
-   * was the only way to send before the redesign and fingers remember.
+   * was the only way to send before Enter did and fingers remember.
    *
    * Caught on the wrapper rather than the input: `MultilineTextInput`'s `onChange` hands
    * back the value rather than an event, so there is no keyboard handler on it to use.

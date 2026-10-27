@@ -12,7 +12,7 @@ export interface NimbusConfig {
   enabled: boolean;
 }
 
-/** Embedded Nimbus MCP (change K). One optional standard configuration key. */
+/** Embedded Nimbus MCP. One optional standard configuration key. */
 export const parseNimbus: SectionParser<NimbusConfig> = (env) => {
   const errors: string[] = [];
   const enabled = bool(env, 'NIMBUS_MCP_ENABLED', true, errors);

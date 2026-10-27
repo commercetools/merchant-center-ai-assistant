@@ -11,7 +11,7 @@ import {
   snapshotChunkKey,
 } from '../../src/utils/feedback-snapshot';
 
-/** Chunks exactly as `feedback.service.ts` stores them (change N's whole-transcript snapshot). */
+/** Chunks exactly as `feedback.service.ts` stores them (whole-transcript snapshot). */
 export const snapshotChunks = (
   feedbackId: string,
   messages: SnapshotMessage[],

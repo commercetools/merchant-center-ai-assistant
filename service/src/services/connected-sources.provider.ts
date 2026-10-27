@@ -5,9 +5,9 @@
  */
 
 /**
- * Seam for change H: names of the enabled non-core data sources (for example `stripe`),
- * used by the suggestions prompt so it never proposes work for a source that is not
- * connected. Default: none.
+ * Seam for the tool-source registry: names of the enabled non-core data sources (for example
+ * `stripe`), used by the suggestions prompt so it never proposes work for a source that is
+ * not connected. Default: none.
  */
 export interface ConnectedSourcesProvider {
   list(): Promise<string[]>;

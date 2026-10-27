@@ -31,8 +31,8 @@ export interface FeedbackStore {
     offset: number
   ): Promise<{ items: FeedbackListItem[]; total: number }>;
   /**
-   * The parent and the raw chunk payloads in key order, without reassembling. Change N owns the
-   * snapshot format (`utils/feedback-snapshot.ts`): it reassembles the whole transcript itself
+   * The parent and the raw chunk payloads in key order, without reassembling. The snapshot
+   * format is owned by `utils/feedback-snapshot.ts`: it reassembles the whole transcript itself
    * and checks its digest, so the store only keeps and returns opaque chunks.
    */
   getParts(id: string): Promise<FeedbackParts | null>;

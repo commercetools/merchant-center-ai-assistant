@@ -7,9 +7,9 @@
 import { isIP } from 'node:net';
 
 /**
- * Syntactic SSRF guard for an operator-supplied URL (design DJ-5). DNS rebinding is NOT
- * solved: the host name is not resolved. The thrown message names the rule that failed and
- * never contains the URL.
+ * Syntactic SSRF guard for an operator-supplied URL. DNS rebinding is NOT solved: the host
+ * name is not resolved. The thrown message names the rule that failed and never contains the
+ * URL.
  */
 
 const ipv4Blocked = (octets: number[]): boolean => {

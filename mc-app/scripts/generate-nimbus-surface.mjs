@@ -36,7 +36,7 @@
  * The service keeps a copy because its prompts are built there and it cannot install Nimbus
  * itself without pulling React, Chakra and react-aria into a backend. Produce that copy with
  *   yarn generate:nimbus-surface --out ../service/src/<path>
- * (the exact path is fixed by the changes that consume it, H and M).
+ * (the service keeps it at `src/composed-pages/prompt/nimbus-surface.generated.ts`).
  */
 
 import { JSDOM } from 'jsdom';

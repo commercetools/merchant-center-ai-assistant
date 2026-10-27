@@ -282,7 +282,7 @@ describe('stripe source', () => {
     expect(calls).toHaveLength(1);
   });
 
-  it('the menu keeps 24 names and marks the 4 without a toolkit tool as unavailable (TA-22)', async () => {
+  it('the menu keeps 24 names and marks the 4 without a toolkit tool as unavailable', async () => {
     stubFactory();
     const menu = await stripeToolSource.listForMenu(ctxFor(STRIPE_ENV));
     expect(menu?.toolNames).toHaveLength(24);

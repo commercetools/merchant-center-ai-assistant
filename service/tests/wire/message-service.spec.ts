@@ -5,7 +5,7 @@
  */
 
 import type { RequestUser } from '../../src/types/request.types';
-import { makeGApp, resetGApp } from '../helpers/g-app';
+import { makeSessionApp, resetSessionApp } from '../helpers/session-app';
 
 const USER: RequestUser = { userId: 'user-a', projectKey: 'p', isAdmin: false };
 const msg = (id: string, role: 'user' | 'assistant' = 'user') => ({
@@ -14,11 +14,11 @@ const msg = (id: string, role: 'user' | 'assistant' = 'user') => ({
   parts: [{ type: 'text', text: id }],
 });
 
-afterEach(resetGApp);
+afterEach(resetSessionApp);
 
 describe('MessageService', () => {
   it('appendMissing is idempotent by message id', async () => {
-    const { services } = makeGApp();
+    const { services } = makeSessionApp();
     const s = await services.sessions.create(USER, {});
     const first = await services.messages.appendMissing(s.id, [msg('m1'), msg('m2')]);
     expect(first.map((m) => m.id)).toEqual(['m1', 'm2']);
@@ -27,8 +27,8 @@ describe('MessageService', () => {
     expect(await services.messages.list(s.id)).toHaveLength(2);
   });
 
-  it('never overwrites a stored id, so a continued assistant message keeps its first version (TA-20)', async () => {
-    const { services } = makeGApp();
+  it('never overwrites a stored id, so a continued assistant message keeps its first version', async () => {
+    const { services } = makeSessionApp();
     const s = await services.sessions.create(USER, {});
     await services.messages.appendMissing(s.id, [msg('a1', 'assistant')]);
     const continued = {
@@ -44,7 +44,7 @@ describe('MessageService', () => {
   });
 
   it('stores only the missing ones and ignores a duplicate inside one call', async () => {
-    const { services } = makeGApp();
+    const { services } = makeSessionApp();
     const s = await services.sessions.create(USER, {});
     await services.messages.appendMissing(s.id, [msg('m1')]);
     const stored = await services.messages.appendMissing(s.id, [msg('m1'), msg('m2'), msg('m2')]);
@@ -52,7 +52,7 @@ describe('MessageService', () => {
   });
 
   it('bumps the session updatedAt', async () => {
-    const { services } = makeGApp();
+    const { services } = makeSessionApp();
     const s = await services.sessions.create(USER, {});
     await new Promise((r) => setTimeout(r, 3));
     await services.messages.appendMissing(s.id, [msg('m1')]);
@@ -60,7 +60,7 @@ describe('MessageService', () => {
   });
 
   it('lastN returns the newest N, oldest of them first', async () => {
-    const { services } = makeGApp();
+    const { services } = makeSessionApp();
     const s = await services.sessions.create(USER, {});
     for (let i = 0; i < 45; i++) {
       await services.messages.appendMissing(s.id, [msg(`m${String(i).padStart(2, '0')}`)]);
@@ -72,7 +72,7 @@ describe('MessageService', () => {
   });
 
   it('list honours limit and offset, oldest first', async () => {
-    const { services } = makeGApp();
+    const { services } = makeSessionApp();
     const s = await services.sessions.create(USER, {});
     await services.messages.appendMissing(s.id, [msg('a'), msg('b'), msg('c'), msg('d')]);
     expect((await services.messages.list(s.id, { limit: 2 })).map((m) => m.id)).toEqual(['a', 'b']);

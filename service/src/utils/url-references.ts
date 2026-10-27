@@ -5,8 +5,8 @@
  */
 
 /**
- * Pure part of the legacy `file.utils.ts`. Upload, resize and base64 conversion belong to
- * change L (behind `ImageUploader`); nothing here does I/O.
+ * Pure helpers. Upload, resize and base64 conversion live behind `ImageUploader`; nothing
+ * here does I/O.
  */
 
 /** Reference to an original file URL (the image prompt lists them for the model). */
@@ -23,8 +23,8 @@ type PartWithUrl = {
 
 /**
  * A stored file is addressable when it is a web URL (public bucket mode) or a
- * service-relative `/files/...` path (private mode, design D-H8). `data:` URLs are never
- * stored and never referenced.
+ * service-relative `/files/...` path (private mode). `data:` URLs are never stored and never
+ * referenced.
  */
 const isReferenceableFilePart = (part: PartWithUrl): boolean =>
   part.type === 'file' &&

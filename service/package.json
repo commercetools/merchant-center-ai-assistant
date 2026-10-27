@@ -1,5 +1,5 @@
 {
-  "name": "ai-assistant-service",
+  "name": "@commercetools-labs/ai-assistant-service",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -13,7 +13,6 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.integration.config.cjs",
     "connector:post-deploy": "node build/connector/post-deploy.js",
     "connector:pre-undeploy": "node build/connector/pre-undeploy.js",
     "persistence:reencrypt": "node --env-file=.env.local scripts/reencrypt.mjs",

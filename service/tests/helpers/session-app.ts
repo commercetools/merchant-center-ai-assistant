@@ -59,8 +59,11 @@ export interface TestApp {
   mem: MemoryObjectGateway;
 }
 
-/** The G routers over an in-memory persistence layer (optionally a wrapped gateway). */
-export function makeGApp(
+/**
+ * The session, settings and suggestions routers over an in-memory persistence layer
+ * (optionally a wrapped gateway).
+ */
+export function makeSessionApp(
   o: {
     wrap?: (gw: MemoryObjectGateway) => ObjectGateway;
     generateSuggestions?: SuggestionsDeps['generate'];
@@ -83,7 +86,7 @@ export function makeGApp(
   return { app, services, persistence: p, mem };
 }
 
-export const resetGApp = (): void => {
+export const resetSessionApp = (): void => {
   resetServicesForTests();
   clearSessionCleanupHooksForTests();
 };

@@ -29,7 +29,8 @@ runtime is `registry.ts`. See also the [how it works](../../../docs/how-it-works
 - calls `isEnabled` and `getTools` concurrently, with a 15 s timeout per source, and skips a
   source that throws or hangs (warning naming it);
 - merges in `order`, whatever the completion order; a tool-name collision is won by the
-  **later** source and logged, so coordinate names (`query_aggregated_data` is used by L and M);
+  **later** source and logged, so coordinate names (`query_aggregated_data` belongs to the
+  BigQuery source; the composed-pages prompts only refer to it by name);
 - removes the tools the session switched off (`disabledTools[name]`, or all of them for the
   sentinel `all_tools`): a source never filters by session;
 - adds your prompt fragment only when you still have a tool after filtering;

@@ -11,9 +11,8 @@ import { makeSessionTables } from './session-tables';
 import { createTableInfoToolFor, GET_TABLE_INFO_TOOL } from './table';
 
 /**
- * Replaces the legacy `bigquery.agent.ts` (its `createAgent` was dead code: the flat
- * orchestrator merges tools). The tools are created PER REQUEST with the session bound.
- * No other source may provide `query_aggregated_data` (the registry would log a collision).
+ * The tools are created PER REQUEST with the session bound. No other source may provide
+ * `query_aggregated_data` (the registry would log a collision).
  */
 export const bigquerySource: ToolSource = {
   name: 'bigquery',
@@ -34,7 +33,7 @@ export const bigquerySource: ToolSource = {
       [QUERY_AGGREGATED_DATA_TOOL]: createQueryToolFor(ctx.sessionId, tables),
     };
   },
-  // No menu group for it (legacy parity).
+  // No menu group for it.
   listForMenu: async () => null,
   getPrompt: (ctx) => getBigqueryPrompt(ctx),
 };

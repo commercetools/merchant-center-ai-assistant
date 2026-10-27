@@ -114,11 +114,11 @@ ${getProjectSystemPromptSection(ctx.projectSystemPrompt)}
 `;
 
 /**
- * The orchestrator of a custom-view session (capability agent-orchestration).
+ * The orchestrator of a custom-view session.
  *
  * Same time budget and loop settings as the default orchestrator, but only the
  * `commercetools` and `commercetools-knowledge` sources and entity-specific prose. The
- * project system prompt is injected once (legacy: not at all).
+ * project system prompt is injected once.
  */
 export const buildCustomViewOrchestrator = async (
   ctx: ToolContext,

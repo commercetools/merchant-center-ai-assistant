@@ -45,9 +45,9 @@ import {
  * The icon vocabulary the service may choose from when it describes a session or a suggested
  * prompt.
  *
- * Names are Material Symbols in snake_case, which is what the design specifies and what the
- * model is asked to emit; `@commercetools/nimbus-icons` exports the same Material set in
- * PascalCase, so the mapping below is purely mechanical.
+ * Names are Material Symbols in snake_case, which is what the model is asked to emit;
+ * `@commercetools/nimbus-icons` exports the same Material set in PascalCase, so the mapping
+ * below is purely mechanical.
  *
  * This list is deliberately short and domain-flavoured. A model given all 2,123 Material
  * icons picks badly and unpredictably; a curated set keeps the session list visually
@@ -55,9 +55,8 @@ import {
  * `src/constants.ts`, where it is enforced as a zod enum - the two lists must be changed
  * together, and anything unrecognised falls back to `auto_awesome` here regardless.
  *
- * Chrome icons used by the redesign's own layout (menus, chevrons, send arrows) are NOT in
- * here. Components import those from `@commercetools/nimbus-icons` directly; this map exists
- * only for names that arrive as data.
+ * Chrome icons (menus, chevrons, send arrows) are NOT in here. Components import those from
+ * `@commercetools/nimbus-icons` directly; this map exists only for names that arrive as data.
  */
 export const DIGEST_ICON_NAMES = [
   // Catalog

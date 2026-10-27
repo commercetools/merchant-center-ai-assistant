@@ -10,7 +10,7 @@ import {
   getReturnFormatSection,
   getContextSections,
 } from './base.prompt';
-/** Tool name owned by change L (`query_aggregated_data`); kept here so the prompt stays a plain string. */
+/** Tool name owned by the BigQuery tool source (`query_aggregated_data`); kept here so the prompt stays a plain string. */
 const QUERY_AGGREGATED_DATA_TOOL = 'query_aggregated_data';
 
 /**

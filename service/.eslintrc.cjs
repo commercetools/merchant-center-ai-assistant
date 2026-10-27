@@ -25,7 +25,7 @@ module.exports = {
     },
     {
       files: ['src/**/*.ts'],
-      // The lifecycle env module is the one other reader (design D-U9 of change U).
+      // The lifecycle env module is the one other reader.
       excludedFiles: ['src/config/**/*.ts', 'src/connector/env.ts'],
       rules: {
         'no-restricted-properties': [

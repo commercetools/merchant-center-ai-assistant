@@ -50,22 +50,19 @@ The example is a hypothetical store of per-user bookmarks. Names are placeholder
    Export the types from `service/src/persistence/index.ts` if other modules need them.
 5. **Clean up.** If the data belongs to a session or a user, decide when it is deleted. Session deletion runs
    through `deleteSessionCascade` and the cleanup hooks (`service/src/analytics/cleanup/bigquery-hook.ts` is an
-   example); add your own step there. If a new top-level container must be removed by the test purge script, add it
-   to the list in `service/src/persistence/maintenance.ts`.
+   example); add your own step there.
 6. **Test it.** Use `makePersistence()` from `service/tests/helpers/persistence.ts`, which builds the layer over the
    memory gateway. Copy `service/tests/unit/persistence/suggestion.store.spec.ts` for the shape: a round trip, a
    missing object, a conflict (wrap the gateway to force one) and a failing gateway. The shared gateway contract in
    `service/tests/helpers/gateway-contract.ts` runs against the memory gateway
-   (`service/tests/unit/persistence/gateway.contract.memory.spec.ts`) and, as a live variant,
-   against the real one (`service/tests/integration/contract.custom-objects.spec.ts`), which needs a scratch project and is skipped without
-   credentials.
+   (`service/tests/unit/persistence/gateway.contract.memory.spec.ts`).
 7. **Document it.** Add the container to the table in [architecture.md](./architecture.md#data-model) and, if it
    holds user data, to [privacy.md](./privacy.md).
 
 ## Things that surprise people
 
 - The memory gateway mimics versions and conflicts, but it cannot reproduce platform limits or eventual
-  consistency. Run the integration suite against a scratch project before relying on a query shape.
+  consistency. Try a query shape against a scratch commercetools project before relying on it.
 - Containers are created implicitly by the first write; there is no migration step. Renaming a container strands
   the old data, so treat container and key names as part of the public contract of an installation.
 - Undeploying the connector does not delete Custom Objects, so a store has to be safe to find old data

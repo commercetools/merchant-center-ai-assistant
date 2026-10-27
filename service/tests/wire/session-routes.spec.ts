@@ -6,21 +6,21 @@
 
 import request from 'supertest';
 import { registerSessionCleanupHook } from '../../src/services/session.service';
-import { asUser, makeGApp, resetGApp } from '../helpers/g-app';
+import { asUser, makeSessionApp, resetSessionApp } from '../helpers/session-app';
 
 const A = asUser('user-a');
 const B = asUser('user-b');
 
-afterEach(resetGApp);
+afterEach(resetSessionApp);
 
-const create = async (app: ReturnType<typeof makeGApp>['app'], who = A, body: object = {}) => {
+const create = async (app: ReturnType<typeof makeSessionApp>['app'], who = A, body: object = {}) => {
   const res = await request(app).post('/service/session').set(who).send(body);
   return res.body.data as { id: string; title: string; userId: string };
 };
 
 describe('POST /session', () => {
   it('creates with defaults (201, verified user id, no tenant fields)', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const res = await request(app).post('/service/session').set(A).send({});
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
@@ -31,7 +31,7 @@ describe('POST /session', () => {
   });
 
   it('binds to a custom view', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const res = await request(app)
       .post('/service/session')
       .set(A)
@@ -40,7 +40,7 @@ describe('POST /session', () => {
   });
 
   it('stores a sanitised display label but keeps the verified id', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const res = await request(app)
       .post('/service/session')
       .set(A)
@@ -56,7 +56,7 @@ describe('POST /session', () => {
     [{ featureFlags: 'x' }],
     [{ featureFlags: { a: { b: 1 } } }],
   ])('rejects an invalid body %j', async (body) => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const res = await request(app).post('/service/session').set(A).send(body);
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
@@ -65,14 +65,14 @@ describe('POST /session', () => {
 
 describe('reading', () => {
   it('404 envelope for an unknown session', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const res = await request(app).get('/service/session/00000000-0000-4000-8000-000000000000').set(A);
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ success: false, error: 'Session not found' });
   });
 
   it('404 for another user across every :sessionId route', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const s = await create(app);
     const base = `/service/session/${s.id}`;
     for (const [method, path] of [
@@ -92,7 +92,7 @@ describe('reading', () => {
   });
 
   it('GET / answers the last matching session or 404', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     expect((await request(app).get('/service/session').set(A)).status).toBe(404);
     const s = await create(app);
     const res = await request(app).get('/service/session').set(A);
@@ -100,7 +100,7 @@ describe('reading', () => {
   });
 
   it('list is newest first, own sessions only, with a limit', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const ids: string[] = [];
     for (let i = 0; i < 9; i++) {
       ids.push((await create(app)).id);
@@ -117,7 +117,7 @@ describe('reading', () => {
   });
 
   it('feature flags scope the list and the last session', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const plain = await create(app);
     const flagged = await create(app, A, { featureFlags: { customView: 'X' } });
     const withFlag = await request(app).get('/service/session/all?customView=X').set(A);
@@ -129,7 +129,7 @@ describe('reading', () => {
   });
 
   it('messages of a mismatching session come from the last matching one, or 404', async () => {
-    const { app, services } = makeGApp();
+    const { app, services } = makeSessionApp();
     const plain = await create(app);
     await services.messages.appendMissing(plain.id, [
       { id: 'm1', role: 'user', parts: [{ type: 'text', text: 'plain' }] },
@@ -145,7 +145,7 @@ describe('reading', () => {
   });
 
   it('messages are oldest first and honour limit / offset', async () => {
-    const { app, services } = makeGApp();
+    const { app, services } = makeSessionApp();
     const s = await create(app);
     await services.messages.appendMissing(s.id, [
       { id: 'a', role: 'user', parts: [] },
@@ -161,7 +161,7 @@ describe('reading', () => {
 
 describe('update and delete', () => {
   it('PUT applies only title and metadata', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const s = await create(app);
     const res = await request(app)
       .put(`/service/session/${s.id}`)
@@ -173,14 +173,14 @@ describe('update and delete', () => {
   });
 
   it('PUT rejects a non-string title', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const s = await create(app);
     const res = await request(app).put(`/service/session/${s.id}`).set(A).send({ title: 7 });
     expect(res.status).toBe(400);
   });
 
   it('DELETE runs hooks, answers a top-level message, then 404 the second time', async () => {
-    const { app, services } = makeGApp();
+    const { app, services } = makeSessionApp();
     const s = await create(app);
     await services.messages.appendMissing(s.id, [{ id: 'm1', role: 'user', parts: [] }]);
     const seen: string[] = [];
@@ -199,7 +199,7 @@ describe('update and delete', () => {
 
 describe('digest polling', () => {
   it('stale digest is pending, fresh digest is returned', async () => {
-    const { app, services } = makeGApp();
+    const { app, services } = makeSessionApp();
     const s = await create(app);
     expect((await request(app).get(`/service/session/${s.id}/digest`).set(A)).body.data).toEqual({
       pending: true,

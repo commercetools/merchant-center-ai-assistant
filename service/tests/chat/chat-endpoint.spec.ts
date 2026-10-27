@@ -15,7 +15,7 @@ import { setChatModelForTests } from '../../src/chat/orchestrator';
 import { resetServicesForTests } from '../../src/services/registry';
 import { createToolSourceRegistry } from '../../src/tool-sources/registry';
 import { makeChatApp, type ChatApp } from '../helpers/chat-app';
-import { asUser } from '../helpers/g-app';
+import { asUser } from '../helpers/session-app';
 import {
   finish,
   textTurn,

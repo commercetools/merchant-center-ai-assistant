@@ -25,7 +25,7 @@ import {
   type Services,
 } from '../../src/services/registry';
 import type { ToolSourceRegistry } from '../../src/tool-sources/registry';
-import { fakeAuth } from './g-app';
+import { fakeAuth } from './session-app';
 import type { Chunk } from './mock-model';
 import { scriptedModel } from './mock-model';
 import { makePersistence } from './persistence';

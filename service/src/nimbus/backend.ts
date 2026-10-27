@@ -22,7 +22,7 @@ export interface Readiness {
 
 /**
  * Where the Nimbus tools come from. The embedded child process is the only implementation
- * today; a separate HTTP gateway would be a second one (see design Appendix A). Free of any
+ * today; a separate HTTP gateway would be a second one. Free of any
  * stdio concept on purpose.
  */
 export interface NimbusBackend {

@@ -185,7 +185,7 @@ sequenceDiagram
   O->>M: update registrations with the real URLs
 ```
 
-The service takes the audience of the Merchant Center token from the origin of `CONNECT_SERVICE_URL` (no path, because the verifier appends the request path). That depends on Connect providing the variable to the running service; its documentation only names it for the lifecycle scripts, so this is an open item (U5 in the runbook). The lifecycle scripts
+The service takes the audience of the Merchant Center token from the origin of `CONNECT_SERVICE_URL` (no path, because the verifier appends the request path). That depends on Connect providing the variable to the running service (its documentation only names it for the lifecycle scripts); the service log line `auth configuration` shows `audience: <origin>` when it does. The lifecycle scripts
 (`service/src/connector/post-deploy.ts`) verify the configuration and report problems, including the service origin they see; they do not register anything.
 Commands are in [deployment-runbook.md](./deployment-runbook.md).
 
@@ -194,7 +194,6 @@ Commands are in [deployment-runbook.md](./deployment-runbook.md).
 | Layer | Tool | Where |
 | --- | --- | --- |
 | Service logic | Jest, supertest, msw, in-memory persistence | `service/tests/` |
-| Service against Custom Objects, Google Cloud, MCP servers | integration suites, skipped without credentials | `service/tests/integration/` |
 | Frontends | `tsc`, ESLint, Jest, `mc-scripts build` | each frontend folder |
 | Deployment helper | Node test runner | `scripts/tests/` |
 | Deployed connector | manual checks in a browser logged in to the Merchant Center | see [troubleshooting.md](./troubleshooting.md) |

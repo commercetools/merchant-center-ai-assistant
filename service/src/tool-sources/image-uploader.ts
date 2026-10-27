@@ -9,9 +9,9 @@ import type { ImageUploader } from './types';
 let uploader: ImageUploader | undefined;
 
 /**
- * Change L registers its Cloud Storage uploader here (whenever Google Cloud is configured).
- * Without an uploader the `imageGeneration` source is disabled: the feature is absent rather
- * than broken.
+ * `analytics/register.ts` registers the Cloud Storage uploader here (whenever Google Cloud is
+ * configured). Without an uploader the `imageGeneration` source is disabled: the feature is
+ * absent rather than broken.
  */
 export const setImageUploader = (value: ImageUploader | undefined): void => {
   uploader = value;

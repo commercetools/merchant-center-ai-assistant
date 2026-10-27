@@ -95,7 +95,7 @@ describe('source prompts', () => {
     expect(getBigqueryPrompt(ctx)).not.toContain('calling agent');
   });
 
-  it('the commercetools prompt embeds the optional developer tips (change J)', () => {
+  it('the commercetools prompt embeds the optional developer tips', () => {
     const ctx = makeToolContext();
     contexts.push(ctx);
     expect(

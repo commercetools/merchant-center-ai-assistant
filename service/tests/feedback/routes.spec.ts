@@ -12,8 +12,8 @@ import { freshConfig } from '../helpers/env';
 import { authEnv } from '../helpers/mc-app';
 
 /**
- * REST contract rows 20-25 on the assembled app (real verifyMcSession, development bypass for
- * the identity). TODO(unify with change G): move into G's tests/contract/routes.spec.ts.
+ * The feedback and backoffice routes of docs/api.md on the assembled app (real verifyMcSession,
+ * development bypass for the identity).
  */
 beforeEach(() => resetPersistenceForTests());
 afterAll(() => {

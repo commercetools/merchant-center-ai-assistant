@@ -82,7 +82,7 @@ export const keepNewestGeneratedImages = (
 };
 
 /**
- * The model input of one turn (capability chat-stream-endpoint, "History window").
+ * The model input of one turn.
  *
  * 1. the newest `CHAT_HISTORY_MESSAGES` (20) stored messages, oldest first;
  * 2. plus the incoming message unless its id is already the last stored id. The stream route

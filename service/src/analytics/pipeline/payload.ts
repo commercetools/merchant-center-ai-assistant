@@ -8,10 +8,10 @@ import { logger } from '../../utils/logger.utils';
 
 /*
  * WIRE CONTRACT between the tool sources and `parseRawDataToTables` (pinned by
- * tests/analytics/payload.spec.ts; ported from legacy incidents).
+ * tests/analytics/payload.spec.ts).
  *
- * The parser was written for a retired in-process agent that emitted a string
- * `{"READ PRODUCT RESULT": {results, total, count}}` (pagination nested under one title key).
+ * The parser reads a string `{"READ PRODUCT RESULT": {results, total, count}}` (pagination
+ * nested under one title key).
  * A Managed MCP server returns a `CallToolResult` OBJECT whose text part holds
  * `{limit, offset, count, total, results}` at the TOP level. Handing the object to the parser
  * dies with `rawData.match is not a function`; unwrapping to the bare text loses total/count

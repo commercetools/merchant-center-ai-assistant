@@ -14,7 +14,7 @@ import { MAX_TURN_BYTES, turnRegistry } from '../../src/chat/turn-buffer';
 import { resetServicesForTests } from '../../src/services/registry';
 import { createToolSourceRegistry } from '../../src/tool-sources/registry';
 import { makeChatApp, type ChatApp } from '../helpers/chat-app';
-import { asUser } from '../helpers/g-app';
+import { asUser } from '../helpers/session-app';
 import { textTurn, usage, type Chunk } from '../helpers/mock-model';
 
 afterEach(() => {

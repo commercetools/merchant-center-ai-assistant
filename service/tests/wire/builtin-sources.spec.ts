@@ -29,7 +29,7 @@ afterEach(() => {
 describe('built-in sources', () => {
   it('the process-wide registry resolves the three always-on tools', async () => {
     const ctx = makeToolContext({
-      // The registry also holds the nimbus source (change K); keep it from spawning a child.
+      // The registry also holds the nimbus source; keep it from spawning a child.
       config: freshConfig({ NIMBUS_MCP_ENABLED: 'false' }),
     });
     contexts.push(ctx);

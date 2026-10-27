@@ -18,7 +18,7 @@ export async function smoke({ fetch, sleep, origin, attempts = 10, delayMs = 10_
       const response = await fetch(`${origin}/service/status`);
       if (response.status === 200) {
         const body = await response.json().catch(() => undefined);
-        // The service answers {status:'UP'} (change C); the task text says 'ok': accept both.
+        // The service answers {status:'UP'}; 'ok' is accepted as well.
         if (/^(up|ok)$/i.test(String(body?.status))) return { ok: true, attempts: i };
         throw new Error('status endpoint answered 200 without a healthy status field');
       }

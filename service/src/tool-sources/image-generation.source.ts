@@ -158,7 +158,7 @@ export const imageGenerationAgent: AgentDefinition = {
 };
 
 /**
- * Enabled only while an `ImageUploader` (change L) is registered: without one the tool is
+ * Enabled only while an `ImageUploader` is registered: without one the tool is
  * absent from the tool set and from the instructions.
  */
 export const imageGenerationSource: ToolSource = {

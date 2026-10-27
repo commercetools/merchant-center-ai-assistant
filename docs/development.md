@@ -57,7 +57,7 @@ The three Merchant Center applications run with their own dev server and need a 
 ```
 cd mc-app
 yarn install --frozen-lockfile
-cp .env.example .env        # set INITIAL_PROJECT_KEY and CHAT_SERVICE_ENDPOINT_URL
+cp .env.example .env        # git-ignored; set INITIAL_PROJECT_KEY and CHAT_SERVICE_ENDPOINT_URL
 yarn start                  # needs a Merchant Center login
 ```
 
@@ -81,12 +81,11 @@ cd service
 npm run typecheck && npm run lint
 npm test                                         # Jest, no network, in-memory persistence
 npm run build
-npm run test:integration                         # needs credentials in .env.local; every suite skips without them
 ```
 
 ```
 cd mc-app        # and composed-apps, mc-view-app
-yarn typecheck && yarn lint && yarn test && yarn build    # the build needs the variables of .env.example
+yarn typecheck && yarn lint && yarn test && yarn build    # the build needs the variables of .env.example: cp .env.example .env
 ```
 
 ```
@@ -106,6 +105,8 @@ A key lives in several places that must agree. For a new optional setting:
 5. Add a case to the matching test in `service/tests/unit`.
 
 Keys shared by every application (`CLOUD_IDENTIFIER`, `CHAT_SERVICE_ENDPOINT_URL`) go under `inheritAs.configuration` instead, and the deployment helper passes them without an application prefix.
+
+In `connect.yaml` the keys sit in context groups (a comment names each group); inside a group the required keys come first, then the optional keys with a default, then the optional keys without a default. The tables in [README.md](../README.md#configuration) and [configuration.md](./configuration.md) mirror `connect.yaml` in that order and are updated by hand.
 
 ## Adding to the service
 

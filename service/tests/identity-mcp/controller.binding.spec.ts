@@ -241,7 +241,7 @@ describe('PUT /managed-mcp-identity', () => {
   });
 });
 
-describe('PUT /managed-mcp-identity: rebind cleanup (TA-21)', () => {
+describe('PUT /managed-mcp-identity: rebind cleanup', () => {
   it("removes the old binding's token records of every user, revoking them best effort", async () => {
     const fake = fakeAuth2();
     const net = routedFetch(fakeMcp().responder, auth2Responder(fake));

@@ -95,7 +95,7 @@ const CLAUSE_WORDS = new Set([
 ]);
 
 /**
- * FALLBACK ONLY (design DL-1): the table identifiers a SELECT reads, used when a dry run does
+ * FALLBACK ONLY: the table identifiers a SELECT reads, used when a dry run does
  * not report `referencedTables`. Conservative: it returns every identifier that follows
  * `FROM`/`JOIN` (and a comma after a table in a FROM list is NOT followed, so such queries
  * are rejected as unparseable by the caller via `unsupported`). CTE names, `UNNEST(...)` and

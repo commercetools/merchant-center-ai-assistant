@@ -36,7 +36,7 @@ export const parseLlm: SectionParser<LlmConfig> = (env) => {
   return {
     errors,
     value: {
-      // Each tier has its own variable (the legacy code let one variable pin two tiers).
+      // Each tier has its own variable.
       mainModel: modelName(env, 'GEMINI_MODEL_NAME', 'gemini-3.8-flash', errors),
       liteModel: modelName(env, 'GEMINI_LITE_MODEL_NAME', 'gemini-3.5-flash-lite', errors),
       imageModel: modelName(env, 'GEMINI_IMAGE_MODEL_NAME', 'gemini-2.5-flash-image', errors),

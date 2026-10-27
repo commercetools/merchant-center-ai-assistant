@@ -9,9 +9,9 @@ import { parseRawDataToTables } from '../../src/analytics/pipeline/parse';
 import { toOffloadPayload, toResultShapeOf } from '../../src/analytics/pipeline/payload';
 
 /*
- * Ported from the legacy `tool-result-offload.spec.ts`. WIRE CONTRACT between the tool sources
- * and the parser: an MCP `CallToolResult` object used to kill the offload with
- * `rawData.match is not a function` (a 1.1 MB product page then landed in the context window).
+ * WIRE CONTRACT between the tool sources and the parser: an MCP `CallToolResult` object used
+ * to kill the offload with `rawData.match is not a function` (a 1.1 MB product page then
+ * landed in the context window).
  */
 const products = Array.from({ length: 100 }, (_, i) => ({ id: `p${i}`, key: `sku-${i}` }));
 const READ_PRODUCTS_BODY = { limit: 100, offset: 0, count: 100, total: 4187, results: products };

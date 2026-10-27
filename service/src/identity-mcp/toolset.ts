@@ -38,7 +38,7 @@ import type { IdentityBinding } from './types';
  * becomes a loud discarded entry instead of an impersonation.
  *
  * The tool names are also a snapshot of the user's Merchant Center permissions, hence the
- * short TTL. Schema normalisation for the model is the registry's job (change H), not ours.
+ * short TTL. Schema normalisation for the model is the registry's job, not ours.
  */
 
 export type CreateMcpClient = typeof createMCPClient;

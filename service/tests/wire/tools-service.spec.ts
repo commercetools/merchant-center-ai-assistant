@@ -14,7 +14,7 @@ import {
   filterEnabled,
   toSessionTools,
 } from '../../src/services/tools.service';
-import { asUser, makeGApp, resetGApp } from '../helpers/g-app';
+import { asUser, makeSessionApp, resetSessionApp } from '../helpers/session-app';
 
 const A = asUser('user-a');
 
@@ -30,7 +30,7 @@ const provider = (groups: Awaited<ReturnType<ToolMenuProvider['listMenuGroups']>
 };
 
 afterEach(() => {
-  resetGApp();
+  resetSessionApp();
   setToolMenuProvider({ listMenuGroups: async () => [] });
 });
 
@@ -59,11 +59,11 @@ describe('tools.service', () => {
 describe('session tools routes', () => {
   const menu = [{ mcp: 'knowledge', toolNames: ['a', 'b'] }];
 
-  const session = async (t: ReturnType<typeof makeGApp>) =>
+  const session = async (t: ReturnType<typeof makeSessionApp>) =>
     (await request(t.app).post('/service/session').set(A).send({})).body.data.id as string;
 
   it('the default provider answers an empty menu', async () => {
-    const t = makeGApp();
+    const t = makeSessionApp();
     const id = await session(t);
     const res = await request(t.app).get(`/service/session/${id}/tools`).set(A);
     expect(res.status).toBe(200);
@@ -72,7 +72,7 @@ describe('session tools routes', () => {
 
   it('assembles groups from the provider with the stored negative list (GET and POST alias)', async () => {
     const seen = provider(menu);
-    const t = makeGApp();
+    const t = makeSessionApp();
     const id = await session(t);
     await request(t.app)
       .put(`/service/session/${id}/tools`)
@@ -94,9 +94,9 @@ describe('session tools routes', () => {
     expect(seen[0]).toEqual({ userId: 'user-a', sessionId: id });
   });
 
-  it('marks names without a backing tool as available:false and leaves the others untouched (TA-22)', async () => {
+  it('marks names without a backing tool as available:false and leaves the others untouched', async () => {
     provider([{ mcp: 'stripe', toolNames: ['a', 'b'], unavailableToolNames: ['b'] }]);
-    const t = makeGApp();
+    const t = makeSessionApp();
     const id = await session(t);
     const res = await request(t.app).get(`/service/session/${id}/tools`).set(A);
     expect(res.body.data).toEqual([
@@ -112,7 +112,7 @@ describe('session tools routes', () => {
 
   it('a new tool from a source is enabled by default', async () => {
     provider([{ mcp: 'knowledge', toolNames: ['a', 'b', 'c'] }]);
-    const t = makeGApp();
+    const t = makeSessionApp();
     const id = await session(t);
     await request(t.app)
       .put(`/service/session/${id}/tools`)
@@ -124,14 +124,14 @@ describe('session tools routes', () => {
 
   it('serialised response never carries a description key', async () => {
     provider([{ mcp: 'g', toolNames: [{ toolName: 'a', description: 'long text' }] }]);
-    const t = makeGApp();
+    const t = makeSessionApp();
     const id = await session(t);
     const res = await request(t.app).get(`/service/session/${id}/tools`).set(A);
     expect(JSON.stringify(res.body)).not.toContain('description');
   });
 
   it('switching off and on stores and then removes the group key', async () => {
-    const t = makeGApp();
+    const t = makeSessionApp();
     const id = await session(t);
     const put = (enabled: boolean) =>
       request(t.app)
@@ -147,7 +147,7 @@ describe('session tools routes', () => {
   });
 
   it('a group absent from the body is untouched', async () => {
-    const t = makeGApp();
+    const t = makeSessionApp();
     const id = await session(t);
     const send = (mcp: string) =>
       request(t.app)
@@ -171,7 +171,7 @@ describe('session tools routes', () => {
     [{ tools: [{ mcp: 'a', tools: [{ toolName: 'x' }] }] }],
     [{ tools: [{ mcp: 'a', tools: [{ toolName: 1, enabled: true }] }] }],
   ])('rejects the invalid body %j', async (body) => {
-    const t = makeGApp();
+    const t = makeSessionApp();
     const id = await session(t);
     const res = await request(t.app).put(`/service/session/${id}/tools`).set(A).send(body);
     expect(res.status).toBe(400);
@@ -179,7 +179,7 @@ describe('session tools routes', () => {
   });
 
   it('a group named __proto__ is stored as an ordinary key', async () => {
-    const t = makeGApp();
+    const t = makeSessionApp();
     const id = await session(t);
     const res = await request(t.app)
       .put(`/service/session/${id}/tools`)

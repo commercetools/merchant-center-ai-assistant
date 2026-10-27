@@ -29,8 +29,8 @@ export function statusOf(error: unknown): number | undefined {
 
 /**
  * API root for the lifecycle scripts, built from the lifecycle environment with the service's
- * own client builder (change C) instead of readConfiguration(): the scripts must not demand
- * keys they do not use (design D-U9).
+ * own client builder (`buildClient`) instead of readConfiguration(): the scripts must not
+ * demand keys they do not use.
  */
 export function createLifecycleApiRoot(
   env: LifecycleEnv
@@ -59,7 +59,7 @@ const failed = (error: unknown, what: string): ProbeResult => ({
 });
 
 /**
- * Create-or-update, read, delete a throw-away Custom Object through change E's gateway
+ * Create-or-update, read, delete a throw-away Custom Object through `CustomObjectGateway`
  * (which owns timeout and transport retries): proves the generated API client can write.
  * Idempotent: the object is removed again (a missing object on delete is fine).
  */

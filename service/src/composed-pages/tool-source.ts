@@ -13,8 +13,8 @@ import { getCommercetoolsUIPrompt } from './prompt/commercetools-ui.prompt';
 import { composedPageTool } from './tool';
 
 /**
- * Does the `nimbus` source (change K) contribute tools this turn? Used where the merged tool
- * set is not known yet (`getTools`, the tool description): it reads the kill switch K's source
+ * Does the `nimbus` source contribute tools this turn? Used where the merged tool set is not
+ * known yet (`getTools`, the tool description): it reads the kill switch the Nimbus source
  * reads. `getPrompt` asks the merged set itself through `ctx.hasTool`.
  */
 const nimbusToolsEnabled = (
@@ -22,7 +22,7 @@ const nimbusToolsEnabled = (
 ): boolean => ctx.config.nimbus.enabled;
 
 /**
- * `create_composed_page` and its prompt. Order 60 (K's Nimbus source is 61). The name is the
+ * `create_composed_page` and its prompt. Order 60 (the Nimbus source is 61). The name is the
  * agent key `commercetoolsUI`. It is not part of the custom-view selection
  * (`commercetools` + `commercetools-knowledge`), so custom-view sessions never get it.
  */

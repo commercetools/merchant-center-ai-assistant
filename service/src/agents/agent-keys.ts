@@ -12,8 +12,8 @@ import type { Log } from '../utils/log.types';
  * provides it (so `disabledTools[key]` and the tools-menu group id are the same string).
  *
  * A key with no registered source contributes nothing: there is no code path that creates an
- * agent for a key whose source is absent or disabled. Sources of I-M are registered by those
- * changes; until then their keys are only reported at startup.
+ * agent for a key whose source is absent or disabled. Such keys are only reported at
+ * startup (`logGatedAgentKeys`).
  */
 export const AGENT_KEYS = [
   'commercetools',
@@ -36,7 +36,7 @@ export interface AgentMeta {
   description: string;
 }
 
-/** Human-readable name and one-line description (legacy `meta` of each agent definition). */
+/** Human-readable name and one-line description of each agent key. */
 export const AGENT_META: Record<AgentKey, AgentMeta> = {
   commercetools: {
     name: 'Commercetools Commerce Agent',
@@ -91,7 +91,7 @@ export const gatedAgentKeys = (
 
 /**
  * One info line at startup: which sources are registered and which agent keys still wait for
- * their source (changes I-M). Returns the gated keys.
+ * their source. Returns the gated keys.
  */
 export const logGatedAgentKeys = (
   registry: { list(): Array<{ name: string }> },

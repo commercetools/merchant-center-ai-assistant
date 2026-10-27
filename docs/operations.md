@@ -115,7 +115,7 @@ The BigQuery tables and the image bucket are derived or replaceable data and are
 
 ## Rollback
 
-Redeploy the previous tag: `node scripts/connect/connect.mjs update-code --tag <previous tag>` (stage the old tag, publish, redeploy with `--updateConnector`), see [the deployment runbook](./deployment-runbook.md#5-rollback). If needed delete the deployment with `delete --yes`; the Custom Objects stay. This procedure has been unit-tested with a fake CLI only and has not yet been rehearsed on a real deployment.
+Redeploy the previous tag: `node scripts/connect/connect.mjs update-code --tag <previous tag>` (stage the old tag, publish, redeploy with `--updateConnector`), see [the deployment runbook](./deployment-runbook.md#5-rollback). If needed delete the deployment with `delete --yes`; the Custom Objects stay.
 
 ## Upgrading Nimbus
 

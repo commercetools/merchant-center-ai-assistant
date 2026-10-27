@@ -14,7 +14,7 @@ export type SessionTablesAccessor = () => Promise<TemporaryTable[]>;
 /**
  * Reads the session's tables on EVERY call: tables are added during the same turn, so the
  * `ctx.session` snapshot (loaded once per request) is stale. Ownership (`userId`) is
- * enforced by change G's `SessionService`; it is never bypassed here.
+ * enforced by `SessionService`; it is never bypassed here.
  */
 export const makeSessionTables = (
   sessionId: string,

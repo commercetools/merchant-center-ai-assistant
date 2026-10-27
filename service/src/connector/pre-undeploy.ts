@@ -15,8 +15,8 @@ import { containers } from '../persistence/names';
 import { LifecycleEnv, readLifecycleEnv } from './env';
 
 /**
- * Containers that hold user data. They are only reported, never touched (design D-U10).
- * The names come from change E's container constants (per-session message and feedback
+ * Containers that hold user data. They are only reported, never touched. The names come
+ * from the container constants in `persistence/names.ts` (per-session message and feedback
  * snapshot containers are created per id and are not listed here).
  */
 const names = containers();

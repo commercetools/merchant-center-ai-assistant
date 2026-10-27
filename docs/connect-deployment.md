@@ -31,13 +31,13 @@ flowchart TD
 
 ## Why twice
 
-- The service knows its own public URL: it takes the audience of the Merchant Center token from `CONNECT_SERVICE_URL`. It needs no second step, provided Connect passes that variable to the running service (U5 in the runbook).
+- The service knows its own public URL: it takes the audience of the Merchant Center token from `CONNECT_SERVICE_URL`. It needs no second step, provided Connect passes that variable to the running service.
 - The frontends cannot learn the URL by themselves. `CHAT_SERVICE_ENDPOINT_URL` is substituted into `custom-application-config.mjs` and `custom-view-config.mjs` when the applications are built, so it has to be known as a configuration value.
 - The URL is assigned by Connect once the service is deployed, so it cannot be put into the first deployment. The first run therefore uses the default `https://not-configured.invalid/service`; the second run replaces it.
 - `CHAT_SERVICE_ENDPOINT_URL` and `CLOUD_IDENTIFIER` are shared by all applications (`inheritAs.configuration` in `connect.yaml`). They are passed once, as a bare `KEY=value` item without an application prefix, while application keys use `application.KEY=value`.
 - A redeploy is a partial merge: keys you do not pass keep their current value. The second run therefore sends only `CHAT_SERVICE_ENDPOINT_URL` and never re-sends a secret.
 
-Open item: whether a configuration redeploy rebuilds the Merchant Center bundles with the new value is not confirmed yet (U2 in [the runbook](./deployment-runbook.md#11-verified-behaviour)). Check it after the second run: open the application and confirm that its requests go to your service and not to `not-configured.invalid`.
+After the second run, open the application and confirm that its requests go to your service and not to `not-configured.invalid`.
 
 ## Prerequisites
 
@@ -69,14 +69,14 @@ Add `--dry-run` to any helper command to print what would run (secured values sh
 
 ### What each run sends
 
-- **First run (`deploy`)**: the two secrets (`GCP_SA_KEY_BASE64`, `ENCRYPTION_KEY`), `CTP_REGION`, the registration ids and entry point paths of the three applications, `CLOUD_IDENTIFIER` (derived from the region, so the service and the frontends cannot disagree) and any optional settings. It does not wait; it prints the command with secrets masked.
+- **First run (`deploy`)**: the two secrets (`GCP_SA_KEY_BASE64`, `ENCRYPTION_KEY`), `CTP_REGION`, the ids of the three applications and the entry point paths of the two Custom Applications, `CLOUD_IDENTIFIER` (derived from the region, so the service and the frontends cannot disagree) and any optional settings. It does not wait; it prints the command with secrets masked.
 - **Second run (`finalize`)**: waits up to about 25 minutes for the first deployment to reach `Deployed` and report a service URL, redeploys with `CHAT_SERVICE_ENDPOINT_URL`, waits again, reads the `post-deploy:` lines, retries the smoke check for cold starts and prints the application URLs under `next: paste these URLs into the Merchant Center registrations`.
 
 ## Check the result
 
 - `curl <service origin>/service/status` answers 200 with `status` `UP` and `authConfigured` true.
 - `node scripts/connect/connect.mjs logs` shows `post-deploy: OK`. A `post-deploy: FAILED <check>` line names the cause. The deployment status alone does not prove that the script succeeded, so read the log.
-- The service log's `auth configuration` line shows `audience: <origin>`. `audience: not configured` means Connect did not provide `CONNECT_SERVICE_URL` to the running service (U5 in the runbook) and every authenticated request answers 401.
+- The service log's `auth configuration` line shows `audience: <origin>`. `audience: not configured` means Connect did not provide `CONNECT_SERVICE_URL` to the running service and every authenticated request answers 401.
 
 ## Regions
 
@@ -104,8 +104,4 @@ A configuration change (`configure KEY=VALUE`) is a redeploy of the same Deploym
 
 ## Connect certification
 
-The README at the repository root is the connector README that a certification review reads: configuration table, required scopes, fail-open and fail-closed behaviour, and the poison-message statement. Certification itself is only needed to list a connector on the Connect marketplace; a private connector skips it.
-
-## What is verified and what is not
-
-The helper and the lifecycle checks are tested against fakes. Platform behaviours that need a real deployment (for example whether an empty optional key is absent or empty, whether a configuration redeploy rebuilds the frontends, and how long a deployment takes) are listed as open items in [section 11 of the runbook](./deployment-runbook.md#11-verified-behaviour) and are filled in by the first real deployment.
+Certification is only needed to list a connector on the Connect marketplace; a private connector skips it.

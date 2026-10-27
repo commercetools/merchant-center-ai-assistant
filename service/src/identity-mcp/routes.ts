@@ -26,7 +26,7 @@ import { getIdentityRuntime } from './runtime';
  * Mounted at `/service/managed-mcp-identity`. `/callback` is registered first and WITHOUT
  * `verifyMcSession`: the browser comes from the authorization server and carries no forward-to
  * JWT; the route authenticates through the single-use state it claims. Binding writes need
- * `requireAdmin` (administrator access, change D).
+ * `requireAdmin` (administrator access).
  */
 export const identityMcpRouter: Router = Router();
 
@@ -52,8 +52,8 @@ identityMcpRouter.post('/verify', authed, verifyIdentityMcp);
 identityMcpRouter.delete('/me', authed, disconnectIdentityMcpUser);
 
 /**
- * Adds the identity fields to the `/auth/session` bootstrap (change D registry): one binding
- * read and one token read, no decryption; `managedMcpConfigured` is the legacy alias.
+ * Adds the identity fields to the `/auth/session` bootstrap: one binding read and one token
+ * read, no decryption; `managedMcpConfigured` is the legacy alias.
  */
 registerBootstrapContributor('identity-mcp', async (req) => {
   const { stores } = getIdentityRuntime();

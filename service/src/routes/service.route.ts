@@ -30,9 +30,7 @@ serviceRouter.use('/system-prompt', verifyMcSession, systemPromptRouter);
 serviceRouter.use('/tool-call-logs', verifyMcSession, toolCallLogsRouter);
 serviceRouter.use('/feedback', feedbackRouter);
 serviceRouter.use('/backoffice', backofficeRouter);
-// L: private generated images, streamed to the session owner or an administrator.
+// Private generated images, streamed to the session owner or an administrator.
 serviceRouter.use('/files', verifyMcSession, createFilesRouter());
-serviceRouter.use('/mcp', verifyMcSession, mcpProvidersRouter); // J
-// I..M mount their routers here.
-serviceRouter.use('/managed-mcp-identity', identityMcpRouter); // I
-// J..M mount their routers here.
+serviceRouter.use('/mcp', verifyMcSession, mcpProvidersRouter);
+serviceRouter.use('/managed-mcp-identity', identityMcpRouter);

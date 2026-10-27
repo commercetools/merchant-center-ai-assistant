@@ -32,7 +32,7 @@ export function assertSafeId(id: string): string {
 export const stateKey = (state: string): string =>
   createHash('sha256').update(state, 'utf8').digest('hex');
 
-/** Container names (Appendix A of the design). */
+/** Container names. */
 export function containers(prefix: string = PREFIX) {
   return {
     settings: () => `${prefix}-settings`,

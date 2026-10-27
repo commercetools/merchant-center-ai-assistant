@@ -14,20 +14,25 @@ import {
 import { setToolMenuProvider } from '../../src/services/tool-menu.provider';
 import { installRegistryProviders } from '../../src/tool-sources/providers';
 import { createToolSourceRegistry } from '../../src/tool-sources/registry';
-import { asUser, makeGApp, resetGApp, type TestApp } from '../helpers/g-app';
+import {
+  asUser,
+  makeSessionApp,
+  resetSessionApp,
+  type TestApp,
+} from '../helpers/session-app';
 import { StubToolSource } from '../helpers/stub-tool-source';
 
 let t: TestApp;
 beforeEach(() => {
-  t = makeGApp();
+  t = makeSessionApp();
 });
 afterEach(() => {
-  resetGApp();
+  resetSessionApp();
   setToolMenuProvider({ listMenuGroups: async () => [] });
   setConnectedSourcesProvider({ list: async () => [] });
 });
 
-describe('registry providers (change G seams)', () => {
+describe('registry providers (tool menu and connected sources)', () => {
   it('GET /session/:id/tools returns the stub group with the session switches applied', async () => {
     const registry = createToolSourceRegistry();
     registry.register(

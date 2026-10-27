@@ -18,7 +18,7 @@ import {
 
 export interface CommercetoolsUIPromptOptions {
   /**
-   * True when the `nimbus` tool source (change K) contributed tools this turn. The model must
+   * True when the `nimbus` tool source contributed tools this turn. The model must
    * not be told about tools it does not have.
    */
   nimbusTools: boolean;

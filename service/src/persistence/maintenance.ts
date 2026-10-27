@@ -16,17 +16,8 @@ import type { IdentityTokenRecord } from './types/identity';
 import { isRecord } from './types/session';
 import { settingsFromValue } from './types/settings';
 
-/** aad of the project's OAuth client envelope in the settings object (see change I). */
+/** aad of the project's OAuth client envelope in the settings object. */
 export { IDENTITY_CLIENT_AAD };
-
-export const TEST_PREFIX = 'ai-assistant-it-';
-
-export interface PurgeOptions {
-  prefix: string;
-  concurrency?: number;
-  /** Allows prefixes other than `ai-assistant-it-...` (deletes real data). */
-  allowAnyPrefix?: boolean;
-}
 
 /** Lists every key of a container (offset paging, ordered by key). */
 async function allKeys(gw: ObjectGateway, container: string): Promise<string[]> {
@@ -41,55 +32,6 @@ async function allKeys(gw: ObjectGateway, container: string): Promise<string[]> 
     if (page.results.length < PAGE) break;
   }
   return keys;
-}
-
-async function emptyContainer(
-  gw: ObjectGateway,
-  container: string,
-  concurrency: number
-): Promise<number> {
-  let deleted = 0;
-  for (;;) {
-    const page = await gw.query(container, {
-      sort: { field: 'key', dir: 'asc' },
-      limit: PAGE,
-    });
-    if (page.results.length === 0) return deleted;
-    const done = await mapBounded(page.results, concurrency, (r) =>
-      gw.delete(container, r.key)
-    );
-    deleted += done.filter((d) => d !== null).length;
-  }
-}
-
-/**
- * Deletes everything the connector wrote under `prefix`. Per-session and per-feedback
- * containers are discovered from the sessions and feedback containers, so containers whose
- * parent object is already gone cannot be found (documented limitation).
- */
-export async function purgeContainers(
-  gw: ObjectGateway,
-  o: PurgeOptions
-): Promise<{ containers: number; objects: number }> {
-  if (!o.prefix || o.prefix.trim() === '') throw new Error('A prefix is required');
-  if (!o.allowAnyPrefix && !o.prefix.startsWith(TEST_PREFIX)) {
-    throw new Error(`Refusing to purge a prefix that does not start with ${TEST_PREFIX}`);
-  }
-  const concurrency = o.concurrency ?? 8;
-  const c = containers(o.prefix);
-  const names = [
-    ...(await allKeys(gw, c.sessions())).map((id) => c.messages(id)),
-    ...(await allKeys(gw, c.feedback())).map((id) => c.feedbackSnap(id)),
-    c.sessions(),
-    c.feedback(),
-    c.settings(),
-    c.tokens(),
-    c.states(),
-    c.suggestions(),
-  ];
-  let objects = 0;
-  for (const name of names) objects += await emptyContainer(gw, name, concurrency);
-  return { containers: names.length, objects };
 }
 
 export interface ReencryptResult {

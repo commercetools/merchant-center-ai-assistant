@@ -5,11 +5,12 @@
  */
 
 /**
- * Model layer (Gemini on Vertex AI). Contract used by specs G, H and L:
+ * Model layer (Gemini on Vertex AI). Contract used by the agents, the chat orchestrator and the
+ * tool sources:
  * - `getModel(tier)`: Vertex language model for `main` | `lite` | `image`
- *   (orchestrator and commercetools-facing agents use `main`; algolia, stripe, export and
- *   contentstack agents use `agent`; digest, suggestions and analyzer use `lite`;
- *   the image agent uses `image`).
+ *   (orchestrator, commercetools-facing agents, and algolia, stripe, export and contentstack
+ *   agents use `main`; digest, suggestions and analyzer use `lite`; the image agent uses
+ *   `image`).
  * - `getModelName(tier)`: the resolved model id.
  * - `getProviderOptions(tier)`: thinking configuration (`undefined` for `image`).
  * - `countTokens(text, tier?)`: token count, `0` when unknown.

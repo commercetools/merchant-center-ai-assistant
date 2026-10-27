@@ -7,9 +7,9 @@
 import { stateKey } from '../persistence/names';
 
 /**
- * The single place that decides the aad of every identity envelope. Change I encrypts and
- * decrypts with these, and E's `reencryptAll` rotates with the same values; a mismatch would
- * make a rotation fail every record, so nobody builds these strings by hand.
+ * The single place that decides the aad of every identity envelope. The identity MCP code
+ * encrypts and decrypts with these, and `reencryptAll` rotates with the same values; a
+ * mismatch would make a rotation fail every record, so nobody builds these strings by hand.
  */
 
 /** The project's OAuth client envelope in the settings object (one per project). */

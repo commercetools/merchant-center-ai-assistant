@@ -211,7 +211,7 @@ const connectedNameFor = async (
 };
 
 /**
- * The registry of tool sources (capability tool-source-registry, design D-H1/D-H2).
+ * The registry of tool sources.
  *
  * - `resolve` calls every source concurrently, bounds each by `timeoutMs`, treats a throw or a
  *   timeout as "contributes nothing" (warning naming the source) and merges deterministically

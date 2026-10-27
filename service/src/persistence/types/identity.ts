@@ -9,7 +9,7 @@ import { isRecord } from './session';
 
 /**
  * One object per user. The store never sees plaintext: `encryptedTokens` is produced by
- * `encryptJson('identity-tokens', tokens, userId)` in the identity change.
+ * `encryptJson('identity-tokens', tokens, userId)` in `identity-mcp/auth-provider.ts`.
  */
 export interface IdentityTokenRecord {
   userId: string;

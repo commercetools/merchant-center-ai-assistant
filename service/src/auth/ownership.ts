@@ -8,7 +8,7 @@ import type { RequestUser } from '../types/request.types';
 
 /**
  * A session is owned by exactly one verified user id. A session without an
- * owner (legacy data) belongs to nobody. Callers answer 404, not 403, for a
+ * owner belongs to nobody. Callers answer 404, not 403, for a
  * session that someone else owns, so its existence is not revealed.
  */
 export const isOwner = (

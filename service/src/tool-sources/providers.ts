@@ -12,7 +12,7 @@ import { setToolMenuProvider } from '../services/tool-menu.provider';
 import type { ToolSourceRegistry } from './registry';
 
 /**
- * Plugs the registry into change G's two seams:
+ * Plugs the registry into its two seams (`setToolMenuProvider`, `setConnectedSourcesProvider`):
  * - the tools menu (`GET /session/:id/tools`) lists the groups of every source;
  * - the suggestions prompt learns which integration sources are connected.
  *

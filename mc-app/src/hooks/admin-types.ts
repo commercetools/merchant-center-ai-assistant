@@ -4,8 +4,8 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-// Wire types of the admin surfaces (change Q): system prompt, MCP provider status,
-// backoffice and feedback review. They follow the service contracts of changes G, J and N.
+// Wire types of the admin surfaces: system prompt, MCP provider status, backoffice and
+// feedback review. They follow the service routes listed in docs/api.md.
 //
 // Identity: every row carries the gateway-verified `userId`. `userLabel` is a display-only
 // text the browser supplied; it is shown tagged "(unverified)" and never used to filter,

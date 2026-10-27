@@ -14,12 +14,12 @@ export const GCP_SETTING_KEYS = [
   'GCP_VERTEX_LOCATION',
   'GCP_BIGQUERY_DATASET_ID',
   'GCP_BIGQUERY_LOCATION',
-  'GCP_BUCKET_NAME',
   'GCP_BUCKET_LOCATION',
   'IMAGE_URL_MODE',
+  'GCP_BUCKET_NAME',
 ];
 
-/** Optional third-party provider keys (maintainer decision Q4). */
+/** Optional third-party provider keys. */
 export const PROVIDER_KEYS = [
   'CONTENTSTACK_API_KEY',
   'CONTENTSTACK_MANAGEMENT_TOKEN',
@@ -136,7 +136,7 @@ export function phase1Args(env) {
     `mc-app.ENTRY_POINT_URI_PATH=${env.MC_APP_ENTRY_POINT_URI_PATH}`,
     `composed-apps.CUSTOM_APPLICATION_ID=${env.COMPOSED_APPS_CUSTOM_APPLICATION_ID}`,
     `composed-apps.ENTRY_POINT_URI_PATH=${env.COMPOSED_APPS_ENTRY_POINT_URI_PATH}`,
-    // views have no entry point path (B PF5)
+    // views have no entry point path
     `mc-view-app.CUSTOM_VIEW_ID=${env.MC_VIEW_CUSTOM_VIEW_ID}`,
     // inheritAs.configuration: one global item (no application prefix) reaches every application
     `CLOUD_IDENTIFIER=${cloud}`,

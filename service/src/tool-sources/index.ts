@@ -41,8 +41,8 @@ export const registerToolSource = (...sources: ToolSource[]): void => {
   registry.register(...sources);
 };
 
-// H: the three always-on built-in sources, and image generation (enabled only while change L
-// has registered an ImageUploader).
+// The three always-on built-in sources, and image generation (enabled only while an
+// ImageUploader is registered).
 registerToolSource(
   entityLinkSource,
   visualizeSource,
@@ -50,21 +50,21 @@ registerToolSource(
   imageGenerationSource
 );
 
-// K: the embedded Nimbus design-system documentation tools.
+// The embedded Nimbus design-system documentation tools.
 registerToolSource(nimbusSource);
 
-// L: SQL analytics over offloaded tool results (tools are created per request).
+// SQL analytics over offloaded tool results (tools are created per request).
 registerToolSource(bigquerySource);
-registerToolSource(...thirdPartyToolSources); // J: Knowledge, Contentstack, Algolia, Stripe
-registerToolSource(commercetoolsToolSource); // I
-// M: composed pages (`create_composed_page`).
+registerToolSource(...thirdPartyToolSources); // Knowledge, Contentstack, Algolia, Stripe
+registerToolSource(commercetoolsToolSource);
+// Composed pages (`create_composed_page`).
 registerToolSource(composedPageSource);
 
 /*
  * Composition. A new tool source is one file plus one line here.
  *
- *   // registerToolSource(createCommercetoolsIdentitySource(...));         // I
- *   // registerToolSource(nimbusSource);                                   // K
- *   // registerToolSource(bigquerySource);                                 // L (+ setImageUploader)
- *   // registerToolSource(composedPageSource);                             // M
+ *   // registerToolSource(createCommercetoolsIdentitySource(...));
+ *   // registerToolSource(nimbusSource);
+ *   // registerToolSource(bigquerySource);                                 // (+ setImageUploader)
+ *   // registerToolSource(composedPageSource);
  */

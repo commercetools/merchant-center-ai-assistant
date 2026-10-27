@@ -135,7 +135,7 @@ describe('buildOrchestrator', () => {
     useMock();
     const { instructions, allTools } = await buildOrchestrator(
       ctxOf({
-        // The registry also holds the nimbus source (change K); keep it from spawning a child.
+        // The registry also holds the nimbus source; keep it from spawning a child.
         config: freshConfig({ NIMBUS_MCP_ENABLED: 'false' }),
       }),
       realRegistry

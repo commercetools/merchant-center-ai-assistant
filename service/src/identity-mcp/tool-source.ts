@@ -25,13 +25,13 @@ import type { IdentityToolSetDeps } from './toolset';
  * The `commercetools` ToolSource: the signed-in user's own Merchant Center permissions decide
  * which tools the Managed MCP Server (identity mode) exposes.
  *
- * `commercetools` (change I) and the documentation-lookup source (another change) are two independent
- * sources with separate menu groups; the orchestrators merge them (the custom-view
- * orchestrator selects exactly these two). Do not merge them here.
+ * `commercetools` and the documentation-lookup source are two independent sources with
+ * separate menu groups; the orchestrators merge them (the custom-view orchestrator selects
+ * exactly these two). Do not merge them here.
  *
- * The registry (change H) owns the 15 s timeout, failure isolation, the session's
- * `disabledTools`, Gemini schema normalisation and prompt gating; this source only answers
- * "how do I get this user's tools".
+ * The registry owns the 15 s timeout, failure isolation, the session's `disabledTools`, Gemini
+ * schema normalisation and prompt gating; this source only answers "how do I get this user's
+ * tools".
  */
 
 type Problem = 'reauth' | 'no-permitted';

@@ -16,7 +16,7 @@ import { initRequestContext } from '../../src/middleware/context.middleware';
 import { createFilesRouter } from '../../src/storage/files-route';
 import { setStorageForTests, storage } from '../../src/storage/ports';
 import { useGcpEnv } from '../helpers/gcp-env';
-import { fakeAuth, asUser } from '../helpers/g-app';
+import { fakeAuth, asUser } from '../helpers/session-app';
 import { FakeStorage } from '../helpers/storage-fake';
 
 const SESSION = '3f2b8c1e-aaaa-4bbb-8ccc-1234567890ab';

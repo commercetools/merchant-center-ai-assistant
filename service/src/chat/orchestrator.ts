@@ -81,7 +81,7 @@ export const createChatAgent = (params: {
 };
 
 /**
- * The default orchestrator (capability agent-orchestration).
+ * The default orchestrator.
  *
  * It is FLAT: it merges the tools of every contributing source and calls them directly, no
  * delegation to sub-agents. Instructions, in order: the preamble generated from the

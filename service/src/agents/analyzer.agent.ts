@@ -101,7 +101,7 @@ export const OFFLOAD_WITHOUT_ASKING_TOKENS = Math.pow(10, 5);
 export interface AnalyzeQueryParams {
   messages: ModelMessage[];
   /**
-   * `resultChars` is the serialized length of `result`, which the caller (change L's
+   * `resultChars` is the serialized length of `result`, which the caller (the
    * tool-result pipeline) has already computed; passing it avoids a second `JSON.stringify`.
    */
   toolCallParams: {
@@ -139,7 +139,7 @@ const generateWithLiteModel: NonNullable<
 
 /**
  * Decides whether a tool result has to be offloaded (aggregated) instead of being handed to
- * the next step. Used by the tool-result pipeline of change L.
+ * the next step. Used by the tool-result pipeline.
  *
  * 1. no usable history -> `false`, no model call;
  * 2. result larger than `OFFLOAD_WITHOUT_ASKING_TOKENS` -> `true`, no model call;

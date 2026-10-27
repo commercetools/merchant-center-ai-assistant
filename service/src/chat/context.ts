@@ -15,7 +15,7 @@ import { logger } from '../utils/logger.utils';
 import type { UrlReference } from '../utils/url-references';
 import { RequestBudget } from './request-budget';
 
-/** Default request locale (the same default as the legacy router). */
+/** Default request locale. */
 export const DEFAULT_LOCALE = 'en';
 
 export interface CreateToolContextParams {

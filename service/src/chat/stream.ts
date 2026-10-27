@@ -23,7 +23,7 @@ import {
 } from './constants';
 import type { RequestBudget } from './request-budget';
 
-/** Idle time after which a keep-alive part is written (design D-H5). */
+/** Idle time after which a keep-alive part is written. */
 export const KEEPALIVE_INTERVAL_MS = 20_000;
 
 /** SDK timeouts that apply in addition to the budget (never above the remaining budget). */
@@ -65,7 +65,8 @@ export interface CreateChatStreamParams {
   allTools: ToolSet;
   /**
    * Called once when the stream has ended. Never throws into the stream. When it returns a
-   * promise the stream close waits for it (keep it short: digest-before-close, TA-15).
+   * promise the stream close waits for it (keep it short: this is the digest-before-close
+   * fallback).
    */
   onFinish: (turn: ChatTurnResult) => void | Promise<void>;
   sessionId?: string;

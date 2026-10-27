@@ -5,7 +5,7 @@
  */
 
 import request from 'supertest';
-import { asUser, makeGApp, resetGApp } from '../helpers/g-app';
+import { asUser, makeSessionApp, resetSessionApp } from '../helpers/session-app';
 
 /**
  * The browser must never decide who is an administrator or who owns a session. Every value
@@ -20,11 +20,11 @@ const forged = {
   'x-admin-user-id': 'admin-1',
 };
 
-afterEach(resetGApp);
+afterEach(resetSessionApp);
 
 describe('forged identity grants nothing', () => {
   it('PUT /system-prompt and PUT /tool-call-logs stay 403 ADMIN_REQUIRED, nothing stored', async () => {
-    const { app, persistence } = makeGApp();
+    const { app, persistence } = makeSessionApp();
     const prompt = await request(app)
       .put(`/service/system-prompt?userEmail=${ADMIN_ADDRESS}&userId=admin-1`)
       .set(ATTACKER)
@@ -45,7 +45,7 @@ describe('forged identity grants nothing', () => {
   });
 
   it("another user's session is 404 even with the owner's address forged everywhere", async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const created = await request(app).post('/service/session').set(OWNER).send({ userLabel: 'owner@example.test' });
     const id = created.body.data.id as string;
     const res = await request(app)
@@ -56,7 +56,7 @@ describe('forged identity grants nothing', () => {
   });
 
   it('GET /session/all?userEmail=<someone else> lists only the caller\'s sessions', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     await request(app).post('/service/session').set(OWNER).send({});
     const mine = await request(app).post('/service/session').set(ATTACKER).send({});
     const res = await request(app)
@@ -68,7 +68,7 @@ describe('forged identity grants nothing', () => {
   });
 
   it('a forged userLabel in the create body is stored as text but owns nothing', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const res = await request(app)
       .post('/service/session')
       .set(ATTACKER)

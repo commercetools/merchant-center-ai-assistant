@@ -42,10 +42,9 @@ const STATE_COLOR = {
 /**
  * One step inside the disclosure: what it did, and the call it made.
  *
- * No duration. The design shows one per row, but nothing in the message parts records when
- * a tool started or finished - inventing a plausible number would be worse than the honest
- * omission, and the pill above already answers "how long did all this take" badly enough
- * by not claiming to.
+ * No duration: nothing in the message parts records when a tool started or finished -
+ * inventing a plausible number would be worse than the honest omission, and the pill above
+ * already answers "how long did all this take" badly enough by not claiming to.
  */
 export const ToolStepRow: React.FC<Props> = ({ step, showPayloads }) => {
   const motion = useMotion();

@@ -15,10 +15,10 @@ export type SaKeyResult =
   | { ok: false; reason: string };
 
 /**
- * Decodes the Base64 service-account JSON with change F's parser (closed list of reasons, no
- * input is ever echoed). The effective project is `configuredProjectId ?? key.project_id`; a
- * differing GCP_PROJECT_ID is a warning because the key's account may be granted access to
- * another project.
+ * Decodes the Base64 service-account JSON with `parseServiceAccountKey` (closed list of
+ * reasons, no input is ever echoed). The effective project is
+ * `configuredProjectId ?? key.project_id`; a differing GCP_PROJECT_ID is a warning because
+ * the key's account may be granted access to another project.
  */
 export function checkSaKey(base64: string, configuredProjectId?: string): SaKeyResult {
   try {

@@ -7,7 +7,7 @@
 export type BudgetPhase = 'normal' | 'wrapping-up' | 'expired';
 
 /**
- * The time budget of one chat turn (capability request-time-budget, design D-H5).
+ * The time budget of one chat turn.
  *
  * ```
  * T0 request start     soft = T0 + budget - reserve        hard = T0 + budget      Connect kills at 300 s

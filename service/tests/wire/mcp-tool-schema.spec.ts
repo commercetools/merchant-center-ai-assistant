@@ -316,7 +316,7 @@ describe('hoisting MCP tool schema refs into root $defs', () => {
   test('reports a reference it cannot hoist, so the caller can fall back', () => {
     // Nothing to resolve, so there is no target to move into `$defs`. Left alone here, this
     // would reach the provider and throw the non-recursive error that takes down every tool
-    // in the request - hence the flattening fallback in cache/mcp-tools.cache.ts.
+    // in the request - hence the flattening fallback in schema/normalize-tool-set.ts.
     const dangling = hoistRefsForGemini({
       type: 'object',
       properties: { broken: { $ref: '#/properties/missing' } },

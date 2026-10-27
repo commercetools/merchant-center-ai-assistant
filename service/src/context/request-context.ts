@@ -12,7 +12,7 @@ export interface RequestContext {
   requestId: string;
   correlationId: string;
   user?: RequestUser;
-  /** Typed by the change that owns sessions (E/N). */
+  /** The session of this request (untyped here). */
   session?: unknown;
   /** Memo of the settings read of this request (see SettingsService). */
   settings?: Promise<Settings>;

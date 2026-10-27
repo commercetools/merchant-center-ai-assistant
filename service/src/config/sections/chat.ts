@@ -17,7 +17,7 @@ export interface ChatConfig {
   /** Part of the budget kept for the wrap-up step (soft deadline = budget - reserve). */
   finalizeReserveMs: number;
   /**
-   * Fallback for a runtime that freezes CPU once the response has closed (design R-G1): the
+   * Fallback for a runtime that freezes CPU once the response has closed: the
    * turn digest then runs BEFORE the stream closes, for at most `DIGEST_BEFORE_CLOSE_CAP_MS`.
    * Off by default: the digest runs detached after the answer (the answer is never delayed).
    */
@@ -28,7 +28,7 @@ export interface ChatConfig {
 export const DIGEST_BEFORE_CLOSE_CAP_MS = 3_000;
 
 /**
- * The chat stream's time budget (change H, capability request-time-budget).
+ * The chat stream's time budget.
  * Connect times a service request out after 5 minutes
  * (https://docs.commercetools.com/connect/deployment-behavior-and-environments.md), so a
  * longer budget would be cut by the platform with a truncated stream.

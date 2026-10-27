@@ -19,11 +19,9 @@ const toolList = (contributing: ToolSource[]): string =>
 
 /**
  * The orchestrator's opening instructions, generated from the sources that actually
- * contributed tools this turn (design D-H3). It never names a source that did not contribute.
+ * contributed tools this turn. It never names a source that did not contribute.
  *
- * The legacy text told the model to "always delegate to a tool" and listed nine fixed tools
- * although the orchestrator is flat (it calls the concrete tools directly); that prose is
- * gone. The project system prompt and each source's own fragment are added after this text.
+ * The project system prompt and each source's own fragment are added after this text.
  */
 export const buildPreamble = (contributing: ToolSource[]): string => `
 You are an intelligent assistant for the commercetools Merchant Center. You answer the user's requests by calling the tools you have been given and then explaining the result clearly.

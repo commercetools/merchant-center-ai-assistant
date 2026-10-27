@@ -66,7 +66,7 @@ describe('parseComposedPage', () => {
   });
 });
 
-// The shared contract fixture is written by the service (change M); composed-apps cannot
+// The shared contract fixture is written by the service; composed-apps cannot
 // import the service module, so the stored shape is checked against its own copy of the
 // file (the service's drift test keeps the copies identical).
 describe('shared composed page fixture', () => {

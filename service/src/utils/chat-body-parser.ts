@@ -12,11 +12,11 @@ import { SERVICE_BASE_PATH } from '../constants/service-path';
  * JSON body limit of `POST /service/ai-chat/:sessionId/message/stream`.
  *
  * The body carries one user message, and a message can hold attached images as `data:` URLs
- * and annotation payloads, which exceed the 100 kb body-parser default (Q-impl-29: such a
- * message got 413). 10 MB is the same ceiling as the feedback upload: it was measured to pass
- * the Merchant Center gateway and it stays below the 14 MB request-body ceiling of the
- * platform. The limit is only applied after authentication (see below), and every other route
- * keeps the global 100 kb limit.
+ * and annotation payloads, which exceed the 100 kb body-parser default (such a message got
+ * 413). 10 MB is the same ceiling as the feedback upload: it was measured to pass the Merchant
+ * Center gateway and it stays below the 14 MB request-body ceiling of the platform. The limit
+ * is only applied after authentication (see below), and every other route keeps the global
+ * 100 kb limit.
  */
 export const CHAT_BODY_LIMIT = '10mb';
 

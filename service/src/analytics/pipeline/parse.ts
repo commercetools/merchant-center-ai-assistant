@@ -4,9 +4,8 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-// Ported unchanged in behaviour from the legacy `utils/bigquery.utils.ts`. The table-name
-// derivation (`toTableName`) strips READ/GET/... prefixes and RESULT/DATA/... suffixes on
-// purpose: tests pin it. Do not "improve" it.
+// The table-name derivation (`toTableName`) strips READ/GET/... prefixes and RESULT/DATA/...
+// suffixes on purpose: tests pin it. Do not "improve" it.
 
 export type TableData = Record<string, unknown>[];
 export type TablesInput = Record<string, TableData>;

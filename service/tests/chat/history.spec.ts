@@ -191,7 +191,7 @@ describe('loadHistory', () => {
     expect(JSON.stringify(persisted)).toContain('/files/s1/a.png');
   });
 
-  describe('generated images in earlier tool outputs (TA-19)', () => {
+  describe('generated images in earlier tool outputs', () => {
     const imageTurn = (n: number) => [
       textMessage(`u${n}`, 'user', `draw ${n}`),
       {

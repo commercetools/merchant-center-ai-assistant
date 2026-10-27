@@ -29,7 +29,7 @@ afterEach(() => {
   resetConfigurationForTests();
 });
 
-describe('change L composition', () => {
+describe('analytics composition', () => {
   it('the bigquery source is registered with the process-wide registry', () => {
     expect(registry.list().map((s) => s.name)).toContain('bigquery');
   });

@@ -19,7 +19,7 @@ afterEach(() => {
 
 const ctxWith = (env: NodeJS.ProcessEnv = {}) => {
   const ctx = makeToolContext({
-    // Keep K's nimbus source from spawning a real child.
+    // Keep the nimbus source from spawning a real child.
     config: freshConfig({ NIMBUS_MCP_ENABLED: 'false', ...env }),
   });
   contexts.push(ctx);

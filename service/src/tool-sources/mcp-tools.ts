@@ -11,13 +11,9 @@ import { describeMcpFailure } from './mcp-failure';
 import type { Log } from '../utils/log.types';
 
 /**
- * Best-effort MCP helpers for the third-party sources of change J (Knowledge, Algolia).
- *
- * Change H's task list names a `getMcpTools`/`getMcpPrompt` helper module but did not ship
- * one, so J carries a small port of the legacy `cache/mcp-tools.cache.ts` (cache,
- * handshake deadline, late-handshake-still-fills-the-cache, `null` instead of throwing).
+ * Best-effort MCP helpers for the Knowledge and Algolia sources: a cache, a handshake
+ * deadline, a late handshake that still fills the cache, and `null` instead of throwing.
  * Gemini schema normalisation is NOT done here: the registry normalises the merged set.
- * If another change adds a shared helper, point these two functions at it.
  */
 
 /** `'error'` is the secure default for any operator-supplied URL; `'follow'` only for fixed hosts. */
@@ -40,7 +36,7 @@ export type McpClientFactory = (config: {
 const defaultFactory: McpClientFactory = async ({ url, headers, redirect }) =>
   (await createMCPClient({
     transport: { type: 'http', url, headers, redirect },
-    // Both servers J talks to answer the dated protocol versions only: skip the
+    // Both servers these helpers talk to answer the dated protocol versions only: skip the
     // `server/discover` probe (a guaranteed wasted round trip).
     protocolVersionDiscovery: false,
   })) as unknown as McpClientLike;

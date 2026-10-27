@@ -6,7 +6,7 @@
 
 import type { MessageStore, SessionRecord } from '../../src/persistence';
 import type { RequestUser } from '../../src/types/request.types';
-import { makeGApp, resetGApp } from '../helpers/g-app';
+import { makeSessionApp, resetSessionApp } from '../helpers/session-app';
 
 /**
  * `GET /service/session/all` backs the Chats drawer, the empty state's "Pick up where you
@@ -27,10 +27,10 @@ const session = (id: string, extra: Partial<SessionRecord> = {}): SessionRecord 
   ...extra,
 });
 
-afterEach(resetGApp);
+afterEach(resetSessionApp);
 
 const setup = async (sessions: SessionRecord[]) => {
-  const t = makeGApp();
+  const t = makeSessionApp();
   for (const s of sessions) await t.persistence.sessions.create(s);
   const reads: string[] = [];
   const original: MessageStore['list'] = t.persistence.messages.list.bind(t.persistence.messages);

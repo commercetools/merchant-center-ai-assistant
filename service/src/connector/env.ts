@@ -62,7 +62,7 @@ const REQUIRED = [
 /**
  * Lifecycle scripts run before and outside the app: they validate only what they use and
  * name every missing variable. `env` is a parameter so tests never touch the real one.
- * (design D-U9: with readConfiguration(), the only code that reads the process environment.)
+ * Together with readConfiguration(), this is the only code that reads the process environment.
  */
 export function readLifecycleEnv(env: NodeJS.ProcessEnv = process.env): LifecycleEnv {
   const missing = REQUIRED.filter((key) => str(env, key) === undefined);

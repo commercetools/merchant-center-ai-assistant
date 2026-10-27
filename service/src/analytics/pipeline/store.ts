@@ -60,7 +60,7 @@ export const defaultStoreDeps: StoreDeps = {
   tableExists,
   createTable: createNewTable,
   insertRows,
-  // Ownership is checked by change G (`userId`); only the id takes part.
+  // Ownership is checked by `SessionService` (`userId`); only the id takes part.
   addTemporaryTable: (sessionId, userId, table) =>
     getServices().sessions.addTemporaryTable(
       sessionId,
@@ -91,8 +91,7 @@ export function capRows(rows: Row[]): { kept: Row[]; dropped: number } {
 /**
  * Writes the tool result into the session's BigQuery table (append when it exists) and
  * registers a NEW table on the session exactly once. Returns `undefined` when there is
- * nothing tabular to store. Only the first parsed table of a multi-table result is stored
- * (legacy parity).
+ * nothing tabular to store. Only the first parsed table of a multi-table result is stored.
  */
 export async function storeToolResultInBigQuery(
   input: StoreInput,

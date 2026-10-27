@@ -20,8 +20,7 @@ type Props = {
  * most common thing anyone does here, and in the rail this replaces it was a plain icon
  * indistinguishable from the four panels below it.
  *
- * The design asks for Material's `edit_square`, which Nimbus does not ship; `Edit` is the
- * closest thing in the set.
+ * Material's `edit_square` is not shipped by Nimbus; `Edit` is the closest thing in the set.
  */
 export const NewChatTile: React.FC<Props> = ({ onPress }) => {
   const motion = useMotion();

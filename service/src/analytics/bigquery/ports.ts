@@ -11,7 +11,7 @@ import { readConfiguration } from '../../config';
 /*
  * The slice of `@google-cloud/bigquery` this layer uses, as structural types. The real client
  * is cast at one place (`bq()`), tests pass a fake through `setBigQueryForTests`. Clients are
- * never built here: they come from change F (`getBigQueryClient`).
+ * never built here: they come from `getBigQueryClient`.
  */
 
 export interface TableMetadataPort {
@@ -77,7 +77,7 @@ export const setBigQueryForTests = (fake: BigQueryPort | undefined): void => {
   override = fake;
 };
 
-/** The BigQuery client of change F. Throws `GcpNotConfiguredError` without a key. */
+/** The BigQuery client (`getBigQueryClient`). Throws `GcpNotConfiguredError` without a key. */
 export const bq = (): BigQueryPort =>
   override ?? (getBigQueryClient() as unknown as BigQueryPort);
 

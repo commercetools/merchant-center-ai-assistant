@@ -22,9 +22,9 @@ import { requestUrlForLog } from './utils/log-url.utils';
 import { logger } from './utils/logger.utils';
 
 export function createApp(config: AppConfig): Express {
-  // The tool-source registry feeds the tools menu and the suggestions prompt (change G seams).
+  // The tool-source registry feeds the tools menu and the suggestions prompt.
   installRegistryProviders(registry);
-  // Image generation is on whenever Google Cloud is configured (change L).
+  // Image generation is on whenever Google Cloud is configured.
   installGcpImageUploader(config);
 
   const app = express();

@@ -14,7 +14,7 @@ export type BootstrapContributor = (
 const RESERVED_KEYS = new Set(['projectKey', 'userId', 'isAdmin']);
 const contributors = new Map<string, BootstrapContributor>();
 
-/** Later changes (G, I, ...) add fields to the bootstrap payload with this. */
+/** Other modules (for example the identity MCP routes) add fields to the bootstrap payload. */
 export function registerBootstrapContributor(
   name: string,
   fn: BootstrapContributor

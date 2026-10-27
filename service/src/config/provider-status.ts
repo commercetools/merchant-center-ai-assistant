@@ -29,7 +29,10 @@ export interface ProvidersConfig {
   warnings: string[];
 }
 
-/** Presence-only status for one provider (change J adds format validation). */
+/**
+ * Presence-only status for one provider (format validation is `evaluateProvider` in
+ * `mcp-providers/schemas.ts`).
+ */
 export function providerStatus(
   provider: ProviderName,
   required: Record<string, string | undefined>

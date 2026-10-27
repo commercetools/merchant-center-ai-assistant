@@ -168,7 +168,10 @@ export const useChatServiceConnector = () => {
     [request]
   );
 
-  /** Admin-only on the service (403 `ADMIN_REQUIRED` for others); only Q's settings call it. */
+  /**
+   * Admin-only on the service (403 `ADMIN_REQUIRED` for others); only the administrator
+   * settings call it.
+   */
   const setToolCallLogsConfig = useCallback(
     (mode: ToolCallLogsMode) =>
       request<SetToolCallLogsConfigResponse>('PUT', 'tool-call-logs', {

@@ -12,7 +12,7 @@ import type {
   IdentityTokenRecord,
 } from '../persistence';
 
-/** Domain names for E's persisted shapes (epoch milliseconds everywhere). */
+/** Domain names for the persisted shapes (epoch milliseconds everywhere). */
 export type IdentityBinding = IdentityMcpBindingRecord;
 export type IdentityMcpClient = IdentityMcpClientRecord;
 export type IdentityMcpDiscovery = IdentityMcpDiscoveryRecord;

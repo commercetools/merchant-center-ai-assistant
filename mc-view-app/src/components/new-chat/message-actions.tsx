@@ -5,7 +5,7 @@
  */
 
 // Derived from mc-app/src/components/new-chat/message-actions.tsx without the rating
-// buttons: the panel has no feedback feature (spec "Reduced chat surface").
+// buttons: the panel has no feedback feature.
 
 import React, { useCallback, useState } from 'react';
 import { ContentCopy, Refresh } from '@commercetools/nimbus-icons';

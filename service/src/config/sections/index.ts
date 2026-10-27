@@ -16,8 +16,9 @@ import { parseProviders } from './providers';
 import { parseServer } from './server';
 
 /**
- * One line per section. A new section = a new file + one line here
- * (and its keys in the env-key registry and connect.yaml).
+ * One line per section. A new section = a new file + one line here (and its keys in
+ * connect.yaml, service/.env.example and the two configuration tables, in README.md and
+ * docs/configuration.md).
  */
 export const SECTIONS = {
   server: parseServer,

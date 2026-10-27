@@ -7,23 +7,23 @@
 import request from 'supertest';
 import { runWithContext } from '../../src/context/request-context';
 import { MAX_SYSTEM_PROMPT_CHARS } from '../../src/services/settings.service';
-import { asUser, makeGApp, resetGApp } from '../helpers/g-app';
+import { asUser, makeSessionApp, resetSessionApp } from '../helpers/session-app';
 import { captureLogs } from '../helpers/log-capture';
 
 const ADMIN = asUser('admin-1', true);
 const MEMBER = asUser('member-1', false);
 
-afterEach(resetGApp);
+afterEach(resetSessionApp);
 
 describe('system prompt', () => {
   it('is empty when unset and visible to a member', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const res = await request(app).get('/service/system-prompt').set(MEMBER);
     expect(res.body).toEqual({ success: true, data: { systemPrompt: '' } });
   });
 
   it('an admin sets it and a member reads it back', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const put = await request(app).put('/service/system-prompt').set(ADMIN).send({ systemPrompt: 'Be brief.' });
     expect(put.status).toBe(200);
     expect(put.body.data).toMatchObject({ systemPrompt: 'Be brief.' });
@@ -32,7 +32,7 @@ describe('system prompt', () => {
   });
 
   it('a non-admin gets 403 ADMIN_REQUIRED and nothing is stored', async () => {
-    const { app, persistence } = makeGApp();
+    const { app, persistence } = makeSessionApp();
     const res = await request(app).put('/service/system-prompt').set(MEMBER).send({ systemPrompt: 'x' });
     expect(res.status).toBe(403);
     expect(res.body.code).toBe('ADMIN_REQUIRED');
@@ -41,7 +41,7 @@ describe('system prompt', () => {
   });
 
   it('rejects a non-string and an over-long prompt', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const bad = await request(app).put('/service/system-prompt').set(ADMIN).send({ systemPrompt: 5 });
     expect(bad.status).toBe(400);
     const long = await request(app)
@@ -57,7 +57,7 @@ describe('system prompt', () => {
   });
 
   it('writes an audit line without an e-mail address', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const capture = captureLogs();
     try {
       await request(app).put('/service/system-prompt').set(ADMIN).send({ systemPrompt: 'x' });
@@ -72,7 +72,7 @@ describe('system prompt', () => {
 
 describe('tool-call-logs', () => {
   it('defaults to all without writing', async () => {
-    const { app, mem } = makeGApp();
+    const { app, mem } = makeSessionApp();
     const before = (await mem.query('ai-assistant-settings', { filters: [], limit: 10 })).results.length;
     const res = await request(app).get('/service/tool-call-logs').set(MEMBER);
     expect(res.body.data).toEqual({ mode: 'all' });
@@ -82,7 +82,7 @@ describe('tool-call-logs', () => {
   });
 
   it('an admin sets a valid mode, an invalid mode is 400 listing the four', async () => {
-    const { app } = makeGApp();
+    const { app } = makeSessionApp();
     const ok = await request(app).put('/service/tool-call-logs').set(ADMIN).send({ mode: 'none' });
     expect(ok.status).toBe(200);
     expect(ok.body.data.mode).toBe('none');
@@ -93,7 +93,7 @@ describe('tool-call-logs', () => {
   });
 
   it('a non-admin mode write is 403 and the stored mode is unchanged', async () => {
-    const { app, persistence } = makeGApp();
+    const { app, persistence } = makeSessionApp();
     await request(app).put('/service/tool-call-logs').set(ADMIN).send({ mode: 'tools' });
     const res = await request(app).put('/service/tool-call-logs').set(MEMBER).send({ mode: 'none' });
     expect(res.status).toBe(403);
@@ -104,7 +104,7 @@ describe('tool-call-logs', () => {
 
 describe('settings object', () => {
   it('writing the prompt preserves identityMcp and the log mode', async () => {
-    const { app, persistence } = makeGApp();
+    const { app, persistence } = makeSessionApp();
     await persistence.settings.update((cur) => ({
       ...cur,
       toolCallLogs: 'thinking',
@@ -125,7 +125,7 @@ describe('settings object', () => {
   });
 
   it('two reads in one request context hit the store once', async () => {
-    const { services, persistence } = makeGApp();
+    const { services, persistence } = makeSessionApp();
     let reads = 0;
     const original = persistence.settings.get.bind(persistence.settings);
     persistence.settings.get = async () => {
@@ -141,7 +141,7 @@ describe('settings object', () => {
   });
 
   it('a write inside a request context refreshes the memo', async () => {
-    const { services } = makeGApp();
+    const { services } = makeSessionApp();
     await runWithContext({ requestId: 'r', correlationId: 'c' }, async () => {
       expect(await services.settings.getSystemPrompt()).toBe('');
       await services.settings.setSystemPrompt('new');

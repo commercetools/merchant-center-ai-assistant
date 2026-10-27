@@ -39,7 +39,10 @@ const iso = (ms: number | undefined): string | undefined =>
 export class BackofficeService {
   constructor(private readonly deps: BackofficeDeps) {}
 
-  /** The service-computed decision (the verified-user-id allowlist check of change D); nothing from the request is read. */
+  /**
+   * The service-computed decision (the verified-user-id allowlist check); nothing from the
+   * request is read.
+   */
   isAdmin(user: Pick<RequestUser, 'isAdmin'>): boolean {
     return user.isAdmin;
   }
@@ -77,7 +80,7 @@ export class BackofficeService {
     limit?: number;
     offset?: number;
     includeMessages?: boolean;
-    /** `lastModifiedAt`: most recently active first (TA-12); default `createdAt`. */
+    /** `lastModifiedAt`: most recently active first; default `createdAt`. */
     sortBy?: 'createdAt' | 'lastModifiedAt';
   }): Promise<{ items: BackofficeThread[]; pagination: Pagination }> {
     const limit = clamp(input.limit, 1, MAX_THREAD_PAGE, DEFAULT_THREAD_PAGE);

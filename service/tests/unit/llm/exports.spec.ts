@@ -6,7 +6,7 @@
 
 import * as llm from '../../../src/llm';
 
-describe('llm module contract (used by G, H, L)', () => {
+describe('llm module contract', () => {
   it('exports the documented functions', () => {
     for (const name of ['getModel', 'getModelName', 'getProviderOptions', 'countTokens']) {
       expect(typeof (llm as Record<string, unknown>)[name]).toBe('function');

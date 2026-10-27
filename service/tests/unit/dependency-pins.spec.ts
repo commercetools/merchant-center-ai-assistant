@@ -10,8 +10,7 @@ import { join } from 'node:path';
 /*
  * The lockfile is what `npm ci` installs in the Connect build and what the dependency
  * scanner reads, so these versions are pinned there. A routine `npm install` or a lockfile
- * regeneration that quietly goes back to an advisory's affected release fails here. See
- * "Dependency advisories" in docs/security.md.
+ * regeneration that quietly goes back to an advisory's affected release fails here.
  */
 
 type Lock = { packages: Record<string, { version?: string }> };

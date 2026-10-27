@@ -15,7 +15,7 @@ export class BucketUnavailableError extends Error {
   }
 }
 
-/** Fixed text (design DL-11): names the permission, the roles and the manual command. */
+/** Fixed text: names the permission, the roles and the manual command. */
 export const bucketMissingMessage = (): string => {
   const t = storageTarget();
   return (

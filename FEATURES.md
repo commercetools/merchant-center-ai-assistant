@@ -101,6 +101,5 @@ What is not implemented is listed in [docs/operations.md](./docs/operations.md) 
 ## Testing
 
 - Service: Jest unit, wire and contract tests with an in-memory persistence double, and a route-table contract test: `service/tests/contract/routes.spec.ts`.
-- Integration suites that skip without credentials: `service/jest.integration.config.cjs`.
 - Frontends: type check, lint, Jest and build per folder: `mc-app/package.json`, `composed-apps/package.json`, `mc-view-app/package.json`.
 - The deployment helper with Node tests: `scripts/tests/`.

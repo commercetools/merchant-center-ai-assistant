@@ -9,13 +9,10 @@
  *
  * Every duration, easing, distance and stagger step in the app comes from here. Components
  * import presets (see `presets.ts`), never these raw values, and never declare their own
- * `animationDuration` / `transition` strings. See `README.md` for the rule.
+ * `animationDuration` / `transition` strings.
  *
- * The numbers are the redesign's own motion tokens, copied from the design system's
- * `colors_and_type.css` (`--motion-fast|base|slow|easing|easing-in`) plus the entrance scale
- * the redesign document defines inline (`--anim`, `--anim-slow`, `--rise`). Nimbus itself
- * publishes no motion token scale - its recipes inline cubic-beziers - which is precisely why
- * this file exists rather than re-exporting something from the design system.
+ * Nimbus itself publishes no motion token scale - its recipes inline cubic-beziers - which is
+ * precisely why this file exists rather than re-exporting something from the design system.
  */
 export const MOTION = {
   duration: {
@@ -38,7 +35,7 @@ export const MOTION = {
     /** Accelerating curve for anything leaving the screen. */
     in: 'cubic-bezier(0.55, 0.05, 0.68, 0.53)',
   },
-  /** How far a rising element travels on entrance. Matches the design's `--rise`. */
+  /** How far a rising element travels on entrance. */
   rise: '14px',
   /** Delay added per item when a list or grid enters one item at a time. */
   staggerMs: 60,

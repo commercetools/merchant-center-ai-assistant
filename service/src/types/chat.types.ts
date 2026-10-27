@@ -42,12 +42,12 @@ export type AiSdkChatMessage = {
   id: string;
   role: 'user' | 'assistant' | 'system';
   parts: unknown[];
-  /** Only `metadata.usage` token counters are stored (change H). */
+  /** Only `metadata.usage` token counters are stored. */
   metadata?: Record<string, unknown>;
   timestamp?: number;
 };
 
-/** What one turn's digest produces; see the session-digest capability. */
+/** What one turn's digest produces; see `agents/session-digest.agent.ts`. */
 export type SessionDigest = {
   title: string;
   description: string;

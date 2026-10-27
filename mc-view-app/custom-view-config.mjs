@@ -50,7 +50,7 @@ const config = {
       'style-src': ['*.gstatic.com'],
     },
   },
-  // The 65 locators of the legacy view, verbatim and in the same order (do not reorder).
+  // The 65 locators of the view, in this order (do not reorder).
   locators: [
     'categories',
     'categories.category_details.external_search',

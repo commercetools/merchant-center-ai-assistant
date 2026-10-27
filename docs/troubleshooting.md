@@ -17,7 +17,7 @@ Command-level problems of the deployment helper are in section 10 of [deployment
 | Symptom | Likely cause | Fix | Where to look |
 | --- | --- | --- | --- |
 | The service exits at start with `Invalid environment configuration` | A required key is missing or malformed (`CTP_REGION`, `ENCRYPTION_KEY`, `GCP_SA_KEY_BASE64`, a number out of range, an unknown region) | Read the key list in the log line; values are never printed. Fix the Connect configuration and redeploy | Deployment log, first lines |
-| Every request answers 401 | `CONNECT_SERVICE_URL` is not available to the service (message `Service is not configured for authentication`; the `auth configuration` log line shows `audience: not configured`), or `CTP_REGION` does not match the project's Merchant Center cloud | Check that Connect provides `CONNECT_SERVICE_URL` to the running service (runbook U5); locally set it in `service/.env.local`; check the region | `MC session verification failed` with `expectedAudience`, `post-deploy: service origin ...` |
+| Every request answers 401 | `CONNECT_SERVICE_URL` is not available to the service (message `Service is not configured for authentication`; the `auth configuration` log line shows `audience: not configured`), or `CTP_REGION` does not match the project's Merchant Center cloud | Check that Connect provides `CONNECT_SERVICE_URL` to the running service; locally set it in `service/.env.local`; check the region | `MC session verification failed` with `expectedAudience`, `post-deploy: service origin ...` |
 | 401 `Merchant Center session is incomplete` | The token has no user ID or project key | Reload the Merchant Center to refresh the session | Service log |
 | 403 `This assistant is not available for the requested project` | The user is in another project than the one the connector is installed in | Use the project the connector is deployed for | Log line with the 403 |
 | The application shows "unavailable until your Merchant Center session is restored" | The bootstrap failed: expired session (401), wrong project (403) or the service is down | Use the retry action or sign in again; check `GET /service/status` | Network tab |
@@ -73,8 +73,3 @@ Command-level problems of the deployment helper are in section 10 of [deployment
 | A data source shows `Unsupported data source target` | The page's data source uses a target the pages application does not run (for example BigQuery) | Ask the assistant to rebuild the page with Merchant Center GraphQL sources | Data source error in the page |
 | Only the first 500 pages are listed | The pages application loads at most 500 pages (oldest first) and says so | Delete pages you no longer need | Notice in the list |
 | Generated page throws | The component code has an error | The error boundary shows the phase and the component; ask the assistant to fix it | Pages application |
-
-## Running live checks
-
-Checks against a deployed connector need a browser that is logged in to the Merchant Center. A redirect to the login page means that session expired: sign in again in that browser and repeat. The gateway cannot reach `localhost`,
-so a locally running service is only reachable from the Merchant Center through a public HTTPS address; use a deployed sandbox instead. The instructions for the automated browser checks are not part of this tree.

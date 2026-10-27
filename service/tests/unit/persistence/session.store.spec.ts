@@ -121,7 +121,7 @@ describe('SessionStore', () => {
     );
   });
 
-  it('listAll sorts by lastModifiedAt on request: the most recently written session first (TA-12)', async () => {
+  it('listAll sorts by lastModifiedAt on request: the most recently written session first', async () => {
     const { p } = makePersistence();
     await p.sessions.create(session('s1', 'u1'));
     await p.sessions.create(session('s2', 'u1'));

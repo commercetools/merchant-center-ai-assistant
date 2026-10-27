@@ -53,7 +53,7 @@ function statusOfAuthError(error: unknown): number | undefined {
 /**
  * countTokens on the cheap model proves credentials, project, location and model in one call.
  * 400/401/403/404 are facts we can prove wrong (failure); 5xx, network errors and timeouts are
- * transient (warning only), design D-U7. Messages never contain the token or the response body.
+ * transient (warning only). Messages never contain the token or the response body.
  */
 export async function checkVertex(input: VertexCheckInput): Promise<VertexResult> {
   const { projectId, location, model } = input;

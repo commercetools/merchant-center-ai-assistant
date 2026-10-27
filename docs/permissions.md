@@ -45,7 +45,6 @@ It is read-only text from the session bootstrap, shown to everyone because an op
 4. Wait until the instances have restarted and refresh the application. The administrator screens appear.
 
 To add or remove an administrator, run the same command with the new full list and redeploy; the change takes effect when the instances restart (an instance that is already running keeps the old list until then).
-Whether a comma-separated value stays one string through the Connect CLI is listed as an open platform check in [deployment-runbook.md](./deployment-runbook.md#11-verified-behaviour).
 
 ## What a non-administrator sees
 

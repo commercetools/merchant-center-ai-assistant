@@ -320,7 +320,7 @@ const classifyAuthorizationServer = (
       log(
         `AS_VERDICT client-credentials-as as=${authorizationServer} - the ` +
           'metadata does not reflect the configured authentication mode. Identity mode ' +
-          'cannot be reached by discovery; see the plan for the fallback'
+          'cannot be reached by discovery'
       )
     );
   } else {

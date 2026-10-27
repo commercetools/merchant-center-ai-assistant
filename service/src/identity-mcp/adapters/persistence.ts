@@ -14,8 +14,8 @@ import type {
 } from '../ports';
 
 /**
- * The only file that knows E's store method names. Binding and the OAuth client live in
- * `settings.identityMcp`; tokens and PKCE attempts in the token store.
+ * The only file that knows the persistence store method names. Binding and the OAuth client
+ * live in `settings.identityMcp`; tokens and PKCE attempts in the token store.
  */
 export function createIdentityStores(
   p: Pick<Persistence, 'settings' | 'tokens'>

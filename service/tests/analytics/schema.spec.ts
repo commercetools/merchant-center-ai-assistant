@@ -13,9 +13,8 @@ import {
 } from '../../src/analytics/pipeline/schema';
 
 /*
- * Ported from the legacy `table-schema-inline.spec.ts`: the offloaded table's columns must
- * reach the model without a second round trip (`Unrecognized name: orderNumber` was seen in
- * three production turns).
+ * The offloaded table's columns must reach the model without a second round trip
+ * (`Unrecognized name: orderNumber` was seen in three production turns).
  */
 const ORDER_ROWS = [
   { id: 'ord-1', orderNumber: '20d04fd3', totalPrice: 4999, createdAt: '2026-09-28T10:00:00Z', complete: true },

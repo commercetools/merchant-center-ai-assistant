@@ -18,7 +18,7 @@ import { parse } from '@babel/parser';
 /** The page schema version the tool emits. A future version is a new union member. */
 export const COMPOSED_PAGE_SCHEMA_VERSION = '5.0' as const;
 
-/** Custom Object container the frontends store pages in. Changes only by maintainer decision. */
+/** Custom Object container the frontends store pages in. Renaming it strands existing pages. */
 export const COMPOSED_PAGES_CONTAINER_KEY = 'shared-composed-pages';
 
 /** Scheme + host of every composed-page URI; the frontend detects pages by this prefix. */

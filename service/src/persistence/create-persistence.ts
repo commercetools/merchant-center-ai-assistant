@@ -31,7 +31,7 @@ export interface Persistence {
 
 export interface PersistenceOptions {
   gateway?: ObjectGateway;
-  /** Container prefix; integration tests use `ai-assistant-it-<random>`. */
+  /** Container name prefix (default `ai-assistant`). */
   containerPrefix?: string;
 }
 

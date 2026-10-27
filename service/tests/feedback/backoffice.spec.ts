@@ -95,7 +95,7 @@ describe('thread listing', () => {
     });
   });
 
-  it('applies the date filter (declared but never applied in legacy)', async () => {
+  it('applies the date filter', async () => {
     const h = makeFeedbackHarness();
     await seed(h, 's1', 'user-a', 0);
     await wait(20);

@@ -10,8 +10,8 @@ import { getStorageClient, requireBucketName } from '../gcp/clients';
 import { getGoogleCredentials } from '../gcp/credentials';
 
 /*
- * The slice of `@google-cloud/storage` this layer uses. The real client comes from change F
- * (`getStorageClient`) and is cast at one place (`storage()`); tests use `setStorageForTests`.
+ * The slice of `@google-cloud/storage` this layer uses. The real client comes from
+ * `getStorageClient` and is cast at one place (`storage()`); tests use `setStorageForTests`.
  * Forbidden everywhere in this layer: object ACLs, `makePublic`, signed URLs, `bucket.exists()`.
  */
 

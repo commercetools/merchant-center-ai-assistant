@@ -25,7 +25,7 @@ export interface TokenStore {
   /** `'stale-ignored'` when a strictly newer grant is already stored. */
   putTokens(r: IdentityTokenRecord): Promise<'written' | 'stale-ignored'>;
   deleteTokens(userId: string): Promise<void>;
-  /** Like `getTokens`, plus the object version for a later compare-and-delete (change I). */
+  /** Like `getTokens`, plus the object version for a later compare-and-delete. */
   getTokensWithVersion(
     userId: string
   ): Promise<{ record: IdentityTokenRecord; version: number } | null>;

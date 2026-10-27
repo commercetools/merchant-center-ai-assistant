@@ -7,8 +7,9 @@ and the configuration files of the Merchant Center applications.
 
 - Connect creates one API client from `inheritAs.apiClient.scopes` and injects `CTP_API_URL`, `CTP_AUTH_URL`, `CTP_CLIENT_ID`, `CTP_CLIENT_SECRET`, `CTP_PROJECT_KEY` and `CTP_SCOPE` into the `service`. They are never declared in `connect.yaml`.
   `CTP_REGION` is not injected; it is a declared, required key.
-- Connect injects `APPLICATION_URL` into the three Merchant Center applications. `CONNECT_SERVICE_URL` (the public URL of the service) exists only inside the `postDeploy` and `preUndeploy` scripts, not in the running service.
-  That is why `CHAT_SERVICE_ENDPOINT_URL` is set by a second deployment step ([deployment.md](./connect-deployment.md)).
+- Connect injects `APPLICATION_URL` into the three Merchant Center applications. `CONNECT_SERVICE_URL` (the public URL of the service) is available to the `postDeploy` and `preUndeploy` scripts, and the running service reads it and takes the audience of the Merchant Center token from its origin (`service/src/config/sections/auth.ts`).
+  That depends on Connect passing the variable to the running service: the `auth configuration` line of the service log shows `audience: <origin>` when it does, and `audience: not configured` when it does not.
+  The Merchant Center applications cannot learn the service URL by themselves, which is why `CHAT_SERVICE_ENDPOINT_URL` is set by a second deployment step ([deployment.md](./connect-deployment.md)).
 - The service reads its configuration once at start (`service/src/config/index.ts`). An invalid value makes it exit with `Invalid environment configuration:` and the list of keys; values are never printed.
 - Standard configuration is stored as plain text by Connect; secured configuration is encrypted and is never shown again. Third-party provider credentials are Connect configuration only: there is no screen or API to enter them.
 
@@ -20,8 +21,8 @@ and the configuration files of the Merchant Center applications.
 | --- | --- | --- | --- | --- |
 | `CTP_REGION` | standard | yes |  | commercetools API region of the project in API-host spelling (us-central1.gcp, europe-west1.gcp, australia-southeast1.gcp, eu-central-1.aws or us-east-2.aws). Connect does not inject it. No default, required |
 | `MC_APP_ENTRY_POINT_URI_PATH` | standard | no | `ai-assistant` | Entry point URI path of the chat Custom Application (used for logging and checks only) |
-| `ADMIN_USER_IDS` | standard | no |  | Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator. Default is empty, so nobody is an administrator |
 | `MCP_BINDING_OPEN_TO_ALL` | standard | no | `false` | Feature flag. When true every verified Merchant Center user, not only an administrator from ADMIN_USER_IDS, may create, change and delete the shared Managed MCP (identity) binding. Nothing else loses its administrator gate (true or false) |
+| `ADMIN_USER_IDS` | standard | no |  | Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator. Default is empty, so nobody is an administrator |
 | `GCP_PROJECT_ID` | standard | no |  | Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional. Default is the project_id inside the service-account key |
 | `GCP_VERTEX_LOCATION` | standard | no | `us-central1` | Vertex AI location (Gemini text and image models) |
 | `GEMINI_MODEL_NAME` | standard | no | `gemini-3.8-flash` | Main Gemini model id. Used by the chat orchestrator and by the Algolia, Stripe, export and Contentstack agents, all with a high thinking level |
@@ -30,9 +31,9 @@ and the configuration files of the Merchant Center applications.
 | `GEMINI_IMAGE_MODEL_NAME` | standard | no | `gemini-2.5-flash-image` | Gemini model id used for image generation (must be available in GCP_VERTEX_LOCATION) |
 | `GCP_BIGQUERY_DATASET_ID` | standard | no | `aiassistant` | BigQuery dataset for offloaded tool results (created on first use when the service account may create datasets) |
 | `GCP_BIGQUERY_LOCATION` | standard | no | `us-central1` | BigQuery location of the dataset (immutable once the dataset exists) |
-| `GCP_BUCKET_NAME` | standard | no |  | Cloud Storage bucket for generated images. Optional. Default is <gcp project id>-ai-assistant-images |
 | `GCP_BUCKET_LOCATION` | standard | no | `us-central1` | Location used when the bucket has to be created (us-central1, or a multi-region such as US) |
 | `IMAGE_URL_MODE` | standard | no | `private` | private (default) = bucket stays private and images are streamed through the service; public = objects are publicly readable and stored with the public bucket URL |
+| `GCP_BUCKET_NAME` | standard | no |  | Cloud Storage bucket for generated images. Optional. Default is <gcp project id>-ai-assistant-images |
 | `CHAT_REQUEST_BUDGET_MS` | standard | no | `270000` | Time one chat reply may take in milliseconds, at most 285000 (Connect times a request out after 5 minutes; the reply is finished gracefully when this is reached) |
 | `CHAT_FINALIZE_RESERVE_MS` | standard | no | `30000` | Part of the chat time budget reserved for the final summary step, in milliseconds (5000 up to half the budget) |
 | `CHAT_DIGEST_BEFORE_CLOSE` | standard | no | `false` | When true the chat stream waits up to 3 seconds for the session digest before closing (true or false) |
@@ -102,9 +103,9 @@ One service-account key serves Vertex AI (text and image models), BigQuery and C
 | `GCP_VERTEX_LOCATION` | `us-central1` | Vertex AI location of the Gemini models |
 | `GCP_BIGQUERY_DATASET_ID` | `aiassistant` | Dataset for offloaded tool results |
 | `GCP_BIGQUERY_LOCATION` | `us-central1` | Dataset location (cannot be changed once the dataset exists) |
-| `GCP_BUCKET_NAME` | `<project>-ai-assistant-images` | Private bucket for generated images |
 | `GCP_BUCKET_LOCATION` | `us-central1` | Location used when the bucket has to be created |
 | `IMAGE_URL_MODE` | `private` | `private` streams images through the service; `public` makes the bucket objects world-readable |
+| `GCP_BUCKET_NAME` | `<project>-ai-assistant-images` | Private bucket for generated images |
 
 Create the key value with `base64 < key.json | tr -d '\n'` and delete the local file afterwards. The parser accepts a key of at most 16 KiB (a real key is about 3 KB) and reports a fixed reason
 for an invalid one, for example `not valid base64` or `missing field "private_key"`, without echoing any value (`service/src/gcp/service-account.ts`).
@@ -160,7 +161,7 @@ an entry that the pinned toolkit does not provide switches nothing.
 
 | Tier | Key | Default | Used for |
 | --- | --- | --- | --- |
-| main | `GEMINI_MODEL_NAME` | `gemini-3.8-flash` | The chat orchestrator and the Algolia, Stripe, export and Contentstack agents, with a high thinking level. There is no separate agent model (`GEMINI_AGENT_MODEL_NAME` was removed and is ignored); token counting uses this model too |
+| main | `GEMINI_MODEL_NAME` | `gemini-3.8-flash` | The chat orchestrator and the Algolia, Stripe, export and Contentstack agents, with a high thinking level. There is no separate agent model; token counting uses this model too |
 | lite | `GEMINI_LITE_MODEL_NAME` | `gemini-3.5-flash-lite` | Session digests, suggestions, the result analyzer; thinking level from `GEMINI_LITE_THINKING_LEVEL` (`minimal`) |
 | image | `GEMINI_IMAGE_MODEL_NAME` | `gemini-2.5-flash-image` | Image generation; must exist in `GCP_VERTEX_LOCATION` |
 
@@ -181,7 +182,7 @@ model writes its closing answer. See [architecture.md](./architecture.md#request
 | `CLOUD_IDENTIFIER` | all applications (shared, `inheritAs.configuration`) | Connect configuration | Merchant Center API cloud (`gcp-us`, `gcp-eu`, `gcp-au`, `aws-us`, `aws-eu`) |
 | `CHAT_SERVICE_ENDPOINT_URL` | shared by all applications, used by `mc-app` and `mc-view-app` | Connect configuration | Service origin plus `/service`; set by the second deployment step |
 | `APPLICATION_URL` | all three | injected by Connect | Public URL of the deployed application |
-| `INITIAL_PROJECT_KEY`, `HOST_URI_PATH` | local `yarn start` only | your `.env` | Project and host page of the development server (the latter for the Custom View only) |
+| `INITIAL_PROJECT_KEY`, `HOST_URI_PATH` | local `yarn start` only | your `.env` (copy of `.env.example`, git-ignored) | Project and host page of the development server (the latter for the Custom View only) |
 
 The variables are substituted into `custom-application-config.mjs` and `custom-view-config.mjs` when the application is built. A production build fails with `Missing environment variable '<name>'` when one is unset.
 The browser never contacts the service directly, so the content security policy of each application allows only the Merchant Center origins:

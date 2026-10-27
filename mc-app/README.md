@@ -36,7 +36,7 @@ The content security policy allows `unsafe-eval` for the generated-page renderer
 ## Required scopes and permissions
 
 The application declares the OAuth scopes in `custom-application-config.mjs` (`view_key_value_documents` and `manage_key_value_documents` for composed pages, `view_mcp_servers` and `manage_mcp_servers` for the Managed MCP setup, and the commerce scopes that generated pages use).
-The generated list with the reason for each scope is in the [root README](../README.md#required-scopes). The only Merchant Center permissions are the default View and Manage pair of the application; they control access to the application, not administrator rights.
+The list with the reason for each scope is in the [root README](../README.md#required-scopes). The only Merchant Center permissions are the default View and Manage pair of the application; they control access to the application, not administrator rights.
 
 ## Run and test locally
 
@@ -48,7 +48,7 @@ yarn start                  # needs a Merchant Center login
 yarn typecheck && yarn lint && yarn test && yarn build
 ```
 
-`yarn build` needs the variables of `.env.example` exported or in `.env`. The gateway only reaches public https URLs, so a local development server talks to a deployed sandbox service, or to a local service over `http` when that service runs with `MC_AUTH_DISABLED=true` ([development.md](../docs/development.md#run-a-frontend)).
+`yarn build` needs the variables of `.env.example` exported or in `.env` (a git-ignored local copy of `.env.example`, made by the `cp` above). The gateway only reaches public https URLs, so a local development server talks to a deployed sandbox service, or to a local service over `http` when that service runs with `MC_AUTH_DISABLED=true` ([development.md](../docs/development.md#run-a-frontend)).
 `postinstall` generates the Nimbus type definitions and the Nimbus surface manifest (`yarn check:nimbus-surface` verifies that it is up to date; the service keeps a byte copy, checked by `npm run check:nimbus-surface` in `service/`).
 Some files are copied into the other frontends and must stay identical; change every copy ([architecture.md](../docs/architecture.md#applications)).
 

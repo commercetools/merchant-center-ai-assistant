@@ -40,7 +40,7 @@ export interface DryRunStatistics {
  * statement type must be SELECT and every referenced table must be registered on the calling
  * session. `sessionTables` are full `project.dataset.table` references.
  *
- * When a dry run does not report `referencedTables` (unverified, OQ-L1) a conservative
+ * When a dry run does not report `referencedTables` a conservative
  * identifier extractor stands in; if it cannot follow the SQL the query is rejected.
  */
 export function assertSelectOverSessionTables(

@@ -92,9 +92,9 @@ const inspectBucket = async (): Promise<string> => {
 };
 
 /**
- * Sequential readiness checks for the postDeploy script and the live smoke suite.
- * Never throws. A missing dataset or bucket is not a failure here: change L's
- * `checkGcpAnalytics()` reports and creates them.
+ * Sequential readiness checks for the postDeploy script.
+ * Never throws. A missing dataset or bucket is not a failure here: `checkGcpAnalytics()`
+ * reports and creates them.
  */
 export async function checkGcpReadiness(
   options: { deep?: boolean } = {}

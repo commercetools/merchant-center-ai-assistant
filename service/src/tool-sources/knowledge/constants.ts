@@ -4,8 +4,8 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-/** Source name = tools-menu group = key of `disabledTools`. Contract with change H's
- * custom-view orchestrator and the stored session switches: do not rename. */
+/** Source name = tools-menu group = key of `disabledTools`. Contract with the custom-view
+ * orchestrator and the stored session switches: do not rename. */
 export const KNOWLEDGE_SOURCE_NAME = 'commercetools-knowledge';
 
 /** Public, unauthenticated, fixed on purpose: never make this configurable. */

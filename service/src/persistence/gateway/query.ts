@@ -91,7 +91,7 @@ function valuePredicate(path: string, rhs: string): string {
  * Compiles the structured query to Custom Object query parameters. Strings and key lists
  * always travel as input variables (never inside the predicate text). Booleans and finite
  * numbers are validated and written inline, because the variable typing of numbers is not
- * documented (probe P-var-types decides whether that can change).
+ * documented.
  */
 export function compileQuery(q: ObjectQuery): CompiledQuery {
   validateQuery(q);

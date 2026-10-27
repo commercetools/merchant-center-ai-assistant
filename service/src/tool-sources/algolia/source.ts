@@ -27,8 +27,8 @@ const hostOf = (url: string): string => {
 
 /**
  * Remote Algolia MCP at the operator-configured URL (`ALGOLIA_MCP_URL`). The group is a
- * single switch (`all_tools`); change H's registry drops the whole source before any
- * handshake when the session switched it off.
+ * single switch (`all_tools`); the registry drops the whole source before any handshake when
+ * the session switched it off.
  */
 export const algoliaToolSource: ToolSource = {
   name: ALGOLIA_SOURCE_NAME,

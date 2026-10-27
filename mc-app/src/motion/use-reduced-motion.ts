@@ -16,8 +16,7 @@ const matches = (): boolean =>
 /**
  * Whether the user has asked the operating system to reduce motion.
  *
- * Every preset in this module collapses to "no animation" when this is true, which is also
- * how the design's `data-motion="subtle"` mode is honoured in the product: there is no
+ * Every preset in this module collapses to "no animation" when this is true. There is no
  * in-app motion toggle, so the OS preference is the single control.
  */
 export const useReducedMotion = (): boolean => {

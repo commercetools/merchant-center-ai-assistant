@@ -38,12 +38,11 @@ no poison-message or replay procedure.
 | `INITIAL_PROJECT_KEY` | dev only: project of the host page for `yarn start` | your `.env` |
 | `HOST_URI_PATH` | dev only: host page path for `yarn start` | your `.env` |
 
-`.env.example` lists them with placeholders. Never commit a `.env`.
+`.env.example` lists them with placeholders; `cp .env.example .env` makes the git-ignored local copy. Never commit a `.env`.
 
 ## Locators
 
-The view is registered for exactly 65 locators (see `custom-view-config.mjs`, in the same order as the
-previous version), grouped by area:
+The view is registered for exactly 65 locators (see `custom-view-config.mjs`), grouped by area:
 
 - categories: 5 (list, external search, general, products, manage storefront order)
 - customers: 17 (list; business unit add/addresses/associates/details; customer addresses and details; order detail)
@@ -55,7 +54,7 @@ previous version), grouped by area:
 - standalone prices: 3 (list, add, details)
 
 If `mc-scripts build` ever rejects a locator, remove it only after checking the Merchant Center
-documentation and record it in the change's design risks.
+documentation.
 
 ## Scopes
 
@@ -105,7 +104,7 @@ Quality gates: `yarn typecheck && yarn lint && yarn test && yarn build` (Node 22
 
 ## Derived from mc-app
 
-The chat surface is copied from `mc-app/src/components/new-chat` at commit `a62e60e` and pruned.
+The chat surface is copied from `mc-app/src/components/new-chat` and pruned.
 
 Copied unchanged from `mc-app` and kept identical to it:
 `utils/forward-to.ts`, `utils/material-icons.ts`, `types/chart.ts`, `hooks/use-service-image.ts`,

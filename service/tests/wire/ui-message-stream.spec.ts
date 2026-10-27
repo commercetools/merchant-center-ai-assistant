@@ -24,7 +24,7 @@ import { textTurn, toolCallTurn } from '../helpers/mock-model';
  * happens to populate the new shape.
  *
  * Keep this list in sync with the OLDEST `ai` version used by `mc-app` and `mc-view-app`
- * (spec O pins both to one version). Widen it only once every client can parse the new type.
+ * (both apps pin one version). Widen it only once every client can parse the new type.
  */
 const CLIENT_ACCEPTED_CHUNK_TYPES = new Set([
   'text-start',

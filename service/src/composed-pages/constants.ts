@@ -4,16 +4,16 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-/** Tool name; listed in H's STORABLE_TOOLS, so it MUST NOT change. */
+/** Tool name; listed in the storage filter's `STORABLE_TOOLS`, so it MUST NOT change. */
 export const CREATE_COMPOSED_PAGE_TOOL = 'create_composed_page';
 
-/** Owned by change L; referenced by name only. */
+/** Owned by the BigQuery tool source; referenced by name only. */
 export const QUERY_AGGREGATED_DATA_TOOL = 'query_aggregated_data';
 
-/** Tool source name (H's agent key). */
+/** Tool source name (the agent key). */
 export const COMPOSED_PAGE_SOURCE_NAME = 'commercetoolsUI';
 
-/** The Nimbus documentation tools (change K) the prompt may mention. */
+/** The Nimbus documentation tools the prompt may mention. */
 export const NIMBUS_LOOKUP_TOOLS = {
   listComponents: 'list_components',
   getComponents: 'get_components',

@@ -106,7 +106,7 @@ const startTurnDigest = (
 };
 
 /**
- * Fallback for a runtime that freezes CPU after the response closed (R-G1, TA-15): the same
+ * Fallback for a runtime that freezes CPU after the response closed: the same
  * digest, but the returned promise resolves when it is done OR after `capMs`, whichever
  * comes first, so the stream close waits at most `capMs`. The digest is NOT cancelled at the
  * cap: it keeps running and applies its result if the process is still alive. Never rejects.

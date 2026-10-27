@@ -4,7 +4,7 @@
  * Freely available, AS IS and UNSUPPORTED. See LICENSE.
  */
 
-// Connect region -> Merchant Center cloud identifier (design E9). One table, one test.
+// Connect region -> Merchant Center cloud identifier. One table, one test.
 export const CLOUD_IDENTIFIER_BY_REGION = {
   'us-central1.gcp': 'gcp-us',
   'europe-west1.gcp': 'gcp-eu',
@@ -25,7 +25,7 @@ export function cloudIdentifierFor(region) {
   return id;
 }
 
-/** The published docs list only the GCP regions for `--supported-regions` (design E1). */
+/** The published docs list only the GCP regions for `--supported-regions`. */
 export function isGcpRegion(region) {
   return region.endsWith('.gcp');
 }

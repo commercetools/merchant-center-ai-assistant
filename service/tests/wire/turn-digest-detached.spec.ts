@@ -101,7 +101,7 @@ describe('runTurnDigest is detached from the stream', () => {
   });
 });
 
-describe('runTurnDigestBeforeClose (R-G1 fallback, 3 s cap)', () => {
+describe('runTurnDigestBeforeClose (fallback, 3 s cap)', () => {
   test('resolves as soon as a fast digest is applied', async () => {
     const applied: string[] = [];
     await runTurnDigestBeforeClose(

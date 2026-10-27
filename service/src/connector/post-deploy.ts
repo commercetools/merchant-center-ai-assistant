@@ -28,12 +28,12 @@ export interface PostDeployDeps {
     env: LifecycleEnv;
   }) => Promise<VertexResult>;
   runProbe: (env: LifecycleEnv) => Promise<ProbeResult>;
-  /** Change F's deep readiness (token, Vertex, BigQuery dry run, bucket). Undefined = not available. */
+  /** Deep readiness (token, Vertex, BigQuery dry run, bucket). Undefined = not available. */
   gcpReadiness: () => Promise<ReadinessReport | undefined>;
   /**
-   * Change L's `checkGcpAnalytics()`: creates the BigQuery dataset and the image bucket when
-   * they are missing and the service account may, proves probe writes, checks image
-   * visibility. Undefined = not available (configuration not readable here).
+   * `checkGcpAnalytics()`: creates the BigQuery dataset and the image bucket when they are
+   * missing and the service account may, proves probe writes, checks image visibility.
+   * Undefined = not available (configuration not readable here).
    */
   gcpAnalytics: () => Promise<GcpAnalyticsReport | undefined>;
 }
@@ -115,7 +115,7 @@ async function reportGcpAnalytics(deps: PostDeployDeps, log: (line: string) => v
  * The checks run in a fixed order; a failed check never stops the later independent ones, so one
  * log shows everything that is wrong. `post-deploy: FAILED <check>` lines are what the
  * `finalize` command greps for, because a failing postDeploy does not reliably fail the
- * deployment (design D-U7 / E7). Returns the exit code; never throws, never exits the process.
+ * deployment. Returns the exit code; never throws, never exits the process.
  */
 export async function run(deps: PostDeployDeps): Promise<number> {
   const { log } = deps;
@@ -178,8 +178,8 @@ export async function run(deps: PostDeployDeps): Promise<number> {
 
 async function defaultGcpReadiness(): Promise<ReadinessReport | undefined> {
   try {
-    // readConfiguration() throws when the lifecycle environment lacks keys the app needs
-    // (unverified platform behaviour U5): skip instead of reporting a misleading failure.
+    // readConfiguration() throws when the lifecycle environment lacks keys the app needs:
+    // skip instead of reporting a misleading failure.
     const { readConfiguration } = await import('../config');
     readConfiguration();
     const { checkGcpReadiness } = await import('../gcp/readiness');

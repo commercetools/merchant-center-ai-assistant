@@ -16,11 +16,9 @@ import {
 } from '../../src/services/registry';
 
 /**
- * The published route table (openspec change G, capability rest-api-contract, rows 1-25 and
- * 28, plus rows 29 and 30 for the liveness alias of change C and the Nimbus readiness route of
- * change K, and rows 31 and 32 for reattaching to and stopping a running chat turn). Rows 26
- * and 27 (changes I and J) are matched by prefix. Every change has landed, so every row must
- * be mounted.
+ * The published route table (docs/api.md), including the liveness alias, the Nimbus readiness
+ * route and the routes that reattach to and stop a running chat turn. The managed MCP identity
+ * and MCP provider routes are matched by prefix. Every row must be mounted.
  */
 type Row = { n: number; method: string; path: string };
 
@@ -57,7 +55,7 @@ const TABLE: Row[] = [
   { n: 32, method: 'DELETE', path: '/service/ai-chat/:sessionId/message/stream' },
 ];
 
-/** Rows 26 and 27 (changes I and J) are matched by prefix. */
+/** The managed MCP identity and MCP provider routes are matched by prefix. */
 const PREFIXES = ['/service/managed-mcp-identity', '/service/mcp'];
 
 type Layer = {
@@ -129,8 +127,8 @@ describe('route table contract', () => {
   });
 });
 
-describe('removed legacy routes', () => {
-  it.each(['/service/g' + 'ecx/config/anything', '/service/mcp-legacy/anything'])(
+describe('unknown routes under the service prefix', () => {
+  it.each(['/service/unknown/config/anything', '/service/unknown/anything'])(
     '%s answers the standard 404 envelope',
     async (path) => {
       const res = await request(build()).get(path).set('x-dev-user-id', 'u1');
@@ -141,7 +139,7 @@ describe('removed legacy routes', () => {
   );
 });
 
-describe('authentication on every G route', () => {
+describe('authentication on every session, settings, suggestions, files and chat route', () => {
   it.each([
     ['GET', '/service/session/all'],
     ['POST', '/service/session'],

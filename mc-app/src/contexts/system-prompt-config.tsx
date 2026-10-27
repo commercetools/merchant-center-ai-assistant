@@ -155,8 +155,8 @@ export const SystemPromptConfigProvider: React.FC<
    * These settings used to load from a mount effect, which meant every page load fired
    * the request whether or not anyone opened the panel that reads it - putting it in the
    * same burst as the session and message reads and making all of them slower (the
-   * requests contend server-side; see docs/app-load-latency.md). Nothing here is on the
-   * first-paint path, so nothing here should be fetched before it is asked for.
+   * requests contend server-side). Nothing here is on the first-paint path, so nothing
+   * here should be fetched before it is asked for.
    *
    * Idempotent: repeated calls after the first are no-ops, so an `isOpen` effect can call
    * it on every open. Use `loadConfig` directly to force a refresh.

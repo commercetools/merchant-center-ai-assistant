@@ -13,38 +13,11 @@ import {
 import { KeyRing } from '../../../src/crypto/keys';
 import {
   IDENTITY_CLIENT_AAD,
-  purgeContainers,
   reencryptAll,
 } from '../../../src/persistence/maintenance';
 import { createPersistence } from '../../../src/persistence';
 import { MemoryObjectGateway } from '../../../src/persistence/gateway/memory.gateway';
 import { freshConfig } from '../../helpers/env';
-import { session } from '../../helpers/persistence';
-
-describe('purgeContainers', () => {
-  it('removes everything under a test prefix and nothing else', async () => {
-    const gw = new MemoryObjectGateway();
-    const prefix = 'ai-assistant-it-abc';
-    const test = createPersistence(freshConfig(), { gateway: gw, containerPrefix: prefix });
-    const real = createPersistence(freshConfig(), { gateway: gw });
-    await test.sessions.create(session('s1', 'u'));
-    await test.messages.put('s1', [{ id: 'm', role: 'user', parts: [] }]);
-    await test.settings.update((s) => ({ ...s, systemPrompt: 'x' }));
-    await real.sessions.create(session('keep', 'u'));
-    const r = await purgeContainers(gw, { prefix });
-    expect(r.objects).toBe(3);
-    expect(gw.containerNames()).toEqual(['ai-assistant-sessions']);
-  });
-
-  it('refuses an empty prefix and a non-test prefix without the override', async () => {
-    const gw = new MemoryObjectGateway();
-    await expect(purgeContainers(gw, { prefix: '' })).rejects.toThrow(/prefix/);
-    await expect(purgeContainers(gw, { prefix: 'ai-assistant' })).rejects.toThrow(/Refusing/);
-    await expect(
-      purgeContainers(gw, { prefix: 'ai-assistant', allowAnyPrefix: true })
-    ).resolves.toBeDefined();
-  });
-});
 
 describe('reencryptAll', () => {
   const k1 = randomBytes(32);

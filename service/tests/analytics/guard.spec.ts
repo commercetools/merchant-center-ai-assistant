@@ -129,7 +129,7 @@ describe('caps on the real job', () => {
   });
 });
 
-describe('fallback extractor when a dry run omits referencedTables (OQ-L1)', () => {
+describe('fallback extractor when a dry run omits referencedTables', () => {
   const noRefs = (type = 'SELECT') => {
     bq.script = { statementType: type, referencedTables: undefined, rows: [{ ok: 1 }] };
   };

@@ -15,8 +15,8 @@ export interface StoredMessage {
   parts: unknown[];
   timestamp: number;
   /**
-   * Message metadata. Change H stores only `{ usage: { inputTokens, outputTokens,
-   * totalTokens } }` (token counters of the turn); absent for messages without it.
+   * Message metadata. Only `{ usage: { inputTokens, outputTokens, totalTokens } }` (token
+   * counters of the turn) is stored; absent for messages without it.
    */
   metadata?: Record<string, unknown>;
 }

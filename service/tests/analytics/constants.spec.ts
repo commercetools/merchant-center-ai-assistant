@@ -8,7 +8,7 @@ import { describe, expect, it } from '@jest/globals';
 import * as a from '../../src/analytics/constants';
 import * as s from '../../src/storage/constants';
 
-describe('spec-normative constants', () => {
+describe('pinned constants', () => {
   it('analytics caps', () => {
     expect(a.OFFLOAD_MAX_ROWS).toBe(20_000);
     expect(a.OFFLOAD_MAX_BYTES).toBe(20 * 1024 * 1024);

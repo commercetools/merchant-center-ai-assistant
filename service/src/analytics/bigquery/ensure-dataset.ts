@@ -17,7 +17,7 @@ export class DatasetUnavailableError extends Error {
 
 let pending: Promise<void> | undefined;
 
-/** Fixed message (design DL-11): never contains a raw Google error. */
+/** Fixed message: never contains a raw Google error. */
 export const datasetMissingMessage = (): string => {
   const t = bigQueryTarget();
   return (

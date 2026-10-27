@@ -9,12 +9,12 @@ import { VISUALIZE_DATA_TOOL } from '../tools/visualize.tool';
 
 export { ANNOTATIONS_PART_TYPE } from './annotation-part';
 
-/** Stored messages handed to the model per turn (design D-H9). */
+/** Stored messages handed to the model per turn. */
 export const CHAT_HISTORY_MESSAGES = 20;
 
 /**
  * Window of the aggregation analyzer. A DIFFERENT window from the chat history above: do not
- * confuse the two (legacy `MESSAGE_HISTORY_CUTOFF`).
+ * confuse the two.
  */
 export const ANALYZER_HISTORY_MESSAGES = 10;
 
@@ -22,8 +22,8 @@ export const ANALYZER_HISTORY_MESSAGES = 10;
 export const CHAT_MAX_STEPS = 50;
 
 /**
- * Name of change M's tool. Hard-coded here (design D-H10) so the storage filter keeps its
- * terminal output; M MUST keep this tool name.
+ * Name of the composed-page tool. Hard-coded here so the storage filter keeps its terminal
+ * output; the tool MUST keep this name.
  */
 export const CREATE_COMPOSED_PAGE_TOOL = 'create_composed_page';
 
@@ -36,7 +36,7 @@ export const STORABLE_TOOLS: readonly string[] = [
 
 /**
  * Subagent tools: their output is a UIMessage with nested parts that need special storage
- * handling. Only `imageGeneration` is one today (design D-H10).
+ * handling. Only `imageGeneration` is one today.
  */
 export const SUBAGENT_TOOL_NAMES: readonly string[] = ['imageGeneration'];
 

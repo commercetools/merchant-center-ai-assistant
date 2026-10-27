@@ -93,7 +93,7 @@ describe('the bigquery ToolSource', () => {
     });
   });
 
-  it('does not collide with another source in the registry (M and K must not re-provide the tool)', async () => {
+  it('does not collide with another source in the registry (the composed-pages and Nimbus sources must not re-provide the tool)', async () => {
     const registry = createToolSourceRegistry();
     const ctx = makeToolContext({ config: freshConfig({ GCP_SA_KEY_BASE64: fakeKeyBase64() }) });
     registry.register(bigquerySource, new StubToolSource({ name: 'other', tools: {} }));

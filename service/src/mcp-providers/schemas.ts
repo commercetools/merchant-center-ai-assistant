@@ -88,9 +88,9 @@ export interface ProviderEvaluation {
 }
 
 /**
- * The single enablement rule (spec mcp-provider-configs): enabled iff every required key
- * is set AND every set key is valid. Used by the config section (startup) and by the
- * post-deploy report so both always agree.
+ * The single enablement rule: enabled iff every required key is set AND every set key is
+ * valid. Used by the config section (startup) and by the post-deploy report so both always
+ * agree.
  *
  * `configured` = every required key is set; `missingKeys` = required keys that are unset
  * or invalid, plus invalid optional keys (names only).

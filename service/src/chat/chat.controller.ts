@@ -64,7 +64,7 @@ const feedTurnBuffer = async (
 };
 
 /**
- * `POST /service/ai-chat/:sessionId/message/stream` (row 19 of the REST contract).
+ * `POST /service/ai-chat/:sessionId/message/stream` (see docs/api.md).
  *
  * Order: validate -> session (loaded by `loadSession`, 404 when not the caller's) -> budget
  * (started by `startBudget`) -> fire-and-forget save of the user message -> history window ->
@@ -132,10 +132,10 @@ export const createSendAiChatMessage =
         sessionId,
         onFinish: ({ messages, timeLimit }) => {
           // Persist what the turn produced; ids that are already stored are skipped.
-          // Known and intended (TA-20): when the incoming message is an ASSISTANT message
+          // Known and intended: when the incoming message is an ASSISTANT message
           // (the browser auto-sent after a client-side tool result) the SDK continues that
           // message under its stored id, so the added parts are not persisted. The product
-          // has no client-side tools (change P design D-P5 removed `sendAutomaticallyWhen`),
+          // has no client-side tools (the chat apps do not use `sendAutomaticallyWhen`),
           // so the case does not occur; re-open this if a browser-answered tool is added.
           void services.messages
             .appendMissing(sessionId, processMessagesForStorage(messages))
@@ -150,7 +150,7 @@ export const createSendAiChatMessage =
             locale: ctx.locale,
             messages,
           };
-          // Fallback (R-G1): a runtime that freezes CPU once the response closed never
+          // Fallback: a runtime that freezes CPU once the response closed never
           // finishes a detached digest, so wait for it here, at most 3 s. Not when the time
           // budget ran out: there is no time left to wait.
           const before =

@@ -13,7 +13,7 @@ import { fail } from '../utils/api-response';
 /**
  * Loads `:sessionId` once and answers 404 when it does not exist or is not the caller's
  * (ownership is by the verified user id only; a foreign id and a missing id look the same).
- * The session is then available as `res.locals.session`. Also used on the stream route (H).
+ * The session is then available as `res.locals.session`. Also used on the stream route.
  */
 export const loadSession: RequestHandler = async (req, res, next) => {
   try {
