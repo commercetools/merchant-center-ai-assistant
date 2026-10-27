@@ -1,0 +1,102 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 commercetools GmbH and the commercetools-labs contributors
+ * Freely available, AS IS and UNSUPPORTED. See LICENSE.
+ */
+
+import { randomBytes } from 'node:crypto';
+import { decryptJson, encryptJson } from '../../../src/crypto/envelope';
+import {
+  identityTokensAad,
+  identityVerifierAad,
+} from '../../../src/crypto/aad';
+import { KeyRing } from '../../../src/crypto/keys';
+import {
+  IDENTITY_CLIENT_AAD,
+  reencryptAll,
+} from '../../../src/persistence/maintenance';
+import { createPersistence } from '../../../src/persistence';
+import { MemoryObjectGateway } from '../../../src/persistence/gateway/memory.gateway';
+import { freshConfig } from '../../helpers/env';
+
+describe('reencryptAll', () => {
+  const k1 = randomBytes(32);
+  const k2 = randomBytes(32);
+  const old: KeyRing = { primary: k1, previous: [] };
+  const rotated: KeyRing = { primary: k2, previous: [k1] };
+
+  async function seed(gw: MemoryObjectGateway) {
+    const p = createPersistence(freshConfig(), { gateway: gw });
+    await p.tokens.putTokens({
+      userId: 'u1',
+      serverKey: 'sk',
+      encryptedTokens: encryptJson('identity-tokens', { access_token: 'AT' }, identityTokensAad('u1'), old),
+      hasRefreshToken: true,
+      issuedAt: 1,
+      updatedAt: 1,
+    });
+    await p.tokens.createAuthState({
+      state: 'st',
+      userId: 'u1',
+      encryptedVerifier: encryptJson('identity-verifier', 'ver', identityVerifierAad('st'), old),
+      redirectUri: 'https://x.example.test',
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 100000,
+    });
+    await p.settings.update((s) => ({
+      ...s,
+      identityMcp: {
+        serverKey: 'sk',
+        url: 'https://mcp.example.test',
+        majorVersion: '1',
+        authenticationMode: 'CommercetoolsIdentity',
+        connectedAt: 1,
+        client: {
+          encryptedClient: encryptJson('identity-client', { client_id: 'c' }, IDENTITY_CLIENT_AAD, old),
+          clientIdPrefix: 'c',
+          redirectUri: 'https://x.example.test',
+          registeredAt: 1,
+        },
+      },
+    }));
+    return p;
+  }
+
+  it('re-encrypts everything with the primary key and is re-runnable', async () => {
+    const gw = new MemoryObjectGateway();
+    const p = await seed(gw);
+    const dry = await reencryptAll(gw, rotated, { dryRun: true });
+    expect(dry).toEqual({ tokens: 1, authStates: 1, settings: 1, failed: 0 });
+    expect((await p.tokens.getTokens('u1'))?.encryptedTokens.kid).not.toBe(
+      encryptJson('identity-tokens', 1, 'x', rotated).kid
+    );
+
+    const done = await reencryptAll(gw, rotated);
+    expect(done).toEqual({ tokens: 1, authStates: 1, settings: 1, failed: 0 });
+    const onlyNew: KeyRing = { primary: k2, previous: [] };
+    const rec = await p.tokens.getTokens('u1');
+    expect(decryptJson('identity-tokens', rec?.encryptedTokens, identityTokensAad('u1'), onlyNew)).toEqual({
+      access_token: 'AT',
+    });
+    const claimed = await p.tokens.claimAuthState('st');
+    expect(claimed.outcome).toBe('claimed');
+    if (claimed.outcome === 'claimed') {
+      expect(decryptJson('identity-verifier', claimed.record.encryptedVerifier, identityVerifierAad('st'), onlyNew)).toBe('ver');
+    }
+    const settings = await createPersistence(freshConfig({ SETTINGS_CACHE_TTL_MS: '0' }), { gateway: gw }).settings.get();
+    expect(
+      decryptJson('identity-client', settings.identityMcp?.client?.encryptedClient, IDENTITY_CLIENT_AAD, onlyNew)
+    ).toEqual({ client_id: 'c' });
+
+    expect(await reencryptAll(gw, rotated)).toEqual({ tokens: 0, authStates: 0, settings: 0, failed: 0 });
+  });
+
+  it('counts failures instead of throwing or leaking values', async () => {
+    const gw = new MemoryObjectGateway();
+    await seed(gw);
+    const wrongKeys: KeyRing = { primary: randomBytes(32), previous: [] };
+    const r = await reencryptAll(gw, wrongKeys);
+    expect(r.failed).toBe(3);
+    expect(r.tokens + r.authStates + r.settings).toBe(0);
+  });
+});

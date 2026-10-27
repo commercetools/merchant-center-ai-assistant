@@ -1,0 +1,93 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 commercetools GmbH and the commercetools-labs contributors
+ * Freely available, AS IS and UNSUPPORTED. See LICENSE.
+ */
+
+import { afterAll, afterEach, beforeAll, describe, expect, it } from '@jest/globals';
+import { http, HttpResponse } from 'msw';
+import { setupServer } from 'msw/node';
+import { createLifecycleApiRoot, PROBE_CONTAINER, PROBE_KEY } from '../../src/connector/checks/custom-object-probe';
+import { readLifecycleEnv } from '../../src/connector/env';
+import { PreUndeployDeps, run } from '../../src/connector/pre-undeploy';
+import { API, customObjectHandlers, lifecycleEnv, tokenHandler } from '../helpers/lifecycle';
+
+const server = setupServer();
+beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
+afterAll(() => server.close());
+afterEach(() => server.resetHandlers());
+
+function deps(): { deps: PreUndeployDeps; lines: string[] } {
+  const lines: string[] = [];
+  return {
+    lines,
+    deps: {
+      readEnv: () => readLifecycleEnv(lifecycleEnv()),
+      apiRoot: (env) => createLifecycleApiRoot(env),
+      log: (l) => lines.push(l),
+    },
+  };
+}
+
+describe('pre-undeploy run()', () => {
+  it('pre-undeploy: probe removed', async () => {
+    const store = new Map([[`${PROBE_CONTAINER}/${PROBE_KEY}`, { container: PROBE_CONTAINER, key: PROBE_KEY, value: {} }]]);
+    server.use(tokenHandler, ...customObjectHandlers(store));
+    const { deps: d, lines } = deps();
+    await expect(run(d)).resolves.toBeUndefined();
+    expect(store.size).toBe(0);
+    expect(lines).toContain('pre-undeploy: probe object removed');
+  });
+
+  it('pre-undeploy: no probe is fine', async () => {
+    server.use(tokenHandler, ...customObjectHandlers(new Map()));
+    const { deps: d, lines } = deps();
+    await expect(run(d)).resolves.toBeUndefined();
+    expect(lines).toContain('pre-undeploy: no probe object to remove');
+  });
+
+  it('pre-undeploy: data untouched', async () => {
+    const store = new Map([
+      ['ai-assistant-sessions/s1', { container: 'ai-assistant-sessions', key: 's1', value: { a: 1 } }],
+      ['ai-assistant-settings/cfg', { container: 'ai-assistant-settings', key: 'cfg', value: { b: 2 } }],
+    ]);
+    const deletes: string[] = [];
+    server.use(
+      tokenHandler,
+      http.delete(`${API}/p1/*`, ({ request }) => {
+        deletes.push(new URL(request.url).pathname);
+        return undefined;
+      }),
+      ...customObjectHandlers(store)
+    );
+    const { deps: d, lines } = deps();
+    await expect(run(d)).resolves.toBeUndefined();
+    expect(store.size).toBe(2);
+    expect(deletes).toEqual([`/p1/custom-objects/${PROBE_CONTAINER}/${PROBE_KEY}`]);
+    expect(lines).toContain('pre-undeploy: data retained in ai-assistant-sessions');
+    expect(lines).toContain('pre-undeploy: data retained in ai-assistant-settings');
+  });
+
+  it('pre-undeploy: api unreachable does not block', async () => {
+    // Deterministic: the client does not retry, so a 503 is one request and no backoff timers
+    // (the SDK's own retry used to make this race the jest timeout under load).
+    let apiCalls = 0;
+    server.use(
+      tokenHandler,
+      http.all(`${API}/p1/*`, () => {
+        apiCalls += 1;
+        return HttpResponse.json({ statusCode: 503, message: 'x' }, { status: 503 });
+      })
+    );
+    const { deps: d, lines } = deps();
+    await expect(run(d)).resolves.toBeUndefined();
+    expect(apiCalls).toBe(1);
+    expect(lines.some((l) => l.startsWith('pre-undeploy: warning: cleanup incomplete'))).toBe(true);
+  }, 2000);
+
+  it('pre-undeploy: an incomplete environment does not block', async () => {
+    const lines: string[] = [];
+    await expect(run({ readEnv: () => readLifecycleEnv({}), apiRoot: () => { throw new Error('unused'); }, log: (l) => lines.push(l) })).resolves.toBeUndefined();
+    expect(lines[0]).toContain('warning');
+  });
+});

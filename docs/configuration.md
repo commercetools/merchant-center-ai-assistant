@@ -1,0 +1,223 @@
+# Configuration reference
+
+All deployed configuration is Connect configuration declared in `connect.yaml`. The tables in this document mirror that file
+and the configuration files of the Merchant Center applications.
+
+## How configuration reaches each application
+
+- Connect creates one API client from `inheritAs.apiClient.scopes` and injects `CTP_API_URL`, `CTP_AUTH_URL`, `CTP_CLIENT_ID`, `CTP_CLIENT_SECRET`, `CTP_PROJECT_KEY` and `CTP_SCOPE` into the `service`. They are never declared in `connect.yaml`.
+  `CTP_REGION` is not injected; it is a declared, required key.
+- Connect injects `APPLICATION_URL` into the three Merchant Center applications. `CONNECT_SERVICE_URL` (the public URL of the service) is available to the `postDeploy` and `preUndeploy` scripts, and the running service reads it and takes the audience of the Merchant Center token from its origin (`service/src/config/sections/auth.ts`).
+  That depends on Connect passing the variable to the running service: the `auth configuration` line of the service log shows `audience: <origin>` when it does, and `audience: not configured` when it does not.
+  The Merchant Center applications cannot learn the service URL by themselves, which is why `CHAT_SERVICE_ENDPOINT_URL` is set by a second deployment step ([deployment.md](./connect-deployment.md)).
+- The service reads its configuration once at start (`service/src/config/index.ts`). An invalid value makes it exit with `Invalid environment configuration:` and the list of keys; values are never printed.
+- Standard configuration is stored as plain text by Connect; secured configuration is encrypted and is never shown again. Third-party provider credentials are Connect configuration only: there is no screen or API to enter them.
+
+## Keys of connect.yaml
+
+**`service`** (service, endpoint `/service`)
+
+| Key | Kind | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `CTP_REGION` | standard | yes |  | commercetools API region of the project in API-host spelling (us-central1.gcp, europe-west1.gcp, australia-southeast1.gcp, eu-central-1.aws or us-east-2.aws). Connect does not inject it. No default, required |
+| `MC_APP_ENTRY_POINT_URI_PATH` | standard | no | `ai-assistant` | Entry point URI path of the chat Custom Application (used for logging and checks only) |
+| `MCP_BINDING_OPEN_TO_ALL` | standard | no | `false` | Feature flag. When true every verified Merchant Center user, not only an administrator from ADMIN_USER_IDS, may create, change and delete the shared Managed MCP (identity) binding. Nothing else loses its administrator gate (true or false) |
+| `ADMIN_USER_IDS` | standard | no |  | Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator. Default is empty, so nobody is an administrator |
+| `GCP_PROJECT_ID` | standard | no |  | Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional. Default is the project_id inside the service-account key |
+| `GCP_VERTEX_LOCATION` | standard | no | `us-central1` | Vertex AI location (Gemini text and image models) |
+| `GEMINI_MODEL_NAME` | standard | no | `gemini-3.8-flash` | Main Gemini model id. Used by the chat orchestrator and by the Algolia, Stripe, export and Contentstack agents, all with a high thinking level |
+| `GEMINI_LITE_MODEL_NAME` | standard | no | `gemini-3.5-flash-lite` | Cheap Gemini model id used for session digests and prompt suggestions |
+| `GEMINI_LITE_THINKING_LEVEL` | standard | no | `minimal` | Thinking level of the cheap model (minimal, low, medium or high) |
+| `GEMINI_IMAGE_MODEL_NAME` | standard | no | `gemini-2.5-flash-image` | Gemini model id used for image generation (must be available in GCP_VERTEX_LOCATION) |
+| `GCP_BIGQUERY_DATASET_ID` | standard | no | `aiassistant` | BigQuery dataset for offloaded tool results (created on first use when the service account may create datasets) |
+| `GCP_BIGQUERY_LOCATION` | standard | no | `us-central1` | BigQuery location of the dataset (immutable once the dataset exists) |
+| `GCP_BUCKET_LOCATION` | standard | no | `us-central1` | Location used when the bucket has to be created (us-central1, or a multi-region such as US) |
+| `IMAGE_URL_MODE` | standard | no | `private` | private (default) = bucket stays private and images are streamed through the service; public = objects are publicly readable and stored with the public bucket URL |
+| `GCP_BUCKET_NAME` | standard | no |  | Cloud Storage bucket for generated images. Optional. Default is <gcp project id>-ai-assistant-images |
+| `CHAT_REQUEST_BUDGET_MS` | standard | no | `270000` | Time one chat reply may take in milliseconds, at most 285000 (Connect times a request out after 5 minutes; the reply is finished gracefully when this is reached) |
+| `CHAT_FINALIZE_RESERVE_MS` | standard | no | `30000` | Part of the chat time budget reserved for the final summary step, in milliseconds (5000 up to half the budget) |
+| `CHAT_DIGEST_BEFORE_CLOSE` | standard | no | `false` | When true the chat stream waits up to 3 seconds for the session digest before closing (true or false) |
+| `MCP_TOOLS_TTL_MS` | standard | no | `1800000` | In-process cache lifetime of fetched MCP tool sets in milliseconds |
+| `MCP_HANDSHAKE_TIMEOUT_MS` | standard | no | `10000` | Time in milliseconds a third-party MCP server may take to complete its handshake before it is skipped for the turn (at least 1) |
+| `NIMBUS_MCP_ENABLED` | standard | no | `true` | Kill switch of the embedded Nimbus design-system documentation tools (true or false). When false the Nimbus child process is never started |
+| `PERSISTENCE_CONCURRENCY` | standard | no | `8` | Maximum number of parallel Custom Object requests of bulk operations such as deleting a session (1 to 32) |
+| `SETTINGS_CACHE_TTL_MS` | standard | no | `5000` | In-process cache lifetime of the stored settings in milliseconds (0 disables the cache, at most 60000) |
+| `CACHE_MAX_ENTRIES` | standard | no | `5000` | Maximum number of entries of the in-process cache (at least 1) |
+| `CACHE_SWEEP_MS` | standard | no | `60000` | Interval in milliseconds at which expired in-process cache entries are removed (at least 1) |
+| `LOG_LEVEL` | standard | no | `info` | Logger level (error, warn, info, debug) |
+| `LOG_HTTP` | standard | no | `false` | true logs one line per request without bodies or credentials (true or false) |
+| `CONTENTSTACK_REGION` | standard | no | `na` | Contentstack region of the stack (na, eu, au, azure-na, azure-eu, gcp-na, gcp-eu) |
+| `CONTENTSTACK_BRANCH` | standard | no |  | Optional Contentstack branch name sent with every Content Management API call. Default is empty, so no branch header is sent |
+| `STRIPE_CONNECTED_ACCOUNT_ID` | standard | no |  | Optional Stripe connected account id (acct_...) the Stripe tools act on behalf of. Default is empty, so the Stripe tools act on the account of the key |
+| `GCP_SA_KEY_BASE64` | secured | yes |  | Base64 of the complete Google service-account JSON key (single line, no wrapping). No default, required |
+| `ENCRYPTION_KEY` | secured | yes |  | Base64 of a 32-byte AES-256-GCM key that protects stored identity tokens; changing it makes stored tokens unreadable (rotation is described in the configuration guide). No default, required |
+| `ENCRYPTION_KEY_PREVIOUS` | secured | no |  | Optional comma-separated retired ENCRYPTION_KEY values (base64, 32 bytes each) used only to decrypt data written before a key rotation. Default is unset |
+| `CONTENTSTACK_API_KEY` | secured | no |  | Optional Contentstack stack API key. Contentstack is enabled only when this and CONTENTSTACK_MANAGEMENT_TOKEN are both set. Default is unset |
+| `CONTENTSTACK_MANAGEMENT_TOKEN` | secured | no |  | Optional Contentstack Management Token (scope it to what the assistant may change). Default is unset |
+| `ALGOLIA_MCP_URL` | secured | no |  | Optional https URL of the Algolia MCP server. Secured because it may embed a key; Algolia is enabled when it is set. Default is unset |
+| `STRIPE_SECRET_KEY` | secured | no |  | Optional Stripe secret or restricted key (sk_/rk_). Prefer a restricted key limited to the tools you want the assistant to use. Default is unset |
+
+**`mc-app`** (merchant-center-custom-application)
+
+| Key | Kind | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `CUSTOM_APPLICATION_ID` | standard | yes |  | The Custom Application ID returned when registering the application in the Merchant Center. No default, required |
+| `ENTRY_POINT_URI_PATH` | standard | yes |  | Entry point URI path of the Custom Application (unique per cloud region). No default, required |
+
+**`composed-apps`** (merchant-center-custom-application)
+
+| Key | Kind | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `CUSTOM_APPLICATION_ID` | standard | yes |  | The Custom Application ID returned when registering the Pages application in the Merchant Center. No default, required |
+| `ENTRY_POINT_URI_PATH` | standard | yes |  | Entry point URI path of the Pages Custom Application (unique per cloud region, different from the chat application). No default, required |
+
+**`mc-view-app`** (merchant-center-custom-view)
+
+| Key | Kind | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `CUSTOM_VIEW_ID` | standard | yes |  | The Custom View ID returned when registering the view in the Merchant Center. No default, required |
+
+**Shared by all applications** (`inheritAs.configuration` in `connect.yaml`, set once per deployment without an application prefix)
+
+| Key | Kind | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `CLOUD_IDENTIFIER` | standard | yes | `gcp-us` | Merchant Center API cloud identifier (for example gcp-us). Required by the Connect validator for Merchant Center applications; the default is gcp-us |
+| `CHAT_SERVICE_ENDPOINT_URL` | standard | no | `https://not-configured.invalid/service` | Full URL of the service including /service; set on redeploy after the first deployment |
+
+Changing a key means a configuration redeploy. The helper `node scripts/connect/connect.mjs configure KEY=VALUE` accepts the provider keys, the Google settings and `ADMIN_USER_IDS`. `GCP_SA_KEY_BASE64` and `ENCRYPTION_KEY` are set at the first
+deployment only. For the other keys (for example `LOG_LEVEL`, the model names or the chat budget) redeploy with the Connect CLI using the same `--configuration` argument form that the helper prints with `--dry-run`.
+A redeploy takes effect when the instances restart; the sandbox scales to zero, so the next request after a quiet period uses the new values.
+
+## Settings that are not in connect.yaml
+
+These can be read from the environment of a local run (`service/.env.example`) but cannot be set on Connect because they are not declared: `PORT` (default 8080), `NODE_ENV` (unset means `production`), `PERSISTENCE_DRIVER` (`custom-objects`, or `memory` for local runs; refused in production) and `MC_AUTH_DISABLED` (local only; refused in production). `.env.example` files contain empty values or obvious placeholders, never a real secret.
+
+## Google Cloud
+
+One service-account key serves Vertex AI (text and image models), BigQuery and Cloud Storage. Every other Google setting is optional and has a default. How to create the project, the key, the dataset and the bucket is in [setup.md](./setup.md).
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `GCP_SA_KEY_BASE64` | none (required) | Base64 of the complete service-account JSON key on one line |
+| `GCP_PROJECT_ID` | the `project_id` inside the key | Google Cloud project for Vertex AI, BigQuery and the bucket |
+| `GCP_VERTEX_LOCATION` | `us-central1` | Vertex AI location of the Gemini models |
+| `GCP_BIGQUERY_DATASET_ID` | `aiassistant` | Dataset for offloaded tool results |
+| `GCP_BIGQUERY_LOCATION` | `us-central1` | Dataset location (cannot be changed once the dataset exists) |
+| `GCP_BUCKET_LOCATION` | `us-central1` | Location used when the bucket has to be created |
+| `IMAGE_URL_MODE` | `private` | `private` streams images through the service; `public` makes the bucket objects world-readable |
+| `GCP_BUCKET_NAME` | `<project>-ai-assistant-images` | Private bucket for generated images |
+
+Create the key value with `base64 < key.json | tr -d '\n'` and delete the local file afterwards. The parser accepts a key of at most 16 KiB (a real key is about 3 KB) and reports a fixed reason
+for an invalid one, for example `not valid base64` or `missing field "private_key"`, without echoing any value (`service/src/gcp/service-account.ts`).
+
+Required roles of the service account:
+
+| Role | Scope | Why |
+| --- | --- | --- |
+| `roles/aiplatform.user` | project | Calls Gemini models on Vertex AI |
+| `roles/bigquery.jobUser` | project | Runs queries and load jobs |
+| `roles/bigquery.dataEditor` | project | Creates the dataset and the per-session tables |
+| `roles/storage.admin` | project | Lets the service create the private image bucket on first use (broad: it can also change bucket policies) |
+| `roles/storage.objectAdmin` | the bucket only | Least-privilege alternative: create the bucket yourself and grant this role on it |
+
+To pre-create the dataset and the bucket yourself, create a dataset named `GCP_BIGQUERY_DATASET_ID` in `GCP_BIGQUERY_LOCATION`, and a bucket named `GCP_BUCKET_NAME` in `GCP_BUCKET_LOCATION` with uniform bucket-level access and public access prevention enforced.
+The post-deploy log lines `post-deploy: gcp analytics:` tell you when either is missing; they are warnings, chat works without them. Streaming inserts into BigQuery need billing to be enabled on the project; without it the service falls back to slower load jobs.
+
+`private` image mode: the bucket and its objects are never public and there are no signed URLs; the service streams images to the session owner or an administrator ([security.md](./security.md#generated-images)).
+`public` mode stores the public bucket URL in the message; a bucket that the service creates gets a public read binding, an existing bucket is never changed.
+
+## Encryption key
+
+`ENCRYPTION_KEY` is the Base64 of 32 random bytes: `openssl rand -base64 32`. It protects stored Managed MCP tokens, the PKCE verifier and the registered OAuth client secret with AES-256-GCM (`service/src/crypto/envelope.ts`).
+Changing it without keeping the old value makes stored tokens unreadable and users must connect again.
+To rotate: put the new value in `ENCRYPTION_KEY`, the old value in `ENCRYPTION_KEY_PREVIOUS` (comma-separated for several), redeploy, then re-encrypt the stored objects from a workstation with the
+project credentials in `service/.env.local`: `cd service && npm run build && npm run persistence:reencrypt -- --dry-run`, then again without `--dry-run`. Remove the previous key afterwards.
+
+## Third-party providers
+
+| Provider | Required keys | Optional keys | Secured |
+| --- | --- | --- | --- |
+| Contentstack | `CONTENTSTACK_API_KEY`, `CONTENTSTACK_MANAGEMENT_TOKEN` | `CONTENTSTACK_BRANCH`, `CONTENTSTACK_REGION` (default `na`; also `eu`, `au`, `azure-na`, `azure-eu`, `gcp-na`, `gcp-eu`) | API key, management token |
+| Algolia | `ALGOLIA_MCP_URL` (https; may embed a key) | none | the URL |
+| Stripe | `STRIPE_SECRET_KEY` (`sk_` or `rk_`) | `STRIPE_CONNECTED_ACCOUNT_ID` (`acct_...`) | the secret key |
+
+A provider is enabled only when all of its required keys are set and valid. A partial or invalid set logs a warning at start and disables that provider; everything else keeps working
+(`service/src/mcp-providers/schemas.ts`). Set or rotate keys with `node scripts/connect/connect.mjs configure KEY=VALUE`, which needs a configuration redeploy. Settings in the app shows each provider as configured or not,
+with the names of missing keys, and nothing else (`GET /service/mcp/providers`). Use a Stripe restricted key and a Contentstack token scoped to what the assistant may change; the assistant can call every tool the key allows.
+The Algolia URL is checked to be a public HTTPS address (`service/src/mcp-providers/ssrf.ts`).
+
+### Stripe toolkit version
+
+The Stripe tools come from `@stripe/agent-toolkit`, which `service/package.json` pins to exactly `0.7.12`. That release
+declares a peer dependency on an older major version of the `ai` package than the one the service uses, so
+`service/package.json` carries an `overrides` entry that makes the toolkit use the service's `ai`
+(and another that aligns the `zod` version used by one of the toolkit's own dependencies). The tools are renamed to the entries of the tools menu
+and adapted to the current `ai` and `zod` (`service/src/tool-sources/stripe/source.ts`). Keep the pin and the
+overrides together when you upgrade, and run the Stripe tests after any change. Later toolkit releases use a different,
+hosted integration and are not supported by this source. The menu lists 24 entries (`service/src/tool-sources/stripe/constants.ts`);
+an entry that the pinned toolkit does not provide switches nothing.
+
+## Models
+
+| Tier | Key | Default | Used for |
+| --- | --- | --- | --- |
+| main | `GEMINI_MODEL_NAME` | `gemini-3.8-flash` | The chat orchestrator and the Algolia, Stripe, export and Contentstack agents, with a high thinking level. There is no separate agent model; token counting uses this model too |
+| lite | `GEMINI_LITE_MODEL_NAME` | `gemini-3.5-flash-lite` | Session digests, suggestions, the result analyzer; thinking level from `GEMINI_LITE_THINKING_LEVEL` (`minimal`) |
+| image | `GEMINI_IMAGE_MODEL_NAME` | `gemini-2.5-flash-image` | Image generation; must exist in `GCP_VERTEX_LOCATION` |
+
+The ids are passed to Vertex AI unchanged (`service/src/llm/models.ts`). A model that does not exist in the chosen location fails at the first request, not at start; check availability for your location before changing a default.
+
+## Chat budget
+
+`CHAT_REQUEST_BUDGET_MS` (default 270,000, at most 285,000) is the time one answer may take; Connect ends a request after 300 s. `CHAT_FINALIZE_RESERVE_MS` (default 30,000, between 5,000 and half the budget) is the part before the end in which running tools stop and the
+model writes its closing answer. See [architecture.md](./architecture.md#request-time-budget).
+
+## Merchant Center applications
+
+| Variable | Used by | Source | Meaning |
+| --- | --- | --- | --- |
+| `CUSTOM_APPLICATION_ID` | `mc-app`, `composed-apps` | Connect configuration | Id returned when you register the Custom Application |
+| `CUSTOM_VIEW_ID` | `mc-view-app` | Connect configuration | Id returned when you register the Custom View |
+| `ENTRY_POINT_URI_PATH` | `mc-app`, `composed-apps` | Connect configuration | URL segment of the app; unique per cloud region, different for the two apps |
+| `CLOUD_IDENTIFIER` | all applications (shared, `inheritAs.configuration`) | Connect configuration | Merchant Center API cloud (`gcp-us`, `gcp-eu`, `gcp-au`, `aws-us`, `aws-eu`) |
+| `CHAT_SERVICE_ENDPOINT_URL` | shared by all applications, used by `mc-app` and `mc-view-app` | Connect configuration | Service origin plus `/service`; set by the second deployment step |
+| `APPLICATION_URL` | all three | injected by Connect | Public URL of the deployed application |
+| `INITIAL_PROJECT_KEY`, `HOST_URI_PATH` | local `yarn start` only | your `.env` (copy of `.env.example`, git-ignored) | Project and host page of the development server (the latter for the Custom View only) |
+
+The variables are substituted into `custom-application-config.mjs` and `custom-view-config.mjs` when the application is built. A production build fails with `Missing environment variable '<name>'` when one is unset.
+The browser never contacts the service directly, so the content security policy of each application allows only the Merchant Center origins:
+
+| Application | `script-src` additions | `img-src` additions | Why |
+| --- | --- | --- | --- |
+| `mc-app` | `*.commercetools.app`, `*.gstatic.com`, `'unsafe-inline'`, `'unsafe-eval'` | `*.gstatic.com`, `*.gravatar.com`, `gravatar.com`, `blob:` | The generated-page renderer runs code with `new Function` (`unsafe-eval`); avatars come from Gravatar; private images are shown from blob URLs |
+| `composed-apps` | same as `mc-app` | `*.commercetools.app`, `*.gstatic.com` | The page renderer needs `unsafe-eval` |
+| `mc-view-app` | none | `*.gstatic.com`, `blob:` | No generated code runs; no Gravatar |
+
+## Scopes and permissions
+
+The scopes of the service and of the applications are listed with their reasons in [README.md](../README.md#required-scopes). The same tables:
+
+**API client scopes of the service** (`inheritAs.apiClient.scopes` in `connect.yaml`)
+
+| Scope | Why the service needs it |
+| --- | --- |
+| `view_key_value_documents` | Reads sessions, messages, settings, feedback and the other Custom Objects that hold the assistant's state, and reads the composed pages |
+| `manage_key_value_documents` | Creates, updates and deletes those Custom Objects (chat history, settings, encrypted identity tokens, feedback, composed pages) |
+
+**OAuth scopes of the Merchant Center applications and the Custom View** (`oAuthScopes` of each config file)
+
+| Scope | Access | Used by | Why |
+| --- | --- | --- | --- |
+| `view_key_value_documents` | view | `mc-app`, `composed-apps`, `mc-view-app` | Reads the composed pages stored as Custom Objects; in the Custom View the list only has to be non-empty |
+| `view_mcp_servers` | view | `mc-app`, `mc-view-app` | Lists Managed MCP servers with the signed-in user's own permissions (administrator setup screen of the chat application; the Custom View declares it for parity and does not use it) |
+| `view_stores`, `view_tax_categories`, `view_products`, `view_product_selections`, `view_categories`, `view_standalone_prices`, `view_cart_discounts`, `view_discount_codes`, `view_customers`, `view_customer_groups`, `view_business_units`, `view_orders`, `view_payment_methods`, `view_shopping_lists`, `view_shipping_methods`, `view_quote_requests`, `view_staged_quotes`, `view_quotes` | view | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
+| `manage_key_value_documents` | manage | `mc-app`, `mc-view-app` | Lets the chat application save and delete composed pages; in the Custom View the list only has to be non-empty |
+| `manage_stores`, `manage_tax_categories`, `manage_products`, `manage_product_selections`, `manage_categories`, `manage_standalone_prices`, `manage_cart_discounts`, `manage_customers`, `manage_customer_groups`, `manage_business_units`, `manage_orders`, `manage_payment_methods`, `manage_shopping_lists`, `manage_shipping_methods`, `manage_quote_requests`, `manage_staged_quotes`, `manage_quotes` | manage | `mc-app`, `composed-apps` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
+| `manage_mcp_servers` | manage | `mc-app`, `mc-view-app` | Creates Managed MCP servers with the signed-in user's own permissions (administrator setup screen of the chat application; the Custom View declares it for parity and does not use it) |
+| `manage_approval_flows`, `manage_approval_rules`, `manage_associate_roles`, `manage_attribute_groups`, `manage_discount_codes`, `manage_project_settings`, `manage_order_edits`, `manage_payments`, `manage_recurring_orders`, `manage_recurring_payments`, `manage_recurrence_policies`, `manage_states`, `manage_types` | manage | `mc-app` | Commerce data that generated pages read (view) or change (manage) with the signed-in user's own token |
+
+Which Merchant Center users may open an application, and who is an administrator, is explained in [permissions.md](./permissions.md).
+
+## Deployment inputs
+
+The deployment helper reads its inputs from `scripts/connect/.env.connect` (copied from `scripts/connect/.env.connect.example`, git-ignored). The table of variables and what each becomes is in [deployment-runbook.md](./deployment-runbook.md#9-configuration).

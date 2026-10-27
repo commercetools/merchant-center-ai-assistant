@@ -1,0 +1,179 @@
+deployAs:
+  - name: service
+    applicationType: service
+    endpoint: /service
+    scripts:
+      postDeploy: npm ci && npm run build && npm run connector:post-deploy
+      preUndeploy: npm ci && npm run build && npm run connector:pre-undeploy
+    configuration:
+      standardConfiguration:
+        # Commercetools project (required)
+        - key: CTP_REGION
+          description: commercetools API region of the project in API-host spelling (us-central1.gcp, europe-west1.gcp, australia-southeast1.gcp, eu-central-1.aws or us-east-2.aws). Connect does not inject it. No default, required
+          required: true
+        # Merchant Center access and administrators
+        - key: MC_APP_ENTRY_POINT_URI_PATH
+          description: Entry point URI path of the chat Custom Application (used for logging and checks only)
+          default: 'ai-assistant'
+        - key: MCP_BINDING_OPEN_TO_ALL
+          description: Feature flag. When true every verified Merchant Center user, not only an administrator from ADMIN_USER_IDS, may create, change and delete the shared Managed MCP (identity) binding. Nothing else loses its administrator gate (true or false)
+          default: 'false'
+        - key: ADMIN_USER_IDS
+          description: Optional comma-separated list of Merchant Center user ids (at most 50) of administrators. A user is an administrator only when the user id in the signed Merchant Center gateway token is in this list. Empty means nobody is an administrator. Default is empty, so nobody is an administrator
+          required: false
+        # Google Cloud project
+        - key: GCP_PROJECT_ID
+          description: Google Cloud project that hosts Vertex AI, BigQuery and the image bucket. Optional. Default is the project_id inside the service-account key
+          required: false
+        # Gemini on Vertex AI
+        - key: GCP_VERTEX_LOCATION
+          description: Vertex AI location (Gemini text and image models)
+          default: 'us-central1'
+        - key: GEMINI_MODEL_NAME
+          description: Main Gemini model id. Used by the chat orchestrator and by the Algolia, Stripe, export and Contentstack agents, all with a high thinking level
+          default: 'gemini-3.8-flash'
+        - key: GEMINI_LITE_MODEL_NAME
+          description: Cheap Gemini model id used for session digests and prompt suggestions
+          default: 'gemini-3.5-flash-lite'
+        - key: GEMINI_LITE_THINKING_LEVEL
+          description: Thinking level of the cheap model (minimal, low, medium or high)
+          default: 'minimal'
+        - key: GEMINI_IMAGE_MODEL_NAME
+          description: Gemini model id used for image generation (must be available in GCP_VERTEX_LOCATION)
+          default: 'gemini-2.5-flash-image'
+        # BigQuery
+        - key: GCP_BIGQUERY_DATASET_ID
+          description: BigQuery dataset for offloaded tool results (created on first use when the service account may create datasets)
+          default: 'aiassistant'
+        - key: GCP_BIGQUERY_LOCATION
+          description: BigQuery location of the dataset (immutable once the dataset exists)
+          default: 'us-central1'
+        # Cloud Storage images
+        - key: GCP_BUCKET_LOCATION
+          description: Location used when the bucket has to be created (us-central1, or a multi-region such as US)
+          default: 'us-central1'
+        - key: IMAGE_URL_MODE
+          description: private (default) = bucket stays private and images are streamed through the service; public = objects are publicly readable and stored with the public bucket URL
+          default: 'private'
+        - key: GCP_BUCKET_NAME
+          description: Cloud Storage bucket for generated images. Optional. Default is <gcp project id>-ai-assistant-images
+          required: false
+        # Chat and tool limits
+        - key: CHAT_REQUEST_BUDGET_MS
+          description: Time one chat reply may take in milliseconds, at most 285000 (Connect times a request out after 5 minutes; the reply is finished gracefully when this is reached)
+          default: '270000'
+        - key: CHAT_FINALIZE_RESERVE_MS
+          description: Part of the chat time budget reserved for the final summary step, in milliseconds (5000 up to half the budget)
+          default: '30000'
+        - key: CHAT_DIGEST_BEFORE_CLOSE
+          description: When true the chat stream waits up to 3 seconds for the session digest before closing (true or false)
+          default: 'false'
+        - key: MCP_TOOLS_TTL_MS
+          description: In-process cache lifetime of fetched MCP tool sets in milliseconds
+          default: '1800000'
+        - key: MCP_HANDSHAKE_TIMEOUT_MS
+          description: Time in milliseconds a third-party MCP server may take to complete its handshake before it is skipped for the turn (at least 1)
+          default: '10000'
+        - key: NIMBUS_MCP_ENABLED
+          description: Kill switch of the embedded Nimbus design-system documentation tools (true or false). When false the Nimbus child process is never started
+          default: 'true'
+        # Storage and cache tuning
+        - key: PERSISTENCE_CONCURRENCY
+          description: Maximum number of parallel Custom Object requests of bulk operations such as deleting a session (1 to 32)
+          default: '8'
+        - key: SETTINGS_CACHE_TTL_MS
+          description: In-process cache lifetime of the stored settings in milliseconds (0 disables the cache, at most 60000)
+          default: '5000'
+        - key: CACHE_MAX_ENTRIES
+          description: Maximum number of entries of the in-process cache (at least 1)
+          default: '5000'
+        - key: CACHE_SWEEP_MS
+          description: Interval in milliseconds at which expired in-process cache entries are removed (at least 1)
+          default: '60000'
+        # Logging
+        - key: LOG_LEVEL
+          description: Logger level (error, warn, info, debug)
+          default: 'info'
+        - key: LOG_HTTP
+          description: true logs one line per request without bodies or credentials (true or false)
+          default: 'false'
+        # Optional providers (secrets are under securedConfiguration)
+        - key: CONTENTSTACK_REGION
+          description: Contentstack region of the stack (na, eu, au, azure-na, azure-eu, gcp-na, gcp-eu)
+          default: 'na'
+        - key: CONTENTSTACK_BRANCH
+          description: Optional Contentstack branch name sent with every Content Management API call. Default is empty, so no branch header is sent
+          required: false
+        - key: STRIPE_CONNECTED_ACCOUNT_ID
+          description: Optional Stripe connected account id (acct_...) the Stripe tools act on behalf of. Default is empty, so the Stripe tools act on the account of the key
+          required: false
+      securedConfiguration:
+        # Google Cloud credentials (required)
+        - key: GCP_SA_KEY_BASE64
+          description: Base64 of the complete Google service-account JSON key (single line, no wrapping). No default, required
+          required: true
+        # Encryption
+        - key: ENCRYPTION_KEY
+          description: Base64 of a 32-byte AES-256-GCM key that protects stored identity tokens; changing it makes stored tokens unreadable (rotation is described in the configuration guide). No default, required
+          required: true
+        - key: ENCRYPTION_KEY_PREVIOUS
+          description: Optional comma-separated retired ENCRYPTION_KEY values (base64, 32 bytes each) used only to decrypt data written before a key rotation. Default is unset
+          required: false
+        # Optional providers
+        - key: CONTENTSTACK_API_KEY
+          description: Optional Contentstack stack API key. Contentstack is enabled only when this and CONTENTSTACK_MANAGEMENT_TOKEN are both set. Default is unset
+          required: false
+        - key: CONTENTSTACK_MANAGEMENT_TOKEN
+          description: Optional Contentstack Management Token (scope it to what the assistant may change). Default is unset
+          required: false
+        - key: ALGOLIA_MCP_URL
+          description: Optional https URL of the Algolia MCP server. Secured because it may embed a key; Algolia is enabled when it is set. Default is unset
+          required: false
+        - key: STRIPE_SECRET_KEY
+          description: Optional Stripe secret or restricted key (sk_/rk_). Prefer a restricted key limited to the tools you want the assistant to use. Default is unset
+          required: false
+  - name: mc-app
+    applicationType: merchant-center-custom-application
+    configuration:
+      standardConfiguration:
+        - key: CUSTOM_APPLICATION_ID
+          description: The Custom Application ID returned when registering the application in the Merchant Center. No default, required
+          required: true
+        - key: ENTRY_POINT_URI_PATH
+          description: Entry point URI path of the Custom Application (unique per cloud region). No default, required
+          required: true
+  - name: composed-apps
+    applicationType: merchant-center-custom-application
+    configuration:
+      standardConfiguration:
+        - key: CUSTOM_APPLICATION_ID
+          description: The Custom Application ID returned when registering the Pages application in the Merchant Center. No default, required
+          required: true
+        - key: ENTRY_POINT_URI_PATH
+          description: Entry point URI path of the Pages Custom Application (unique per cloud region, different from the chat application). No default, required
+          required: true
+  - name: mc-view-app
+    applicationType: merchant-center-custom-view
+    configuration:
+      standardConfiguration:
+        - key: CUSTOM_VIEW_ID
+          description: The Custom View ID returned when registering the view in the Merchant Center. No default, required
+          required: true
+inheritAs:
+  # Shared by every application, set once per deployment (a global value, no application prefix).
+  # The service ignores both. All three Merchant Center applications read CLOUD_IDENTIFIER;
+  # mc-app and mc-view-app also read CHAT_SERVICE_ENDPOINT_URL, in their config files.
+  configuration:
+    standardConfiguration:
+      - key: CLOUD_IDENTIFIER
+        description: Merchant Center API cloud identifier (for example gcp-us). Required by the Connect validator for Merchant Center applications; the default is gcp-us
+        required: true
+        default: 'gcp-us'
+      - key: CHAT_SERVICE_ENDPOINT_URL
+        description: Full URL of the service including /service; set on redeploy after the first deployment
+        required: false
+        default: 'https://not-configured.invalid/service'
+  apiClient:
+    scopes:
+      - view_key_value_documents
+      - manage_key_value_documents
